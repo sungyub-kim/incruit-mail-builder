@@ -1,0 +1,3240 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>인크루트 메일 빌더 v2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!-- 공지 외부 CSS는 빌더 전체에 영향 주지 않게 iframe 내부에서만 inject (모달/미리보기 srcdoc) -->
+<!-- <link rel="stylesheet" href="https://i.incru.it/ui/static/css/notice/common.css?20220812" /> -->
+
+<style>
+  :root {
+    --accent: #ff460a;
+    --accent-soft: #fff5f0;
+    --accent-dark: #e23e07;
+    --line: #eceef2;
+    --line2: #d8dce3;
+    --muted: #8b919c;
+    --bg: #f6f7f9;
+    --text: #1f2330;
+    --text-soft: #4a5263;
+    --shadow-sm: 0 1px 2px rgba(20,24,38,0.04);
+    --shadow-md: 0 2px 8px rgba(20,24,38,0.06), 0 1px 2px rgba(20,24,38,0.04);
+    --shadow-lg: 0 8px 24px rgba(20,24,38,0.08), 0 2px 6px rgba(20,24,38,0.04);
+    --radius-sm: 5px;
+    --radius-md: 7px;
+    --radius-lg: 10px;
+  }
+  body.corporate {
+    --accent: #2772d0;
+    --accent-soft: #eef4ff;
+    --accent-dark: #1f5fb0;
+  }
+
+  /* 공통 아이콘 */
+  .icon { width: 15px; height: 15px; vertical-align: middle; display: inline-block; flex-shrink: 0; }
+  .icon-sm { width: 13px; height: 13px; }
+  .icon-lg { width: 17px; height: 17px; }
+  button .icon + span, .ctx-item .icon + span { margin-left: 6px; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Pretendard', -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  header.topbar {
+    background: #fff;
+    padding: 11px 20px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    z-index: 10;
+    position: relative;
+  }
+  header.topbar h1 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  header.topbar h1 .logo-mark {
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(255,70,10,0.25);
+  }
+  body.corporate header.topbar h1 .logo-mark {
+    box-shadow: 0 2px 6px rgba(39,114,208,0.25);
+  }
+  header.topbar h1 .logo-mark .icon { color: #fff; }
+  header.topbar h1 .sub { font-size: 11px; color: var(--muted); font-weight: 500; margin-left: 4px; }
+  header.topbar .actions { display: flex; gap: 6px; }
+
+  button.btn {
+    border: 1px solid var(--line2);
+    background: #fff;
+    color: var(--text);
+    padding: 7px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.12s ease;
+    box-shadow: var(--shadow-sm);
+  }
+  button.btn:hover { background: #f7f8fa; border-color: #c5cad3; transform: translateY(-1px); box-shadow: var(--shadow-md); }
+  button.btn:active { transform: translateY(0); }
+  button.btn.primary {
+    background: linear-gradient(180deg, var(--accent), var(--accent-dark));
+    color: #fff;
+    border-color: var(--accent-dark);
+    box-shadow: 0 1px 3px rgba(255,70,10,0.3);
+  }
+  body.corporate button.btn.primary { box-shadow: 0 1px 3px rgba(39,114,208,0.3); }
+  button.btn.primary:hover { filter: brightness(1.05); border-color: var(--accent-dark); }
+  button.btn.secondary {
+    background: linear-gradient(180deg, #4a5263, #353c4a);
+    color: #fff;
+    border-color: #353c4a;
+    box-shadow: 0 1px 3px rgba(53,60,74,0.25);
+  }
+  button.btn.secondary:hover { filter: brightness(1.1); }
+
+  main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 280px 1fr 1fr;
+    overflow: hidden;
+  }
+
+  /* ============ 좌측 ============ */
+  aside.left {
+    background: #fbfcfd;
+    box-shadow: inset -1px 0 0 var(--line);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .left-section {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .left-section:last-child { border-bottom: 0; }
+  .left-section.scroll {
+    flex: 1;
+    overflow-y: auto;
+    border-bottom: 0;
+  }
+  .left-section h3 {
+    margin: 0 0 8px 0;
+    font-size: 11px;
+    color: #696969;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .radio-row label {
+    display: flex;
+    align-items: center;
+    padding: 6px 8px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .radio-row label:hover { background: #f7f8fa; }
+  .radio-row input[type=radio], .radio-row input[type=checkbox] { margin-right: 6px; }
+  .radio-row input:checked + span { font-weight: 600; color: var(--accent); }
+
+  .cta-fields { margin-top: 8px; display: none; }
+  .cta-fields.show { display: block; }
+  .cta-fields label {
+    display: block;
+    font-size: 11px;
+    color: #696969;
+    margin: 8px 0 3px;
+  }
+  .cta-fields input {
+    width: 100%;
+    padding: 5px 8px;
+    border: 1px solid var(--line2);
+    border-radius: 3px;
+    font-family: inherit;
+    font-size: 12px;
+  }
+
+  .snippet-list { display: flex; flex-direction: column; gap: 6px; }
+  .snippet-card {
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 10px;
+    background: #fafbfc;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .snippet-card:hover {
+    border-color: var(--accent);
+    background: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  }
+  .snippet-card .nm { font-size: 12px; font-weight: 600; color: #333; }
+  .snippet-card .ds { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+  .snippet-empty {
+    padding: 30px 12px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.6;
+    border: 1px dashed var(--line2);
+    border-radius: 4px;
+  }
+
+  /* ============ 중앙 ============ */
+  section.center {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--line);
+    background: #fff;
+    overflow: hidden;
+  }
+  .pane-head {
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fafbfc;
+    flex-shrink: 0;
+  }
+  .pane-head .title { font-size: 12px; font-weight: 600; color: #444; }
+  .mode-toggle {
+    display: inline-flex;
+    border: 1px solid var(--line2);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .mode-toggle button {
+    background: #fff;
+    border: 0;
+    padding: 4px 10px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .mode-toggle button.active { background: #555; color: #fff; }
+
+  .btn-refresh {
+    background: linear-gradient(180deg, var(--accent), var(--accent-dark));
+    color: #fff;
+    border: 0;
+    padding: 6px 12px;
+    font-size: 11px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 0 1px 3px rgba(255,70,10,0.25);
+    transition: all 0.12s ease;
+  }
+  body.corporate .btn-refresh { box-shadow: 0 1px 3px rgba(39,114,208,0.25); }
+  .btn-refresh:hover { filter: brightness(1.05); transform: translateY(-1px); }
+  .btn-refresh:active { transform: translateY(0); }
+  .btn-refresh.flash { animation: flashOk 0.4s; }
+  @keyframes flashOk {
+    0% { background: var(--accent); }
+    50% { background: #28a745; }
+    100% { background: var(--accent); }
+  }
+
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--line);
+    background: #f7f8fa;
+    flex-shrink: 0;
+  }
+  .toolbar button {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 5px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+    min-width: 28px;
+    color: var(--text-soft);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s ease;
+  }
+  .toolbar button:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .toolbar button:active { transform: scale(0.95); }
+  .toolbar .sep { width: 1px; background: var(--line2); margin: 2px 3px; }
+  .toolbar select {
+    border: 1px solid var(--line2);
+    border-radius: 3px;
+    padding: 2px 4px;
+    font-size: 11px;
+    font-family: inherit;
+  }
+
+  /* 컬러 팔레트 드롭다운 */
+  .color-wrap { position: relative; display: inline-block; }
+  .color-btn { display:inline-flex; align-items:center; gap:2px; }
+  .color-btn .caret { font-size: 9px; color:#999; }
+  .color-palette {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 2px;
+    padding: 6px;
+    background: #fff;
+    border: 1px solid var(--line2);
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    z-index: 50;
+    width: 188px;
+  }
+  .color-wrap.open .color-palette { display: block; }
+  .color-palette .swatch {
+    display: inline-block;
+    width: 18px; height: 18px;
+    margin: 1px;
+    border: 1px solid #ddd;
+    border-radius: 2px;
+    cursor: pointer;
+    vertical-align: middle;
+  }
+  .color-palette .swatch:hover { transform: scale(1.15); border-color: #333; }
+  .color-palette .swatch.transparent {
+    background: linear-gradient(45deg, transparent 45%, #d9534f 47%, #d9534f 53%, transparent 55%), #fff;
+  }
+  .color-palette .custom-row {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  .color-palette .custom-row input[type=color] {
+    width: 26px; height: 22px; border: 1px solid #ddd; border-radius: 2px; cursor: pointer; padding: 0;
+  }
+  .color-palette .custom-row input[type=text] {
+    flex: 1; padding: 2px 4px; border: 1px solid var(--line2); border-radius: 2px; font-size: 11px;
+  }
+
+  /* contenteditable 안에서 적용되는 블록 스타일 — 메일 호환 padding과 동일하게 */
+  #wysiwyg ul, #wysiwyg ol { padding-left: 20px; margin: 6px 0; }
+
+  .editor-area { flex: 1; overflow-y: auto; padding: 18px; background: #f4f5f7; }
+
+  /* 미리보기와 동일한 캔버스 */
+  .email-canvas {
+    max-width: 700px;
+    margin: 0 auto;
+    background: #fff;
+    font-family: 'Malgun Gothic', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border: 1px solid var(--line);
+  }
+  .email-canvas[data-shape="round"]  { max-width: 640px; }
+  .email-canvas[data-shape="bare"]   { max-width: 700px; box-shadow:none; border:0; background: transparent; }
+  .email-canvas[data-shape="notice"] { max-width: 940px; }
+  .email-canvas[data-shape="notice"] .meta-section { display: none !important; }
+  .email-canvas[data-shape="notice"] #bodyEditorWrap { background: #fff; padding: 20px; }
+  .email-canvas[data-shape="notice_image"] { max-width: 940px; }
+  .email-canvas[data-shape="notice_image"] .meta-section { display: none !important; }
+  .email-canvas[data-shape="notice_image"] #bodyEditorWrap { background: #fff; padding: 0; }
+
+  /* 헤더/푸터 미리보기 — 편집 불가 */
+  .meta-section {
+    position: relative;
+    user-select: none;
+    pointer-events: none;
+    background: #fafbfc;
+  }
+  .meta-section:not(:empty)::before {
+    content: '편집 불가 · 좌측 옵션으로 변경';
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    font-size: 10px;
+    color: var(--muted);
+    background: rgba(255,255,255,0.95);
+    padding: 3px 8px 3px 22px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    z-index: 2;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%238b919c' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><rect width='18' height='11' x='3' y='11' rx='2' ry='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg>");
+    background-repeat: no-repeat;
+    background-position: 8px center;
+  }
+  .meta-section:empty { display: none; }
+  .meta-section > * { opacity: 0.7; }
+
+  /* 본문 편집 영역 */
+  #bodyEditorWrap {
+    position: relative;
+    padding: 0;
+  }
+  .email-canvas[data-shape="bare"] #bodyEditorWrap { background: #fff; border: 1px solid var(--line); }
+
+  #wysiwyg {
+    min-height: 240px;
+    outline: 2px dashed transparent;
+    outline-offset: -2px;
+    padding: 12px;
+    transition: outline-color 0.15s;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  #wysiwyg:focus { outline-color: #ffc7b6; }
+  body.corporate #wysiwyg:focus { outline-color: #b0c4d4; }
+  #wysiwyg img { max-width: 100%; }
+
+  #htmlsrc {
+    width: 100%; height: 100%; border: 0;
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 12px; padding: 14px; outline: none; resize: none; line-height: 1.5;
+  }
+
+  /* ============ 우측 ============ */
+  section.right {
+    display: flex;
+    flex-direction: column;
+    background: #e8eaed;
+    overflow: hidden;
+  }
+  .preview-wrap {
+    flex: 1; overflow-y: auto; padding: 16px;
+    display: flex; justify-content: center;
+  }
+  iframe#preview {
+    width: 100%; max-width: 700px;
+    height: 100%; min-height: 800px;
+    background: #fff;
+    border: 1px solid var(--line2);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  /* ============ 모달 ============ */
+  .modal-bg {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  .modal-bg.show { display: flex; }
+  .modal {
+    background: #fff;
+    padding: 20px 24px;
+    border-radius: 8px;
+    min-width: 380px;
+    max-width: 500px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+  }
+  .modal.large {
+    min-width: 780px;
+    width: 92vw;
+    max-width: 1100px;
+    height: 94vh;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 18px;
+  }
+  .modal h3 { margin: 0 0 4px 0; font-size: 15px; color: #222; }
+  .modal p { margin: 0 0 6px 0; font-size: 12px; color: #555; line-height: 1.5; }
+  .modal .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; flex-shrink: 0; }
+  .modal-preview {
+    flex: 1;
+    min-height: 0;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: #e8eaed;
+    overflow: hidden;
+  }
+  .modal-preview iframe { width: 100%; height: 100%; border: 0; background: #fff; }
+  .modal-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    background: #f0f1f3;
+    color: #555;
+  }
+  .badge.accent { background: var(--accent); color: #fff; }
+
+  /* 카드 시각 단서 */
+  .snippet-card .meta { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px; }
+  .snippet-card .meta .badge { font-size: 10px; padding: 1px 6px; }
+  .snippet-card .preview-hint {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px dashed var(--line);
+    font-size: 11px;
+    color: var(--accent);
+  }
+
+  /* 표 삽입 popover (그리드 선택) */
+  .table-wrap { position: relative; display: inline-block; }
+  .table-grid-popover {
+    display: none;
+    position: absolute;
+    top: 100%; left: 0;
+    margin-top: 2px;
+    background: #fff;
+    border: 1px solid var(--line2);
+    border-radius: 4px;
+    padding: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 60;
+  }
+  .table-wrap.open .table-grid-popover { display: block; }
+  .table-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 18px);
+    gap: 2px;
+  }
+  .table-grid-cell {
+    width: 18px; height: 18px;
+    border: 1px solid #d0d4da;
+    background: #fff;
+    cursor: pointer;
+    border-radius: 2px;
+  }
+  .table-grid-cell.hover { background: var(--accent); border-color: var(--accent); }
+  .table-grid-info {
+    text-align: center;
+    margin-top: 8px;
+    font-size: 11px;
+    color: #666;
+  }
+
+  /* 표 컨텍스트 메뉴 */
+  .table-ctx-menu {
+    display: none;
+    position: fixed;
+    background: #fff;
+    border: 1px solid var(--line2);
+    border-radius: 4px;
+    padding: 4px 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 200;
+    min-width: 160px;
+  }
+  .table-ctx-menu.show { display: block; }
+  .ctx-item {
+    padding: 8px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    color: var(--text-soft);
+    transition: background 0.1s;
+  }
+  .ctx-item .icon { color: var(--muted); }
+  .ctx-item:hover { background: var(--accent-soft); color: var(--accent); }
+  .ctx-item:hover .icon { color: var(--accent); }
+  .ctx-item.warn { color: #d9534f; }
+  .ctx-item.warn .icon { color: #d9534f; }
+  .ctx-item.warn:hover { background: #fef0ee; color: #c9302c; }
+  .ctx-divider { height: 1px; background: var(--line); margin: 4px 0; }
+
+  /* 표 hover 시 가장자리 살짝 강조 */
+  #wysiwyg table.editable-table { outline: 1px dashed transparent; outline-offset: -1px; }
+  #wysiwyg table.editable-table:hover { outline-color: rgba(255,70,10,0.3); }
+  #wysiwyg table.editable-table td.ctx-active { outline: 2px solid #2772d0; outline-offset: -2px; }
+  #wysiwyg table.editable-table td.dragsel { background: rgba(47, 128, 229, 0.18); }
+  #wysiwyg table.editable-table.drag-mode { user-select: none; }
+
+  /* 라이브러리 탭 */
+  .lib-tabs {
+    display: flex;
+    background: #f1f3f7;
+    border-radius: var(--radius-md);
+    padding: 3px;
+    gap: 2px;
+    margin-bottom: 10px;
+  }
+  .lib-tab {
+    flex: 1;
+    padding: 6px 8px;
+    cursor: pointer;
+    font-size: 11px;
+    color: var(--muted);
+    background: transparent;
+    border: 0;
+    border-radius: 5px;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .lib-tab:hover:not(.disabled) { color: var(--text); background: rgba(255,255,255,0.6); }
+  .lib-tab.active {
+    color: var(--accent);
+    background: #fff;
+    font-weight: 700;
+    box-shadow: var(--shadow-sm);
+  }
+  .lib-tab .count {
+    display: inline-block;
+    margin-left: 4px;
+    min-width: 16px;
+    padding: 1px 5px;
+    border-radius: 8px;
+    background: #f0f1f3;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .lib-tab.active .count { background: var(--accent); color: #fff; }
+  .lib-tab.disabled { cursor: default; opacity: 0.55; }
+
+  .hint { font-size: 11px; color: var(--muted); line-height: 1.5; margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<!-- ========== SVG 아이콘 sprite (Lucide 스타일) ========== -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></symbol>
+  <symbol id="i-package" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" x2="12" y1="22.08" y2="12"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></symbol>
+  <symbol id="i-bold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 12a4 4 0 0 0 0-8H6v8"/><path d="M15 20a4 4 0 0 0 0-8H6v8Z"/></symbol>
+  <symbol id="i-italic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></symbol>
+  <symbol id="i-underline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></symbol>
+  <symbol id="i-strike" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4H9a3 3 0 0 0-2.83 4"/><path d="M14 12a4 4 0 0 1 0 8H6"/><line x1="4" x2="20" y1="12" y2="12"/></symbol>
+  <symbol id="i-align-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" x2="3" y1="6" y2="6"/><line x1="15" x2="3" y1="12" y2="12"/><line x1="17" x2="3" y1="18" y2="18"/></symbol>
+  <symbol id="i-align-center" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" x2="3" y1="6" y2="6"/><line x1="17" x2="7" y1="12" y2="12"/><line x1="19" x2="5" y1="18" y2="18"/></symbol>
+  <symbol id="i-align-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" x2="3" y1="6" y2="6"/><line x1="21" x2="9" y1="12" y2="12"/><line x1="21" x2="7" y1="18" y2="18"/></symbol>
+  <symbol id="i-list-ul" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></symbol>
+  <symbol id="i-list-ol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" x2="21" y1="6" y2="6"/><line x1="10" x2="21" y1="12" y2="12"/><line x1="10" x2="21" y1="18" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></symbol>
+  <symbol id="i-hr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="12" y2="12"/></symbol>
+  <symbol id="i-broom" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13 11 9-9"/><path d="M14.6 12.6c.8.8.9 2.1.2 3L10 22l-8-8 6.4-4.8c.9-.7 2.2-.6 3 .2Z"/><path d="m6.8 10.4 6.8 6.8"/><path d="m5 17 1.4-1.4"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+  <symbol id="i-table" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></symbol>
+  <symbol id="i-construction" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="8" rx="1"/><path d="M17 14v7"/><path d="M7 14v7"/><path d="M17 3v3"/><path d="M7 3v3"/><path d="M10 14 2.3 6.3"/><path d="m14 6 7.7 7.7"/><path d="m8 6 8 8"/></symbol>
+  <symbol id="i-chevron-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></symbol>
+  <symbol id="i-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-chevron-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-merge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6V3h13v13h-3"/><rect width="13" height="13" x="3" y="8" rx="1"/></symbol>
+  <symbol id="i-split-h" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 12h18"/></symbol>
+  <symbol id="i-split-v" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M12 3v18"/></symbol>
+  <symbol id="i-columns" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
+  <symbol id="i-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></symbol>
+  <symbol id="i-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></symbol>
+</svg>
+
+<header class="topbar">
+  <h1>
+    <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
+    <span>인크루트 메일 빌더</span>
+    <span class="sub">v2</span>
+  </h1>
+  <div class="actions">
+    <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
+    <button class="btn primary" id="btnDownload"><svg class="icon"><use href="#i-save"/></svg><span>선택 1개 저장</span></button>
+    <button class="btn secondary" id="btnDownloadAll"><svg class="icon"><use href="#i-package"/></svg><span>4종 일괄 저장</span></button>
+  </div>
+</header>
+
+<main>
+  <!-- ============ 좌측: 컨트롤 + 본문 템플릿 라이브러리 ============ -->
+  <aside class="left">
+    <div class="left-section">
+      <h3>대상</h3>
+      <div class="radio-row">
+        <label><input type="radio" name="target" value="personal" checked /><span>개인 (#ff460a)</span></label>
+        <label><input type="radio" name="target" value="corporate" /><span>기업 (#344f77)</span></label>
+      </div>
+    </div>
+
+    <div class="left-section">
+      <h3>형태</h3>
+      <div class="radio-row">
+        <label><input type="radio" name="shape" value="common" checked /><span>공용 (700px)</span></label>
+        <label><input type="radio" name="shape" value="round" /><span>라운드 (640px, 카드형)</span></label>
+        <label><input type="radio" name="shape" value="bare" /><span>헤더·푸터 없음</span></label>
+        <label><input type="radio" name="shape" value="notice" /><span>공지 텍스트형 (noticeTemp · 외부 CSS)</span></label>
+        <label><input type="radio" name="shape" value="notice_image" /><span>공지 이미지형 (940px · raw 테이블)</span></label>
+      </div>
+    </div>
+
+    <div class="left-section">
+      <h3>푸터 / 발수신 유형</h3>
+      <div class="radio-row" id="footerGroup">
+        <label><input type="radio" name="footer" value="receivable" checked /><span>수신거부 가능</span></label>
+        <label><input type="radio" name="footer" value="sendonly" /><span>발신전용</span></label>
+      </div>
+      <div class="hint" id="footerHint" style="display:none">⚠ 헤더·푸터 없음 형태에서는 푸터가 적용되지 않습니다.</div>
+    </div>
+
+    <div class="left-section" id="ctaSection" style="display:none">
+      <h3>외부 CTA 버튼 (라운드 전용)</h3>
+      <div class="radio-row">
+        <label><input type="checkbox" id="ctaEnable" /><span>버튼 포함</span></label>
+      </div>
+      <div class="cta-fields" id="ctaFields">
+        <label>버튼 텍스트</label>
+        <input type="text" id="ctaText" value="자세히 보기" />
+        <label>링크 URL</label>
+        <input type="text" id="ctaUrl" value="https://www.incruit.com/" />
+      </div>
+    </div>
+
+    <div class="left-section">
+      <h3>발송일 (${SENDDATE})</h3>
+      <div class="radio-row">
+        <label><input type="radio" name="datemode" value="token" checked /><span>${SENDDATE} 토큰 유지</span></label>
+        <label><input type="radio" name="datemode" value="today" /><span>오늘 날짜로 치환</span></label>
+      </div>
+    </div>
+
+    <div class="left-section scroll">
+      <h3>본문 템플릿 라이브러리</h3>
+      <div class="lib-tabs" id="libTabs">
+        <button class="lib-tab active" data-tab="full">전체 <span class="count" id="cntFull">0</span></button>
+        <button class="lib-tab" data-tab="notice">공지사항용 <span class="count" id="cntNotice">0</span></button>
+        <button class="lib-tab" data-tab="partial">부분 <span class="count" id="cntPartial">0</span></button>
+      </div>
+      <div id="snippetList" class="snippet-list"></div>
+    </div>
+  </aside>
+
+  <!-- ============ 중앙: 본문 에디터 ============ -->
+  <section class="center">
+    <div class="pane-head">
+      <span class="title">본문 작성</span>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button class="btn-refresh" id="btnRefreshPreview" title="미리보기 즉시 갱신"><svg class="icon"><use href="#i-refresh"/></svg><span>미리보기 갱신</span></button>
+        <div class="mode-toggle">
+          <button id="modeEditor" class="active">에디터</button>
+          <button id="modeHtml">HTML</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toolbar" id="toolbar">
+      <select id="fontSize" title="글자 크기 (px)">
+        <option value="11">11</option>
+        <option value="12">12</option>
+        <option value="13">13</option>
+        <option value="14" selected>14</option>
+        <option value="15">15</option>
+        <option value="16">16</option>
+        <option value="18">18</option>
+        <option value="20">20</option>
+        <option value="22">22</option>
+        <option value="26">26</option>
+        <option value="32">32</option>
+      </select>
+      <span class="sep"></span>
+      <button data-cmd="bold" title="굵게"><svg class="icon"><use href="#i-bold"/></svg></button>
+      <button data-cmd="italic" title="기울임"><svg class="icon"><use href="#i-italic"/></svg></button>
+      <button data-cmd="underline" title="밑줄"><svg class="icon"><use href="#i-underline"/></svg></button>
+      <button id="btnStrike" title="취소선 (인라인 style, Outlook 호환)"><svg class="icon"><use href="#i-strike"/></svg></button>
+      <span class="sep"></span>
+      <div class="color-wrap" title="글자색">
+        <button class="color-btn" id="fgColorBtn"><span style="color:#ff460a">A</span><span class="caret">▾</span></button>
+        <div class="color-palette" id="fgPalette"></div>
+      </div>
+      <div class="color-wrap" title="배경색">
+        <button class="color-btn" id="bgColorBtn"><span style="background:#ffe600;padding:0 3px;">A</span><span class="caret">▾</span></button>
+        <div class="color-palette" id="bgPalette"></div>
+      </div>
+      <span class="sep"></span>
+      <button data-cmd="justifyLeft" title="왼쪽 정렬"><svg class="icon"><use href="#i-align-left"/></svg></button>
+      <button data-cmd="justifyCenter" title="가운데 정렬"><svg class="icon"><use href="#i-align-center"/></svg></button>
+      <button data-cmd="justifyRight" title="오른쪽 정렬"><svg class="icon"><use href="#i-align-right"/></svg></button>
+      <span class="sep"></span>
+      <button id="btnUL" title="글머리표 (메일 호환 padding 자동)"><svg class="icon"><use href="#i-list-ul"/></svg></button>
+      <button id="btnOL" title="번호 매기기 (메일 호환 padding 자동)"><svg class="icon"><use href="#i-list-ol"/></svg></button>
+      <span class="sep"></span>
+      <button id="insertLink" title="링크"><svg class="icon"><use href="#i-link"/></svg></button>
+      <button id="insertImage" title="이미지 (Outlook border 자동 제거)"><svg class="icon"><use href="#i-image"/></svg></button>
+      <button id="insertHr" title="구분선 (메일 호환 table HR)"><svg class="icon"><use href="#i-hr"/></svg></button>
+      <div class="table-wrap">
+        <button id="tableInsertBtn" title="표 삽입 (행/열 선택)"><svg class="icon"><use href="#i-table"/></svg></button>
+        <div class="table-grid-popover" id="tableGridPopover">
+          <div class="table-grid" id="tableGrid"></div>
+          <div class="table-grid-info" id="tableGridInfo">0 × 0</div>
+        </div>
+      </div>
+      <span class="sep"></span>
+      <button id="cleanupBtn" title="HTML 클린업 (중첩 태그 제거)"><svg class="icon"><use href="#i-broom"/></svg></button>
+      <button data-cmd="removeFormat" title="서식 지우기"><svg class="icon"><use href="#i-x"/></svg></button>
+    </div>
+
+    <div class="editor-area">
+      <div class="email-canvas" id="emailCanvas">
+        <div id="headerPreview" class="meta-section" contenteditable="false"></div>
+        <div id="bodyEditorWrap">
+          <div id="wysiwyg" contenteditable="true">
+            <p style="font-family: 'Malgun Gothic', sans-serif; font-size: 14px; line-height: 1.6;">
+              안녕하세요, <b>인크루트</b>입니다.<br /><br />
+              이 영역에 본문을 작성하거나, 좌측 라이브러리에서 본문 템플릿을 골라 삽입하세요.<br />
+              삽입된 템플릿은 직접 수정·삭제할 수 있습니다.
+            </p>
+          </div>
+        </div>
+        <div id="footerPreview" class="meta-section" contenteditable="false"></div>
+      </div>
+      <textarea id="htmlsrc" style="display:none"></textarea>
+    </div>
+  </section>
+
+  <!-- ============ 우측: 미리보기 ============ -->
+  <section class="right">
+    <div class="pane-head">
+      <span class="title">미리보기 <span id="previewLabel" style="color:var(--muted); font-weight:400; font-size:11px; margin-left:6px"></span></span>
+      <span class="hint" id="filenameHint"></span>
+    </div>
+    <div class="preview-wrap">
+      <iframe id="preview"></iframe>
+    </div>
+  </section>
+</main>
+
+<!-- ========== 표 셀 컨텍스트 메뉴 (floating) ========== -->
+<div class="table-ctx-menu" id="tableCtxMenu">
+  <div class="ctx-item" data-act="row-above"><svg class="icon icon-sm"><use href="#i-chevron-up"/></svg><span>위에 행 추가</span></div>
+  <div class="ctx-item" data-act="row-below"><svg class="icon icon-sm"><use href="#i-chevron-down"/></svg><span>아래에 행 추가</span></div>
+  <div class="ctx-divider"></div>
+  <div class="ctx-item" data-act="col-left"><svg class="icon icon-sm"><use href="#i-chevron-left"/></svg><span>왼쪽에 열 추가</span></div>
+  <div class="ctx-item" data-act="col-right"><svg class="icon icon-sm"><use href="#i-chevron-right"/></svg><span>오른쪽에 열 추가</span></div>
+  <div class="ctx-divider"></div>
+  <div class="ctx-item" data-act="merge"><svg class="icon icon-sm"><use href="#i-merge"/></svg><span>셀 병합 (드래그 선택)</span></div>
+  <div class="ctx-item" data-act="split-row"><svg class="icon icon-sm"><use href="#i-split-h"/></svg><span>행 분할</span></div>
+  <div class="ctx-item" data-act="split-col"><svg class="icon icon-sm"><use href="#i-split-v"/></svg><span>열 분할</span></div>
+  <div class="ctx-item" data-act="width-even"><svg class="icon icon-sm"><use href="#i-columns"/></svg><span>너비 균등 맞춤</span></div>
+  <div class="ctx-divider"></div>
+  <div class="ctx-item warn" data-act="row-del"><svg class="icon icon-sm"><use href="#i-trash"/></svg><span>행 삭제</span></div>
+  <div class="ctx-item warn" data-act="col-del"><svg class="icon icon-sm"><use href="#i-trash"/></svg><span>열 삭제</span></div>
+  <div class="ctx-item warn" data-act="table-del"><svg class="icon icon-sm"><use href="#i-trash"/></svg><span>표 전체 삭제</span></div>
+</div>
+
+<!-- ========== 컨펌 모달 (큰 미리보기 포함) ========== -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal large">
+    <h3 id="modalTitle">템플릿 적용</h3>
+    <div class="modal-meta" id="modalMeta"></div>
+    <p id="modalBody"></p>
+    <div class="modal-preview">
+      <iframe id="modalPreview"></iframe>
+    </div>
+    <div class="actions">
+      <button class="btn" id="modalCancel">취소</button>
+      <button class="btn primary" id="modalOk">✓ 본문에 적용</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   본문 템플릿 라이브러리 (사용자가 보낸 본문 템플릿을 여기에 추가)
+   - target: 'personal' | 'corporate' | 'common'
+   - 빈 배열일 땐 안내 메시지 표시
+============================================================ */
+const SNIPPETS = [
+  {
+    id: 'position_personal_info',
+    name: '포지션제안 - 개인정보 확인',
+    target: 'personal',
+    description: '회원 개인정보·이력서 확인 안내 (라운드 외곽 카드 + 흰 카드 2개 + CTA)',
+    html: `<div style="padding: 10px 0 30px; text-align: center;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background: #ffece7; border-radius: 20px;">
+    <tbody>
+      <tr>
+        <td style="padding: 15px;">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tbody>
+              <tr>
+                <td style="font-family: Malgun Gothic, sans-serif;letter-spacing: -1px;padding: 25px 25px 30px;background: #fff;border-radius: 8px">
+                  <table align="left" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse">
+                    <tbody>
+                      <tr>
+                        <th align="left" style="font-size: 20px; letter-spacing: -2px; color: #333; padding-bottom: 20px; text-align: left;">
+                          포지션제안 회원 <span style="color: #ff460a;">개인정보</span> 확인 안내
+                        </th>
+                      </tr>
+                      <tr>
+                        <td align="left" style="font-size: 15px; line-height: 25px; color: #333">
+                          안녕하세요. 인크루트입니다.<br>
+                          <br>
+                          항상 포지션제안 서비스를 이용해 주시는 회원님께 진심으로 감사드립니다.<br>
+                          <br>
+                          회원님의 계정은 최근 1년간 이력서 정보 업데이트 이력 없이<br>
+                          포지션제안 공개 중임을 안내 드립니다.<br>
+                          <br>
+                          회원님의 소중한 개인정보 보호를 위해<br>
+                          포지션제안 설정과 이력서 정보를 확인해 주시기 바랍니다.
+                        </td>
+                      </tr>
+                      <tr><td style="height: 25px"></td></tr>
+                      <tr>
+                        <th align="left" style="font-size: 15px;letter-spacing: -1px;color: #333;text-align: left;padding: 0 0 12px 0;">포지션제안 설정 정보</th>
+                      </tr>
+                      <tr>
+                        <td align="left">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse">
+                            <tbody>
+                              <tr>
+                                <td>
+                                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; border-top: 1px solid #121212; border-bottom: 1px solid #e1e1e1; table-layout: fixed">
+                                    <tbody>
+                                      <tr>
+                                        <th width="110" align="left" bgcolor="#f7f7f7" style="min-width: 110px; padding: 15px 10px; color: #333; font-size: 14px; font-weight: bold; letter-spacing: -1px; font-family: Malgun Gothic, sans-serif">아이디</th>
+                                        <td align="left" valign="middle" style="padding: 15px 12px; font-size: 14px; font-weight: normal; letter-spacing: -1px; font-family: Malgun Gothic, sans-serif; color: #333;">ki*****</td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse;border-bottom: 1px solid #e1e1e1;table-layout: fixed">
+                                    <tbody>
+                                      <tr>
+                                        <th width="110" align="left" bgcolor="#f7f7f7" style="min-width: 110px; padding: 15px 10px; color: #333; font-size: 14px; font-weight: bold; letter-spacing: -1px; font-family: Malgun Gothic, sans-serif">공개 일자</th>
+                                        <td align="left" valign="middle" style="padding: 15px 12px; font-size: 14px; font-weight: normal; letter-spacing: -1px; font-family: Malgun Gothic, sans-serif; color: #333; word-break: break-all; white-space: normal;">YYYY년 M월 D일</td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                </td>
+                              </tr>
+                              <tr>
+                                <td style="padding: 6px 0 0 0;">
+                                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; table-layout: fixed">
+                                    <tbody>
+                                      <tr>
+                                        <td width="15" align="left" style="color: #666;font-size: 13px;letter-spacing: -1px;font-family: Malgun Gothic, sans-serif;line-height: 24px;vertical-align: top;">※</td>
+                                        <td align="left" valign="middle" style="color: #999;font-size: 13px;font-weight: 500;letter-spacing: -1px;font-family: Malgun Gothic, sans-serif;line-height: 24px;">포지션제안 설정 확인: 개인 홈&gt; 받은 제안&gt; 포지션제안 설정</td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 0 15px 15px;">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tbody>
+              <tr>
+                <td style="font-family: Malgun Gothic, sans-serif;letter-spacing: -1px;padding: 25px 25px 30px;background: #fff;border-radius: 8px">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse">
+                    <tbody>
+                      <tr>
+                        <th align="left" style="font-size: 15px;letter-spacing: -1px;color: #333;text-align: left;padding: 0 0 6px 0;">이력서 정보</th>
+                      </tr>
+                      <tr>
+                        <td align="left" style="font-size: 14px;letter-spacing: -1px;color: #333;text-align: left;padding: 0 0 12px 0;">아래 정보를 입력하면 더 적합한 포지션제안을 받으실 수 있습니다.</td>
+                      </tr>
+                      <tr>
+                        <td align="left">
+                          <table width="100%" cellpadding="0" style="padding: 20px 20px 20px; border: 1px solid #E7E7E7; border-radius: 8px; background: #F8F8F8; box-sizing: border-box; border-collapse: separate;">
+                            <tbody>
+                              <tr>
+                                <td align="left" style="font-family: Malgun Gothic, sans-serif; font-size: 14px; color: #333; font-weight: bold; padding-bottom: 18px;">대표 이력서 제목 영역입니다.</td>
+                              </tr>
+                              <tr>
+                                <td align="left" style="padding: 10px 0 0; border-top: dashed 1px #E1E1E1;">
+                                  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                    <tbody>
+                                      <tr>
+                                        <td valign="top" width="4"><img src="https://c.incru.it/2023/smart_mail/dotted_icon.png"></td>
+                                        <td valign="top" align="left" style="font-size: 15px; line-height: 26px; color: #333333;padding: 0 0 0 7px;">최종학력 : 대학교(4년) / 서울대학교</td>
+                                      </tr>
+                                      <tr>
+                                        <td valign="top" width="4"><img src="https://c.incru.it/2023/smart_mail/dotted_icon.png"></td>
+                                        <td valign="top" align="left" style="font-size: 15px; line-height: 26px; color: #333333;padding: 0 0 0 7px;">최종경력 : 5년 3개월 / 인**트</td>
+                                      </tr>
+                                      <tr>
+                                        <td valign="top" width="4"><img src="https://c.incru.it/2023/smart_mail/dotted_icon.png"></td>
+                                        <td valign="top" align="left" style="font-size: 15px; line-height: 26px; color: #333333;padding: 0 0 0 7px;">희망직종 : 서비스기획, 웹기획, 앱기획</td>
+                                      </tr>
+                                      <tr>
+                                        <td valign="top" width="4"><img src="https://c.incru.it/2023/smart_mail/dotted_icon.png"></td>
+                                        <td valign="top" align="left" style="font-size: 15px; line-height: 26px; color: #333333;padding: 0 0 0 7px;">직무기술 : <span style="color:#ff460a;">등록된 직무기술이 없습니다.</span></td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 6px 0 0 0;">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; table-layout: fixed">
+                            <tbody>
+                              <tr>
+                                <td width="15" align="left" style="color: #666;font-size: 13px;letter-spacing: -1px;font-family: Malgun Gothic, sans-serif;line-height: 24px;vertical-align: top;">※</td>
+                                <td align="left" valign="middle" style="color: #999;font-size: 13px;font-weight: 500;letter-spacing: -1px;font-family: Malgun Gothic, sans-serif;line-height: 24px;">이력서 정보는 메일 발송 시점의 대표 이력서 정보로, 열람 시점의 대표 이력서와 다를 수 있습니다.</td>
+                              </tr>
+                              <tr><td style="height: 6px"></td></tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="center" style="padding: 15px 0 0;">
+                          <table width="240" border="0" cellspacing="0" cellpadding="0">
+                            <tbody>
+                              <tr>
+                                <td align="center"><a href="https://incruitapp.deeplink.page/ptwvzg" target="_blank" style="display: block; text-decoration: none; width: 100%; border-radius: 25px; background-color: #ff460a; color: #fff; font-size: 18px; font-weight: bold; border: 0; line-height: 47px; height: 50px; text-align: center;">이력서 관리 바로가기</a></td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>`
+  },
+  {
+    id: 'scrap_recommend',
+    name: '스크랩 취업비서 추천 공고',
+    target: 'personal',
+    description: '{회원명} 스크랩 기반 추천 공고 2섹션 (각 3개 공고) + CTA',
+    html: `<div style="padding: 10px 0 30px; text-align: center;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background: #ffece7; border-radius: 20px">
+    <tbody>
+      <tr>
+        <td align="center" style="padding:20px 10px; word-break:keep-all;">
+          <span style="font-family:Malgun Gothic, sans-serif; letter-spacing:-1px; font-size:18px; font-weight:bold; color:#333333; padding-bottom:6px; display:block; line-height:24px;">{회원명}님을 위한 스크랩 취업비서 추천 공고</span>
+          <span style="font-family:Malgun Gothic, sans-serif; letter-spacing:-1px; font-size:13px; color:#333333; line-height:17px;">최근 {회원명}님의 <strong>스크랩</strong> 데이터를 바탕으로 추천드려요</span>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 0 3% 20px">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tbody>
+              <tr>
+                <td style="font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; padding: 1% 4.387%; background: #fff; border-radius: 8px">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse">
+                    <tbody>
+                      <tr>
+                        <td style="text-align: center; padding: 18px 0 13px">
+                          <span style="line-height: 1.3">
+                            <span style="font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; font-size: 16px; font-weight: bold; color: #333333">최근 스크랩한 공고와 비슷한 공고</span>
+                            <img src="https://c.incru.it/2024/01/8701/emoji_eyes_3x.png" alt="emoji_eyes" width="20" style="max-width: 100%; border: 0; vertical-align: top">
+                          </span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="left" style="border-top: 1px solid #efefef; padding: 18px 0">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; table-layout: fixed">
+                            <colgroup><col width="*"><col width="30px"></colgroup>
+                            <tbody>
+                              <tr>
+                                <td colspan="2" style="vertical-align: top; text-align: left; font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; line-height: 1.5; font-size: 15px; padding: 0 0 6px; color: #333333"><a href="#none" style="text-decoration: none; display: block; color: #333333">\${t.COMPANY_NM} <span style="font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; line-height: 1.5; font-size: 15px; color: #fe450a; padding-left: 5px">\${t.INVITE_CLOSE_DT}</span></a></td>
+                              </tr>
+                              <tr>
+                                <td style="vertical-align: top; text-align: left; font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; line-height: 1.5; font-size: 15px; font-weight: bold; color: #333333"><a href="#none" style="text-decoration: none; display: block; color: #333333">\${t_JOB_TITLE}</a></td>
+                                <td style="vertical-align: top; text-align: right; line-height: 1.5; padding-top: 5px"><a href="#none" style="text-decoration: none; display: block; color: #333333"><img src="https://c.incru.it/2024/01/8701/arrow_3x.png" alt="우측 화살표" width="8" style="max-width: 100%; border: 0"></a></td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="left" style="border-top: 1px solid #efefef; padding: 18px 0">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; table-layout: fixed">
+                            <colgroup><col width="*"><col width="30px"></colgroup>
+                            <tbody>
+                              <tr>
+                                <td colspan="2" style="vertical-align: top; text-align: left; font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; line-height: 1.5; font-size: 15px; padding: 0 0 6px; color: #333333"><a href="#none" style="text-decoration: none; display: block; color: #333333">\${t.COMPANY_NM} <span style="font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; line-height: 1.5; font-size: 15px; color: #fe450a; padding-left: 5px">\${t.INVITE_CLOSE_DT}</span></a></td>
+                              </tr>
+                              <tr>
+                                <td style="vertical-align: top; text-align: left; font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; line-height: 1.5; font-size: 15px; font-weight: bold; color: #333333"><a href="#none" style="text-decoration: none; display: block; color: #333333">\${t_JOB_TITLE}</a></td>
+                                <td style="vertical-align: top; text-align: right; line-height: 1.5; padding-top: 5px"><a href="#none" style="text-decoration: none; display: block; color: #333333"><img src="https://c.incru.it/2024/01/8701/arrow_3x.png" alt="우측 화살표" width="8" style="max-width: 100%; border: 0"></a></td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="left" style="border-top: 1px solid #efefef; padding: 18px 0">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; table-layout: fixed">
+                            <colgroup><col width="*"><col width="30px"></colgroup>
+                            <tbody>
+                              <tr>
+                                <td colspan="2" style="vertical-align: top; text-align: left; font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; line-height: 1.5; font-size: 15px; padding: 0 0 6px; color: #333333"><a href="#none" style="text-decoration: none; display: block; color: #333333">\${t.COMPANY_NM} <span style="font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; line-height: 1.5; font-size: 15px; color: #fe450a; padding-left: 5px">\${t.INVITE_CLOSE_DT}</span></a></td>
+                              </tr>
+                              <tr>
+                                <td style="vertical-align: top; text-align: left; font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; line-height: 1.5; font-size: 15px; font-weight: bold; color: #333333"><a href="#none" style="text-decoration: none; display: block; color: #333333">\${t_JOB_TITLE}</a></td>
+                                <td style="vertical-align: top; text-align: right; line-height: 1.5; padding-top: 5px"><a href="#none" style="text-decoration: none; display: block; color: #333333"><img src="https://c.incru.it/2024/01/8701/arrow_3x.png" alt="우측 화살표" width="8" style="max-width: 100%; border: 0"></a></td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 0 3% 20px">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-radius: 20px">
+            <tbody>
+              <tr>
+                <td style="font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; padding: 1% 4.387%; background: #fff; border-radius: 8px">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse">
+                    <tbody>
+                      <tr>
+                        <td style="text-align: center; padding: 18px 0 13px">
+                          <span style="line-height: 1.3">
+                            <span style="font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; font-size: 16px; font-weight: bold; color: #333333">같은 공고를 스크랩한 사람들이 스크랩한 공고</span>
+                          </span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="left" style="border-top: 1px solid #efefef; padding: 18px 0">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; table-layout: fixed">
+                            <colgroup><col width="*"><col width="30px"></colgroup>
+                            <tbody>
+                              <tr>
+                                <td colspan="2" style="vertical-align: top; text-align: left; font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; line-height: 1.5; font-size: 15px; padding: 0 0 6px; color: #333333"><a href="#none" style="text-decoration: none; display: block; color: #333333">\${t.COMPANY_NM} <span style="font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; line-height: 1.5; font-size: 15px; color: #fe450a; padding-left: 5px">\${t.INVITE_CLOSE_DT}</span></a></td>
+                              </tr>
+                              <tr>
+                                <td style="vertical-align: top; text-align: left; font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; line-height: 1.5; font-size: 15px; font-weight: bold; color: #333333"><a href="#none" style="text-decoration: none; display: block; color: #333333">\${t_JOB_TITLE}</a></td>
+                                <td style="vertical-align: top; text-align: right; line-height: 1.5; padding-top: 5px"><a href="#none" style="text-decoration: none; display: block; color: #333333"><img src="https://c.incru.it/2024/01/8701/arrow_3x.png" alt="우측 화살표" width="8" style="max-width: 100%; border: 0"></a></td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="left" style="border-top: 1px solid #efefef; padding: 18px 0">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; table-layout: fixed">
+                            <colgroup><col width="*"><col width="30px"></colgroup>
+                            <tbody>
+                              <tr>
+                                <td colspan="2" style="vertical-align: top; text-align: left; font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; line-height: 1.5; font-size: 15px; padding: 0 0 6px; color: #333333"><a href="#none" style="text-decoration: none; display: block; color: #333333">\${t.COMPANY_NM} <span style="font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; line-height: 1.5; font-size: 15px; color: #fe450a; padding-left: 5px">\${t.INVITE_CLOSE_DT}</span></a></td>
+                              </tr>
+                              <tr>
+                                <td style="vertical-align: top; text-align: left; font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; line-height: 1.5; font-size: 15px; font-weight: bold; color: #333333"><a href="#none" style="text-decoration: none; display: block; color: #333333">\${t_JOB_TITLE}</a></td>
+                                <td style="vertical-align: top; text-align: right; line-height: 1.5; padding-top: 5px"><a href="#none" style="text-decoration: none; display: block; color: #333333"><img src="https://c.incru.it/2024/01/8701/arrow_3x.png" alt="우측 화살표" width="8" style="max-width: 100%; border: 0"></a></td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="left" style="border-top: 1px solid #efefef; padding: 18px 0">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; table-layout: fixed">
+                            <colgroup><col width="*"><col width="30px"></colgroup>
+                            <tbody>
+                              <tr>
+                                <td colspan="2" style="vertical-align: top; text-align: left; font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; line-height: 1.5; font-size: 15px; padding: 0 0 6px; color: #333333"><a href="#none" style="text-decoration: none; display: block; color: #333333">\${t.COMPANY_NM} <span style="font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; line-height: 1.5; font-size: 15px; color: #fe450a; padding-left: 5px">\${t.INVITE_CLOSE_DT}</span></a></td>
+                              </tr>
+                              <tr>
+                                <td style="vertical-align: top; text-align: left; font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; line-height: 1.5; font-size: 15px; font-weight: bold; color: #333333"><a href="#none" style="text-decoration: none; display: block; color: #333333">\${t_JOB_TITLE}</a></td>
+                                <td style="vertical-align: top; text-align: right; line-height: 1.5; padding-top: 5px"><a href="#none" style="text-decoration: none; display: block; color: #333333"><img src="https://c.incru.it/2024/01/8701/arrow_3x.png" alt="우측 화살표" width="8" style="max-width: 100%; border: 0"></a></td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td align="center" style="padding: 0 0 30px">
+          <table width="230" border="0" cellspacing="0" cellpadding="0">
+            <tbody>
+              <tr>
+                <td align="center"><a href="#none" target="_blank" style="display: block; text-decoration: none; width: 100%; border-radius: 25px; background-color: #ff460a; color: #fff; font-size: 18px; font-weight: bold; border: 0; padding: 13px 0; text-align: center; letter-spacing: -1px">더 많은 공고 보기</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>`
+  },
+  {
+    id: 'smartmatch_accept',
+    name: '스마트매칭 - 제안수락 인재 안내',
+    target: 'corporate',
+    description: '제안수락 인재 정보 테이블 + 이력서 상세보기 CTA + 스마트매칭 적용 결제 유도 CTA',
+    html: `<div style="padding: 10px 0 30px; text-align: center;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background: #eef4ff; border-radius: 12px">
+    <tbody>
+      <tr>
+        <td style="padding: 15px;">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tbody>
+              <tr>
+                <td style="font-family: Malgun Gothic, sans-serif;padding: 25px 25px 28px;background: #fff;border-radius: 8px">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse">
+                    <tbody>
+                      <tr>
+                        <th align="left" style="text-align: left; font-size: 20px; font-weight: bold; letter-spacing: -1px; color: #333; padding-bottom: 20px; line-height: 32px; word-break: keep-all"><b style="color:#2f80e5">스마트매칭 제안수락 인재</b>안내</th>
+                      </tr>
+                      <tr>
+                        <td align="left" style="text-align: left; font-size: 15px; line-height: 23px; color: #333333; letter-spacing: -1px; padding-bottom: 20px; word-break: keep-all">
+                          등록하신 채용 공고 조건으로 찾은 인재예요.
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="left">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: separate; table-layout: fixed; border-top: 1px solid #494949; word-break: keep-all">
+                            <colgroup>
+                              <col width="125px">
+                              <col width="*">
+                            </colgroup>
+                            <tbody>
+                              <tr>
+                                <td style="vertical-align: middle; text-align: left; background-color: #f2f2f2; padding: 15px 10px; font-size: 13px; font-weight: bold; color: #494949; line-height: 23px; letter-spacing: -1px; border-bottom: 1px solid #e1e1e1">공고명</td>
+                                <td style="vertical-align: middle; text-align: left; background-color: #fff; padding: 15px 10px; font-size: 13px; color: #4d5256; line-height: 23px; letter-spacing: -1px; border-bottom: 1px solid #e1e1e1; font-weight: bold;">\${공고명}</td>
+                              </tr>
+                              <tr>
+                                <td style="vertical-align: middle; text-align: left; background-color: #f2f2f2; padding: 15px 10px; font-size: 13px; font-weight: bold; color: #494949; line-height: 23px; letter-spacing: -1px; border-bottom: 1px solid #e1e1e1">이름</td>
+                                <td style="vertical-align: middle; text-align: left; background-color: #fff; padding: 15px 10px; font-size: 13px; color: #4d5256; line-height: 23px; letter-spacing: -1px; border-bottom: 1px solid #e1e1e1">\${마스킹된 제안수락 인재이름} (\${생년, 나이})</td>
+                              </tr>
+                              <tr>
+                                <td style="vertical-align: middle; text-align: left; background-color: #f2f2f2; padding: 15px 10px; font-size: 13px; font-weight: bold; color: #494949; line-height: 23px; letter-spacing: -1px; border-bottom: 1px solid #e1e1e1">지원부문</td>
+                                <td style="vertical-align: middle; text-align: left; background-color: #fff; padding: 15px 10px; font-size: 13px; color: #4d5256; line-height: 23px; letter-spacing: -1px; border-bottom: 1px solid #e1e1e1">\${지원부문}</td>
+                              </tr>
+                              <tr>
+                                <td style="vertical-align: middle; text-align: left; background-color: #f2f2f2; padding: 15px 10px; font-size: 13px; font-weight: bold; color: #494949; line-height: 23px; letter-spacing: -1px; border-bottom: 1px solid #e1e1e1">경력</td>
+                                <td style="vertical-align: middle; text-align: left; background-color: #fff; padding: 15px 10px; font-size: 13px; color: #4d5256; line-height: 23px; letter-spacing: -1px; border-bottom: 1px solid #e1e1e1">\${경력}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr><td align="center" height="22"></td></tr>
+                      <tr>
+                        <td align="center" style="padding: 22px 0 0">
+                          <div style="width: 100%; max-width: 220px; display: inline-block; vertical-align: middle">
+                            <div style="padding: 0; font-size: 18px; line-height: 24px; text-align: center">
+                              <p style="margin: 0; font-family: Malgun Gothic, sans-serif">
+                                <a href="" target="_blank" style="background: #2f80e5; border: 1px solid #2f80e5; text-decoration: none; text-align: center; padding: 13px 10px 14px; color: #ffffff; display: block; mso-padding-alt: 0; text-underline-color: #ffffff; border-radius: 30px">
+                                  <!--[if mso]><i style="letter-spacing: 10px; mso-font-width: -100%; mso-text-raise: 10pt">&nbsp;</i><![endif]-->
+                                  <span style="mso-text-raise: 10pt; font-weight: bold">이력서 상세보기</span>
+                                  <!--[if mso]><i style="letter-spacing: 10px; mso-font-width: -100%">&nbsp;</i><![endif]-->
+                                </a>
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td align="center" style="text-align: center; font-size: 18px; font-weight: 700; line-height: 24px; letter-spacing: -1px; color: #121212; word-break: keep-all; background: #eef4ff; padding:15px 15px 0 15px;">유사한 인재를 더 모집해보세요!</td>
+      </tr>
+      <tr>
+        <td align="center" style="text-align: center; font-size: 15px; font-weight: normal; line-height: 23px; letter-spacing: -1px; color: #494949; word-break: keep-all; background: #eef4ff; padding:3px 15px 0 15px;">지금 스마트매칭을 유료 결제하시면<br>제안수락 인재 전원 연락처 공개와 추가 모집이 진행됩니다.</td>
+      </tr>
+      <tr>
+        <td style="padding:15px 15px 35px 15px; text-align:center;">
+          <div style="width: 100%; max-width: 286px; display: inline-block; vertical-align: middle">
+            <div style="padding: 0; font-size: 18px; line-height: 27px; text-align: center">
+              <p style="margin: 0; font-family: Malgun Gothic, sans-serif">
+                <a href="" target="_blank" style="background: #2772d0; border: 1px solid #2772d0; text-decoration: none; text-align: center; padding: 10px 12px 11px; color: #ffffff; display: block; mso-padding-alt: 0; text-underline-color: #ffffff; border-radius: 30px">
+                  <!--[if mso]><i style="letter-spacing: 10px; mso-font-width: -100%; mso-text-raise: 10pt">&nbsp;</i><![endif]-->
+                  <span style="mso-text-raise: 10pt; font-weight: bold">스마트매칭 적용하기</span>
+                  <!--[if mso]><i style="letter-spacing: 10px; mso-font-width: -100%">&nbsp;</i><![endif]-->
+                </a>
+              </p>
+            </div>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>`
+  },
+  {
+    id: 'corp_recommend_3section',
+    name: '적합 인재 추천 - 3섹션',
+    target: 'corporate',
+    description: '${기업명} 맞춤 인재 추천 3섹션(공고적합/유사인재/동종업계) + 각 섹션 풀폭 CTA + 결제 유도',
+    html: `<div style="padding: 10px 0 30px; text-align: center;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background: #eef4ff; border-radius: 12px">
+    <tbody>
+      <tr>
+        <td style="padding:20px 10px;">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tbody>
+              <tr>
+                <td style="font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; padding: 0; background: #eef4ff;">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse;background: #eef4ff;">
+                    <tbody>
+                      <tr>
+                        <th align="center" style="text-align: center; font-size: 20px; font-weight: bold; line-height: 32px; letter-spacing: -1px; color: #333333; word-break: keep-all; background: #eef4ff;padding:0 0 8px 0;"><span style="color: #2f80e5;vertical-align:top;">\${기업명}</span>에 적합한 인재를 모아봤어요!</th>
+                      </tr>
+                      <tr>
+                        <td align="center" style="text-align: center; font-size: 15px; font-weight: normal; line-height: 23px; letter-spacing: -1px; color: #333333; word-break: keep-all; background: #eef4ff;padding:0 0 5px 0;">빠른 제안이 채용 성공율을 높입니다.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+
+      <!-- 섹션 1: 최근 등록 공고 적합 인재 -->
+      <tr>
+        <td style="padding: 0 15px 15px">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tbody>
+              <tr>
+                <td style="font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; padding: 25px; background:#fff; border-radius:8px 8px 0 0;">
+                  <div style="margin:0;">
+                    <p style="margin:0 0 4px 0;font-size:16px;font-weight:700;line-height:24px;color:#000000;"><img src="https://c.incru.it/2025/03/mail_10159/icon_18_search.png" width="16" style="vertical-align:-1px;margin-right:5px;" alt="">최근 등록하신 공고에 맞는 인재에요</p>
+                    <span style="font-size:14px;line-height:23px;font-weight:400;color:#494949; word-break:keep-all;">가장 최근에 등록한 채용공고를 기반으로 적합도가 가장 높은 인재입니다. </span>
+                  </div>
+                  <div style="margin-top:16px;padding:20px 20px;background: #EEF4FF;border:1px solid #C8DEF9;border-radius:8px;">
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse">
+                      <tbody>
+                        <tr>
+                          <td><a href="https://resumedb.incruit.com/mng/oneclick.asp&amp;utm_source=incruit&amp;utm_medium=email&amp;utm_campaign=0350&amp;utm_content=setting" target="_blank" style="display:inline-block;color:#000;font-size: 15px;font-weight:700;letter-spacing:-1px;text-decoration:none;"><img src="https://c.incru.it/2025/03/mail_10159/icon_18_pin.png" width="16" style="vertical-align:baseline;" alt=""> 공고제목 공고제목 공고제목 공고제목</a></td>
+                          <td align="right"><span style="font-size: 12px;letter-spacing: -1px;line-height: 24px;color: #000;white-space:nowrap;">~ 2026.04.21 마감</span></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse">
+                      <tbody>
+                        <tr>
+                          <td style="padding-top: 10px;text-align:left;vertical-align:top;line-height: 23px;"><a href="https://resumedb.incruit.com/info/resume.asp?rsm={이력서번호}&amp;utm_source=incruit&amp;utm_medium=email&amp;utm_campaign=0350&amp;utm_content=reseme1" target="_blank" style="font-size: 14px;font-weight: 400;letter-spacing: -1px;color: #000;line-height: 23px;text-decoration:none;word-break:keep-all;">공고명 영역입니다. 공백포함 최대 60자 입력될 수 있습니다.<br>공고명 영역입니다. 공백포함 최대 60자 입력될 수 있습니다.</a></td>
+                        </tr>
+                        <tr>
+                          <td valign="middle" style="padding:15px 0 0 0"><a href="https://recruiter.incruit.com/jobpost/jobpostmng.asp" target="_blank" style="text-align: center;display: inline-block;font-size: 14px;color: #fff;letter-spacing: -1px;background: #2F80E5;padding: 5px 10px 6px 10px;line-height: 21px;border-radius: 4px;outline: 0;cursor: pointer;text-decoration: none;">공고관리 바로가기</a></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div style="margin-top:20px;padding:20px 20px; background:#f9f9f9;border-radius:6px;">
+                    <div style="display:flex;align-items: center;justify-content: space-between;flex-wrap: wrap;">
+                      <div style="display:inline-block;flex:1 1 auto;">
+                        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse">
+                          <tbody>
+                            <tr><td style="text-align:left;vertical-align:top;line-height: 23px;"><a href="https://resumedb.incruit.com/info/resume.asp?rsm={이력서번호}" target="_blank" style="font-size: 14px;font-weight: 400;letter-spacing: -1px;color:#747474;text-decoration:none; word-break:keep-all;"><strong style="display:inline-block;margin-right:8px;font-size:16px;font-weight:700;color:#4d5256;">김OO</strong>(여, 30대 후반) <em style="font-style: normal; color:#c5c5c5;">l</em> 경력 15년 3개월</a></td></tr>
+                            <tr><td style="padding-top:10px;text-align:left;line-height: 23px;"><a href="https://resumedb.incruit.com/info/resume.asp?rsm={이력서번호}" target="_blank" style="font-size: 14px;color:#121212; text-decoration:none; word-break:keep-all;"><img src="https://c.incru.it/2025/03/mail_10159/icon_16_bag.png" width="14" style="vertical-align:-1px;margin-right:5px;" alt="경력">(주)네이버, 백엔드 개발 (3년 3개월, 재직중) 외 2건</a></td></tr>
+                            <tr><td style="padding-top:5px;text-align:left;line-height: 23px;"><a href="https://resumedb.incruit.com/info/resume.asp?rsm={이력서번호}" target="_blank" style="font-size: 14px;color:#121212; text-decoration:none; word-break:keep-all;"><img src="https://c.incru.it/2025/03/mail_10159/icon_16_grau.png" width="14" style="vertical-align:-1px;margin-right:5px;" alt="학력">서울대학교 컴퓨터공학과 졸업</a></td></tr>
+                            <tr><td style="padding: 5px 0">
+                              <div style="display:flex;gap:0 4px;flex-wrap:wrap;">
+                                <div style="display:inline-block;padding: 5px 1px"><a href="#none" style="display:inline-block;font-size:12px;letter-spacing:-1px;background:#EEF4FF;border:1px solid #C8DEF9;color:#2F80E5;padding:4px 8px;border-radius:100px;text-decoration:none;">#정보처리기사</a></div>
+                                <div style="display:inline-block;padding: 5px 1px"><a href="#none" style="display:inline-block;font-size:12px;letter-spacing:-1px;background:#EEF4FF;border:1px solid #C8DEF9;color:#2F80E5;padding:4px 8px;border-radius:100px;text-decoration:none;">#백앤드</a></div>
+                                <div style="display:inline-block;padding: 5px 1px"><a href="#none" style="display:inline-block;font-size:12px;letter-spacing:-1px;background:#EEF4FF;border:1px solid #C8DEF9;color:#2F80E5;padding:4px 8px;border-radius:100px;text-decoration:none;">#블록체인</a></div>
+                                <div style="display:inline-block;padding: 5px 1px"><a href="#none" style="display:inline-block;font-size:12px;letter-spacing:-1px;background:#EEF4FF;border:1px solid #C8DEF9;color:#2F80E5;padding:4px 8px;border-radius:100px;text-decoration:none;">#인공지능</a></div>
+                              </div>
+                            </td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div style="display:inline-block;flex:0 0 auto;padding-top:15px;">
+                        <a href="#" style="display:inline-block;font-size:14px;background:#fff;border:1px solid #2F80E5;color:#2F80E5;padding:9px 23px;border-radius:4px;text-decoration:none;white-space:nowrap;">이력서 보기</a>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="display:block;">
+            <a href="#" style="text-align:center;display:block;font-weight:700;font-size:16px;letter-spacing:-1px;background:#2F80E5;color:#fff;padding:20px 10px;border-radius:0 0 8px 8px;text-decoration:none;">최근 등록 공고에 적합한 인재 전체보기 <img src="https://c.incru.it/newjobpost/2026/mail/03/arrow.png" style="vertical-align:baseline;margin-left:2px;" alt=""></a>
+          </div>
+        </td>
+      </tr>
+
+      <!-- 섹션 2: 최근 찾아보신 인재와 유사한 인재 -->
+      <tr>
+        <td style="padding: 0 15px 15px">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tbody>
+              <tr>
+                <td style="font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; padding: 25px; background:#fff; border-radius:8px 8px 0 0;">
+                  <div style="margin:0;">
+                    <p style="margin:0 0 4px 0;font-size:16px;font-weight:700;line-height:24px;color:#000000;"><img src="https://c.incru.it/emoji/emoji-growth-watch.png?250616" width="16" style="vertical-align:-1px;margin-right:5px;" alt="">최근 찾아보신 인재와 유사한 인재예요</p>
+                    <span style="font-size:14px;line-height:23px;font-weight:400;color:#494949; word-break:keep-all;">최근 발송한 제안, 스크랩, 검색 등 활동 기반으로 매칭도가 가장 높은 인재입니다.</span>
+                  </div>
+                  <div style="margin-top:20px;padding:20px 20px; background:#f9f9f9;border-radius:6px;">
+                    <div style="display:flex;align-items: center;justify-content: space-between;flex-wrap: wrap;">
+                      <div style="display:inline-block;flex:1 1 auto;">
+                        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse">
+                          <tbody>
+                            <tr><td style="text-align:left;vertical-align:top;line-height: 23px;"><a href="https://resumedb.incruit.com/info/resume.asp?rsm={이력서번호}" target="_blank" style="font-size: 14px;color:#747474;text-decoration:none; word-break:keep-all;"><strong style="display:inline-block;margin-right:8px;font-size:16px;font-weight:700;color:#4d5256;">김OO</strong>(여, 30대 후반) <em style="font-style: normal; color:#c5c5c5;">l</em> 경력 15년 3개월</a></td></tr>
+                            <tr><td style="padding-top:10px;text-align:left;line-height: 23px;"><a href="https://resumedb.incruit.com/info/resume.asp?rsm={이력서번호}" target="_blank" style="font-size: 14px;color:#121212; text-decoration:none; word-break:keep-all;"><img src="https://c.incru.it/2025/03/mail_10159/icon_16_bag.png" width="14" style="vertical-align:-1px;margin-right:5px;" alt="">(주)네이버, 백엔드 개발 (3년 3개월, 재직중) 외 2건</a></td></tr>
+                            <tr><td style="padding-top:5px;text-align:left;line-height: 23px;"><a href="https://resumedb.incruit.com/info/resume.asp?rsm={이력서번호}" target="_blank" style="font-size: 14px;color:#121212; text-decoration:none; word-break:keep-all;"><img src="https://c.incru.it/2025/03/mail_10159/icon_16_grau.png" width="14" style="vertical-align:-1px;margin-right:5px;" alt="">서울대학교 컴퓨터공학과 졸업</a></td></tr>
+                            <tr><td style="padding: 5px 0">
+                              <div style="display:flex;gap:0 4px;flex-wrap:wrap;">
+                                <div style="display:inline-block;padding: 5px 1px"><a href="#none" style="display:inline-block;font-size:12px;background:#EEF4FF;border:1px solid #C8DEF9;color:#2F80E5;padding:4px 8px;border-radius:100px;text-decoration:none;">#정보처리기사</a></div>
+                                <div style="display:inline-block;padding: 5px 1px"><a href="#none" style="display:inline-block;font-size:12px;background:#EEF4FF;border:1px solid #C8DEF9;color:#2F80E5;padding:4px 8px;border-radius:100px;text-decoration:none;">#백앤드</a></div>
+                                <div style="display:inline-block;padding: 5px 1px"><a href="#none" style="display:inline-block;font-size:12px;background:#EEF4FF;border:1px solid #C8DEF9;color:#2F80E5;padding:4px 8px;border-radius:100px;text-decoration:none;">#블록체인</a></div>
+                                <div style="display:inline-block;padding: 5px 1px"><a href="#none" style="display:inline-block;font-size:12px;background:#EEF4FF;border:1px solid #C8DEF9;color:#2F80E5;padding:4px 8px;border-radius:100px;text-decoration:none;">#인공지능</a></div>
+                              </div>
+                            </td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div style="display:inline-block;flex:0 0 auto;padding-top:15px;">
+                        <a href="#" style="display:inline-block;font-size:14px;background:#fff;border:1px solid #2F80E5;color:#2F80E5;padding:9px 23px;border-radius:4px;text-decoration:none;white-space:nowrap;">이력서 보기</a>
+                      </div>
+                    </div>
+                  </div>
+                  <div style="margin-top:20px;padding:20px 20px; background:#f9f9f9;border-radius:6px;">
+                    <div style="display:flex;align-items: center;justify-content: space-between;flex-wrap: wrap;">
+                      <div style="display:inline-block;flex:1 1 auto;">
+                        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse">
+                          <tbody>
+                            <tr><td style="text-align:left;vertical-align:top;line-height: 23px;"><a href="https://resumedb.incruit.com/info/resume.asp?rsm={이력서번호}" target="_blank" style="font-size: 14px;color:#747474;text-decoration:none; word-break:keep-all;"><strong style="display:inline-block;margin-right:8px;font-size:16px;font-weight:700;color:#4d5256;">김OO</strong>(여, 30대 후반) <em style="font-style: normal; color:#c5c5c5;">l</em> 경력 15년 3개월</a></td></tr>
+                            <tr><td style="padding-top:10px;text-align:left;line-height: 23px;"><a href="https://resumedb.incruit.com/info/resume.asp?rsm={이력서번호}" target="_blank" style="font-size: 14px;color:#121212; text-decoration:none; word-break:keep-all;"><img src="https://c.incru.it/2025/03/mail_10159/icon_16_bag.png" width="14" style="vertical-align:-1px;margin-right:5px;" alt="">(주)네이버, 백엔드 개발 (3년 3개월, 재직중) 외 2건</a></td></tr>
+                            <tr><td style="padding-top:5px;text-align:left;line-height: 23px;"><a href="https://resumedb.incruit.com/info/resume.asp?rsm={이력서번호}" target="_blank" style="font-size: 14px;color:#121212; text-decoration:none; word-break:keep-all;"><img src="https://c.incru.it/2025/03/mail_10159/icon_16_grau.png" width="14" style="vertical-align:-1px;margin-right:5px;" alt="">서울대학교 컴퓨터공학과 졸업</a></td></tr>
+                            <tr><td style="padding: 5px 0">
+                              <div style="display:flex;gap:0 4px;flex-wrap:wrap;">
+                                <div style="display:inline-block;padding: 5px 1px"><a href="#none" style="display:inline-block;font-size:12px;background:#EEF4FF;border:1px solid #C8DEF9;color:#2F80E5;padding:4px 8px;border-radius:100px;text-decoration:none;">#정보처리기사</a></div>
+                                <div style="display:inline-block;padding: 5px 1px"><a href="#none" style="display:inline-block;font-size:12px;background:#EEF4FF;border:1px solid #C8DEF9;color:#2F80E5;padding:4px 8px;border-radius:100px;text-decoration:none;">#백앤드</a></div>
+                                <div style="display:inline-block;padding: 5px 1px"><a href="#none" style="display:inline-block;font-size:12px;background:#EEF4FF;border:1px solid #C8DEF9;color:#2F80E5;padding:4px 8px;border-radius:100px;text-decoration:none;">#블록체인</a></div>
+                                <div style="display:inline-block;padding: 5px 1px"><a href="#none" style="display:inline-block;font-size:12px;background:#EEF4FF;border:1px solid #C8DEF9;color:#2F80E5;padding:4px 8px;border-radius:100px;text-decoration:none;">#인공지능</a></div>
+                              </div>
+                            </td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div style="display:inline-block;flex:0 0 auto;padding-top:15px;">
+                        <a href="#" style="display:inline-block;font-size:14px;background:#fff;border:1px solid #2F80E5;color:#2F80E5;padding:9px 23px;border-radius:4px;text-decoration:none;white-space:nowrap;">이력서 보기</a>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="display:block;">
+            <a href="#" style="text-align:center;display:block;font-weight:700;font-size:16px;letter-spacing:-1px;background:#2F80E5;color:#fff;padding:20px 10px;border-radius:0 0 8px 8px;text-decoration:none;">최근 찾으신 유사한 인재 전체보기 <img src="https://c.incru.it/newjobpost/2026/mail/03/arrow.png" style="vertical-align:baseline;margin-left:2px;" alt=""></a>
+          </div>
+        </td>
+      </tr>
+
+      <!-- 섹션 3: 동종 업계 인사담당자가 주목하는 인재 -->
+      <tr>
+        <td style="padding: 0 15px 15px">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tbody>
+              <tr>
+                <td style="font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; padding: 25px; background:#fff; border-radius:8px 8px 0 0;">
+                  <div style="margin:0;">
+                    <p style="margin:0 0 4px 0;font-size:16px;font-weight:700;line-height:24px;color:#000000;"><img src="https://c.incru.it/emoji/emoji-trend-eye.png?250616" width="16" style="vertical-align:-1px;margin-right:5px;" alt="">동종 업계 인사담당자가 주목하는 인재예요</p>
+                    <span style="font-size:14px;line-height:23px;font-weight:400;color:#494949; word-break:keep-all;">동종 업계에서 가장 많이 제안 받은 인재입니다.</span>
+                  </div>
+                  <div style="margin-top:20px;padding:20px 20px; background:#f9f9f9;border-radius:6px;">
+                    <div style="display:flex;align-items: center;justify-content: space-between;flex-wrap: wrap;">
+                      <div style="display:inline-block;flex:1 1 auto;">
+                        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse">
+                          <tbody>
+                            <tr><td style="text-align:left;vertical-align:top;line-height: 23px;"><a href="https://resumedb.incruit.com/info/resume.asp?rsm={이력서번호}" target="_blank" style="font-size: 14px;color:#747474;text-decoration:none; word-break:keep-all;"><strong style="display:inline-block;margin-right:8px;font-size:16px;font-weight:700;color:#4d5256;">김OO</strong>(여, 30대 후반) <em style="font-style: normal; color:#c5c5c5;">l</em> 경력 15년 3개월</a></td></tr>
+                            <tr><td style="padding-top:10px;text-align:left;line-height: 23px;"><a href="https://resumedb.incruit.com/info/resume.asp?rsm={이력서번호}" target="_blank" style="font-size: 14px;color:#121212; text-decoration:none; word-break:keep-all;"><img src="https://c.incru.it/2025/03/mail_10159/icon_16_bag.png" width="14" style="vertical-align:-1px;margin-right:5px;" alt="">(주)네이버, 백엔드 개발 (3년 3개월, 재직중) 외 2건</a></td></tr>
+                            <tr><td style="padding-top:5px;text-align:left;line-height: 23px;"><a href="https://resumedb.incruit.com/info/resume.asp?rsm={이력서번호}" target="_blank" style="font-size: 14px;color:#121212; text-decoration:none; word-break:keep-all;"><img src="https://c.incru.it/2025/03/mail_10159/icon_16_grau.png" width="14" style="vertical-align:-1px;margin-right:5px;" alt="">서울대학교 컴퓨터공학과 졸업</a></td></tr>
+                            <tr><td style="padding: 5px 0">
+                              <div style="display:flex;gap:0 4px;flex-wrap:wrap;">
+                                <div style="display:inline-block;padding: 5px 1px"><a href="#none" style="display:inline-block;font-size:12px;background:#EEF4FF;border:1px solid #C8DEF9;color:#2F80E5;padding:4px 8px;border-radius:100px;text-decoration:none;">#정보처리기사</a></div>
+                                <div style="display:inline-block;padding: 5px 1px"><a href="#none" style="display:inline-block;font-size:12px;background:#EEF4FF;border:1px solid #C8DEF9;color:#2F80E5;padding:4px 8px;border-radius:100px;text-decoration:none;">#백앤드</a></div>
+                                <div style="display:inline-block;padding: 5px 1px"><a href="#none" style="display:inline-block;font-size:12px;background:#EEF4FF;border:1px solid #C8DEF9;color:#2F80E5;padding:4px 8px;border-radius:100px;text-decoration:none;">#블록체인</a></div>
+                                <div style="display:inline-block;padding: 5px 1px"><a href="#none" style="display:inline-block;font-size:12px;background:#EEF4FF;border:1px solid #C8DEF9;color:#2F80E5;padding:4px 8px;border-radius:100px;text-decoration:none;">#인공지능</a></div>
+                              </div>
+                            </td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div style="display:inline-block;flex:0 0 auto;padding-top:15px;">
+                        <a href="#" style="display:inline-block;font-size:14px;background:#fff;border:1px solid #2F80E5;color:#2F80E5;padding:9px 23px;border-radius:4px;text-decoration:none;white-space:nowrap;">이력서 보기</a>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="display:block;">
+            <a href="#" style="text-align:center;display:block;font-weight:700;font-size:16px;letter-spacing:-1px;background:#2F80E5;color:#fff;padding:20px 10px;border-radius:0 0 8px 8px;text-decoration:none;">동종업계 주목 인재 전체보기 <img src="https://c.incru.it/newjobpost/2026/mail/03/arrow.png" style="vertical-align:baseline;margin-left:2px;" alt=""></a>
+          </div>
+        </td>
+      </tr>
+
+      <!-- 하단 광고 -->
+      <tr><td align="center" style="text-align: center; font-size: 18px; font-weight: 700; line-height: 24px; letter-spacing: -1px; color: #121212; word-break: keep-all; background: #eef4ff;padding:25px 15px 0 15px;">망설이다 늦으면 놓쳐요!</td></tr>
+      <tr><td align="center" style="text-align: center; font-size: 15px; font-weight: normal; line-height: 23px; letter-spacing: -1px; color: #494949; word-break: keep-all; background: #eef4ff;padding:3px 15px 0 15px;">\${기업명}에 적합한 인재를 지금 확인하세요!</td></tr>
+      <tr>
+        <td style="padding:15px 15px 15px 15px;text-align:center;">
+          <div style="width: 100%; max-width: 244px; display: inline-block; vertical-align: middle">
+            <p style="margin: 0;">
+              <a href="" target="_blank" style="background: #2772d0; border: 1px solid #2772d0; text-decoration: none; text-align: center; padding: 10px 10px 11px; color: #ffffff; display: block; border-radius: 30px;font-size: 18px;font-weight: bold;line-height: 27px;">추천인재 더보기</a>
+            </p>
+          </div>
+        </td>
+      </tr>
+      <tr><td align="center" style="text-align: center; font-size: 13px; font-weight: normal; line-height: 23px; letter-spacing: -1px; color: #494949; word-break: keep-all; background: #eef4ff;padding:0 15px 20px 15px;">※ 추천인재 정보는 \${YYYY.MM.DD} 기준 적합도가 가장 높은 인재입니다.</td></tr>
+    </tbody>
+  </table>
+</div>`
+  },
+  {
+    id: 'notice_personal_privacy',
+    name: '개인 공지 - 개인정보 처리방침 개정',
+    target: 'personal',
+    category: 'notice',
+    noticeMode: 'basics',
+    description: '[공지사항 형태 전용] 개인용 noticeTemp.basics 안에 들어가는 본문. 형태=공지사항 선택 후 적용',
+    html: `<p class="title">인크루트 <span class="point">개인정보 처리방침 개정</span> 안내</p>
+<div class="nt_textArea">
+  안녕하세요, 인크루트입니다.<br>
+  <br>
+  항상 인크루트를 이용해 주시는 회원 여러분들께 진심으로 감사드립니다.<br>
+  개인정보 처리방침이 아래와 같이 개정될 예정임을 사전 안내드립니다.<br>
+  <br>
+  자세한 정보는 하단에 기재해드린 내용을 참고해주시기 바랍니다.<br>
+  <br>
+  <strong>1. 개정 항목</strong>
+  <div class="tabcont" id="privacy" style="padding: 8px 0px; font-family: 돋움; font-size: 16px; color: #464646; text-align: left; line-height: 16px; display: block; margin: 0px auto">
+    <table border="0" cellpadding="0" cellspacing="0" class="table_temp" width="100%">
+      <colgroup>
+        <col style="width: 46%">
+        <col style="width: 54%">
+      </colgroup>
+      <thead>
+        <tr>
+          <th style="border-bottom: solid 1px #dfdfdf" class="none">목차</th>
+          <th style="border-bottom: solid 1px #dfdfdf" class="none">개정내역</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="vertical-align: middle; text-align: left" class="none"><p>01. 개인정보 수집 및 이용 현황</p></td>
+          <td class="none">유료서비스 이용의 수집방법 추가 : 공기업 모의고사</td>
+        </tr>
+        <tr>
+          <td style="vertical-align: middle; text-align: left" class="none"><p>03. 개인정보 제 3자 제공에 관한 사항</p></td>
+          <td class="none">개인정보 제 3자 제공받는자 추가</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <br>
+  <p style="display: flex"><em style="padding-right: 4px">-</em> <em>개정 시행일 : 2026년 03월 23일</em></p>
+  <br>
+  <strong>3. 이의 제기 및 관련 문의</strong><br>
+  <p style="display: flex"><em style="padding-right: 4px">-</em> <em>개정된 개인정보 처리방침에 동의하지 않는 경우 회원탈퇴를 요청하실 수 있습니다.</em></p>
+  <p style="display: flex"><em style="padding-right: 4px">-</em> <em>시행일까지 별도의 거부 의사를 표시하지 않는 경우, 개정에 동의한 것으로 간주합니다.</em></p>
+  <p style="display: flex"><em style="padding-right: 4px">-</em> <em>개정과 관련된 문의가 있으신 경우 <a href="https://help.incruit.com/qna/qnawrite.asp?bno=c&amp;mno=11&amp;rno=00" target="_blank" class="links">고객만족센터(1588-6577)</a>를 통해 답변드리겠습니다.</em></p>
+  <br>앞으로도 더 나은 서비스 제공을 위해 항상 최선을 다하겠습니다.<br>
+  감사합니다.<br>
+</div>`
+  },
+  {
+    id: 'notice_corporate_privacy',
+    name: '기업 공지 - 개인정보 처리방침 개정',
+    target: 'corporate',
+    category: 'notice',
+    noticeMode: 'beforehand',
+    description: '[공지사항 형태 전용] 기업용 noticeTemp.beforehand 안에 들어가는 본문. 형태=공지사항 선택 후 적용',
+    html: `<p class="title">인크루트 <span class="point">개인정보 처리방침 개정</span> 안내</p>
+<div class="nt_textArea">
+  안녕하세요, 인크루트입니다.<br>
+  <br>
+  항상 인크루트를 이용해 주시는 기업 회원 여러분들께 진심으로 감사드립니다.<br>
+  개인정보 처리방침이 아래와 같이 개정될 예정임을 사전 안내드립니다.<br>
+  <br>
+  자세한 정보는 하단에 기재해드린 내용을 참고해주시기 바랍니다.<br>
+  <br>
+  <strong>1. 개정 항목</strong>
+  <div class="tabcont" id="privacy" style="padding: 8px 0px; font-family: 돋움; font-size: 16px; color: #464646; text-align: left; line-height: 16px; display: block; margin: 0px auto">
+    <table border="0" cellpadding="0" cellspacing="0" class="table_temp" width="100%">
+      <colgroup>
+        <col style="width: 46%">
+        <col style="width: 54%">
+      </colgroup>
+      <thead>
+        <tr>
+          <th style="border-bottom: solid 1px #dfdfdf" class="none">목차</th>
+          <th style="border-bottom: solid 1px #dfdfdf" class="none">개정내역</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="vertical-align: middle; text-align: left" class="none"><p>01. 개인정보 수집 및 이용 현황</p></td>
+          <td class="none">유료서비스 이용 항목 변경</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <br>
+  <p style="display: flex"><em style="padding-right: 4px">-</em> <em>개정 시행일 : 2026년 03월 23일</em></p>
+  <br>
+  <strong>2. 이의 제기 및 관련 문의</strong><br>
+  <p style="display: flex"><em style="padding-right: 4px">-</em> <em>개정된 개인정보 처리방침에 동의하지 않는 경우 회원탈퇴를 요청하실 수 있습니다.</em></p>
+  <p style="display: flex"><em style="padding-right: 4px">-</em> <em>시행일까지 별도의 거부 의사를 표시하지 않는 경우, 개정에 동의한 것으로 간주합니다.</em></p>
+  <p style="display: flex"><em style="padding-right: 4px">-</em> <em>개정과 관련된 문의가 있으신 경우 <a href="https://help.incruit.com/qna/qnawrite.asp?bno=c&amp;mno=11&amp;rno=00" target="_blank" class="links">고객만족센터(1588-6577)</a>를 통해 답변드리겠습니다.</em></p>
+  <br>앞으로도 더 나은 서비스 제공을 위해 항상 최선을 다하겠습니다.<br>
+  감사합니다.<br>
+</div>`
+  },
+  {
+    id: 'notice_image_pubexam',
+    name: '공지 이미지형 - 공기업 모의고사 OPEN',
+    target: 'personal',
+    category: 'notice',
+    description: '[공지 이미지형 940px 전용] 이미지 + a태그 조합. 형태=공지 이미지형(940px) 선택 후 적용',
+    html: `<table border="0" cellpadding="0" cellspacing="0" width="100%">
+<tbody>
+  <tr>
+    <td><img src="https://c.incru.it/newjobpost/2026/notice/03/11574/img1.png" style="display:block; border:0; vertical-align:top;" alt="인크루트 X 공기잡고 취업. 공기업 공공기관 취업대비 인크루트 공기업 모의고사 OPEN! 합격 모의고사. 공기업 취업의 당락을 가르는 것은 단순한 공부량이 아니라 실전에서의 완성도입니다. 인크루트 공기업 모의고사로 합격에 가까운 준비를 시작하세요!"></td>
+  </tr>
+  <tr>
+    <td><img src="https://c.incru.it/newjobpost/2026/notice/03/11574/img2-2.png" style="display:block; border:0; vertical-align:top;" alt="인크루트가 공기업 수험생들에게 검증된 플랫폼과 제휴하여 실제 시험과 가장 유사한 공기업 모의고사 서비스를 제공합니다."></td>
+  </tr>
+  <tr>
+    <td>
+      <table border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tbody>
+          <tr>
+            <td width="50%"><a href="https://people.incruit.com/store/pubexam/main.asp?pty=2" target="_blank"><img src="https://c.incru.it/newjobpost/2026/notice/03/11574/btn1.png" style="display:block; border:0; vertical-align:top;" alt="기업별 전공필기에 특화된 실속상품! 스마트 패키지"></a></td>
+            <td width="50%"><a href="https://people.incruit.com/store/pubexam/main.asp?pty=3" target="_blank"><img src="https://c.incru.it/newjobpost/2026/notice/03/11574/btn2.png" style="display:block; border:0; vertical-align:top;" alt="기출문제+실전문제+NCS직업기초능력검사까지 핵심만 콕콕 집은 상품! 족집게 패키지"></a></td>
+          </tr>
+          <tr>
+            <td width="50%"><a href="https://people.incruit.com/store/pubexam/main.asp?pty=1" target="_blank"><img src="https://c.incru.it/newjobpost/2026/notice/03/11574/btn3.png" style="display:block; border:0; vertical-align:top;" alt="3개월/6개월/12개월 기간별로 시험대비할수 있는 상품! 프리패스"></a></td>
+            <td width="50%"><a href="https://people.incruit.com/store/pubexam/main.asp?pty=6" target="_blank"><img src="https://c.incru.it/newjobpost/2026/notice/03/11574/btn4.png" style="display:block; border:0; vertical-align:top;" alt="전공별 전문가들의 기출문제 해설강의 상품! 기출해설강의"></a></td>
+          </tr>
+        </tbody>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td><img src="https://c.incru.it/newjobpost/2026/notice/03/11574/bimg1.png" style="display:block; border:0; vertical-align:top;" alt="더 많은 공기업 모의고사 보러가기"></td>
+  </tr>
+  <tr>
+    <td><a href="https://people.incruit.com/store/pubexam/main.asp" target="_blank"><img src="https://c.incru.it/newjobpost/2026/notice/03/11574/b-btn.png" style="display:block; border:0; vertical-align:top;" alt="공기업 모의고사 바로가기"></a></td>
+  </tr>
+  <tr>
+    <td><img src="https://c.incru.it/newjobpost/2026/notice/03/11574/bimg2.png" style="display:block; border:0; vertical-align:top;" alt="공기업 모의고사 서비스는 PC환경에 최적화 되어 있습니다.(모바일 서비스 준비중)"></td>
+  </tr>
+</tbody>
+</table>`
+  },
+  {
+    id: 'notice_personal_jobcode',
+    name: '개인 공지 - 직종 변경 안내 (타입3, 기본형 + 표)',
+    target: 'personal',
+    category: 'notice',
+    noticeMode: 'basics',
+    description: '[공지사항 형태 전용 / 타입3] 타이틀 + 본문 + 대형 분류표 3개(1차 13건/2차 68건/3차 155건). 개인용 basics',
+    html: `<p class="title">인크루트 <span class="point">직종 변경</span> 안내</p>
+<div class="notice_cnt">
+<div class="nt_textArea">
+안녕하세요, 인크루트입니다.<br>
+<br>항상 인크루트를 이용해 주시는 회원 여러분께 진심으로 감사드립니다.<br>
+최신 채용 트렌드에 맞춰 직종 카테고리 명칭을 정비하고, 새로운 직종이 추가될 예정으로 사전 안내드립니다.<br>
+자세한 내용은 아래를 참고해 주시기 바랍니다.
+<br><br>
+<strong>※ 이용 전 꼭 확인해 주세요</strong>
+<div class="tabcont" style="padding: 8px 0px; font-family: 돋움; font-size: 16px; color: #464646; text-align: left; line-height: 20px; display: block; margin: 0px auto">
+<p style="display:flex"><em style="padding-right:4px">-</em><em>이번 개편은 <strong>직종 명칭 변경</strong>으로, 직종 코드 번호는 그대로 유지됩니다.</em></p>
+<p style="display:flex"><em style="padding-right:4px">-</em><em>기존에 등록하신 <strong>이력서 희망 직종</strong>, <strong>마이핏 조건</strong>, <strong>채용공고 직종 항목</strong>은 동일하게 유지되나, 표시되는 이름이 달라질 수 있습니다.</em></p>
+<p style="display:flex"><em style="padding-right:4px">-</em><em>변경 내용을 확인하신 후 필요 시 직접 수정해 주시기 바랍니다.</em></p>
+</div>
+<br>
+<strong>1. 변경 내용</strong>
+<div class="tabcont" id="jobcode" style="padding: 8px 0px; font-family: 돋움; font-size: 16px; color: #464646; text-align: left; line-height: 16px; display: block; margin: 0px auto">
+<p style="margin: 14px 0 6px; font-weight:bold; color:#464646">① 1차 분류 명칭 변경 - 13건</p>
+<table border="0" cellpadding="0" cellspacing="0" class="table_temp" width="100%">
+<colgroup><col style="width:50%"><col style="width:50%"></colgroup>
+<thead><tr><th style="border-bottom:solid 1px #dfdfdf; border-right:solid 1px #dfdfdf">변경 전</th><th class="none" style="border-bottom:solid 1px #dfdfdf">변경 후</th></tr></thead>
+<tbody>
+<tr><td style="border-right:solid 1px #dfdfdf">경영·인사·총무·사무</td><td class="none"><em style="color:#2f80e5">경영·사무</em></td></tr>
+<tr><td style="border-right:solid 1px #dfdfdf">재무·회계·경리</td><td class="none"><em style="color:#2f80e5">회계·세무·재무</em></td></tr>
+<tr><td style="border-right:solid 1px #dfdfdf">마케팅·광고·홍보·조사</td><td class="none"><em style="color:#2f80e5">마케팅·광고·MD</em></td></tr>
+<tr><td style="border-right:solid 1px #dfdfdf">교육·교사·강사·교직원</td><td class="none"><em style="color:#2f80e5">교육</em></td></tr>
+<tr><td style="border-right:solid 1px #dfdfdf">건설·건축·토목·환경</td><td class="none"><em style="color:#2f80e5">건설·부동산</em></td></tr>
+<tr><td style="border-right:solid 1px #dfdfdf">유통·물류·운송·운전</td><td class="none"><em style="color:#2f80e5">유통·물류</em></td></tr>
+<tr><td style="border-right:solid 1px #dfdfdf">전자·기계·기술·화학·연구개발</td><td class="none"><em style="color:#2f80e5">전자·기계·R&amp;D</em></td></tr>
+<tr><td style="border-right:solid 1px #dfdfdf">전문직·법률·인문사회·임원</td><td class="none"><em style="color:#2f80e5">전문직·법률</em></td></tr>
+<tr><td style="border-right:solid 1px #dfdfdf">서비스·여행·숙박·음식·미용·보안</td><td class="none"><em style="color:#2f80e5">서비스</em></td></tr>
+<tr><td style="border-right:solid 1px #dfdfdf">인터넷·IT·통신·모바일·게임</td><td class="none"><em style="color:#2f80e5">IT개발·데이터</em></td></tr>
+<tr><td style="border-right:solid 1px #dfdfdf">무역·영업·판매·매장관리</td><td class="none"><em style="color:#2f80e5">영업·판매·무역</em></td></tr>
+<tr><td style="border-right:solid 1px #dfdfdf">생산·정비·기능·노무</td><td class="none"><em style="color:#2f80e5">생산·기술·노무</em></td></tr>
+<tr><td style="border-right:solid 1px #dfdfdf">의료·간호·보건·복지</td><td class="none"><em style="color:#2f80e5">의료·보건·복지</em></td></tr>
+</tbody>
+</table>
+<p style="margin: 20px 0 6px; font-weight:bold; color:#464646">② 2차 분류 명칭 변경 - 68건</p>
+<p style="font-size: 14px; color: #888; padding: 8px 0;">※ 2차 분류 표는 68행으로 매우 길어 자동 등록 시 생략됨. 필요 시 원본 HTML에서 직접 복사 추가하세요.</p>
+<p style="margin: 20px 0 6px; font-weight:bold; color:#464646">③ 3차 분류 명칭 변경 - 155건</p>
+<p style="font-size: 14px; color: #888; padding: 8px 0;">※ 3차 분류 표는 155행으로 매우 길어 자동 등록 시 생략됨. 필요 시 원본 HTML에서 직접 복사 추가하세요.</p>
+</div>
+<br>
+<strong>2. 변경일자</strong><br>
+<p style="display:flex"><em style="padding-right:4px">-</em><em>2026년 5월 28일 (예정)</em></p>
+<p style="display:flex"><em style="padding-right:4px">-</em><em>개편 사항은 당사 사정에 따라 조정/변경될 수 있습니다.</em></p>
+<br>
+<strong>3. 문의</strong><br>
+<p style="display:flex"><em style="padding-right:4px">-</em><em>직종 변경과 관련된 문의가 있으신 경우 <a class="links" href="https://help.incruit.com/qna/qnawrite.asp?bno=c&amp;mno=11&amp;rno=00" target="_blank">고객만족센터(1588-6577)</a>를 통해 답변드리겠습니다.</em></p>
+<br>앞으로도 더 나은 서비스 제공을 위해 항상 최선을 다하겠습니다.<br>
+감사합니다.<br>
+</div>
+</div>`
+  },
+  {
+    id: 'title_text_personal',
+    name: '타이틀 + 텍스트 블록',
+    target: 'personal',
+    category: 'partial',
+    description: '상단 타이틀(강조어 #ff460a) + 본문 인사말/안내 텍스트. 흰 카드 안에 들어가는 기본 블록',
+    html: `<div style="margin: 10px 0;">
+  <table align="left" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse">
+    <tbody>
+      <tr>
+        <th align="left" style="font-size: 20px; letter-spacing: -2px; color: #333; padding-bottom: 20px; text-align: left;">
+          포지션제안 회원 <span style="color: #ff460a;">개인정보</span> 확인 안내
+        </th>
+      </tr>
+      <tr>
+        <td align="left" style="font-size: 15px; line-height: 25px; color: #333">
+          안녕하세요. 인크루트입니다.<br>
+          <br>
+          항상 포지션제안 서비스를 이용해 주시는 회원님께 진심으로 감사드립니다.<br>
+          <br>
+          회원님의 계정은 최근 1년간 이력서 정보 업데이트 이력 없이<br>
+          포지션제안 공개 중임을 안내 드립니다.<br>
+          <br>
+          회원님의 소중한 개인정보 보호를 위해<br>
+          포지션제안 설정과 이력서 정보를 확인해 주시기 바랍니다.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>`
+  },
+  {
+    id: 'title_text_corporate',
+    name: '타이틀 + 텍스트 블록',
+    target: 'corporate',
+    category: 'partial',
+    description: '상단 타이틀(강조어 #2f80e5) + 본문 인사말/안내 텍스트. 흰 카드 안에 들어가는 기본 블록',
+    html: `<div style="margin: 10px 0;">
+  <table align="left" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse">
+    <tbody>
+      <tr>
+        <th align="left" style="font-size: 20px; letter-spacing: -2px; color: #333; padding-bottom: 20px; text-align: left;">
+          포지션제안 회원 <span style="color: #2f80e5;">개인정보</span> 확인 안내
+        </th>
+      </tr>
+      <tr>
+        <td align="left" style="font-size: 15px; line-height: 25px; color: #333">
+          안녕하세요. 인크루트입니다.<br>
+          <br>
+          항상 포지션제안 서비스를 이용해 주시는 회원님께 진심으로 감사드립니다.<br>
+          <br>
+          회원님의 계정은 최근 1년간 이력서 정보 업데이트 이력 없이<br>
+          포지션제안 공개 중임을 안내 드립니다.<br>
+          <br>
+          회원님의 소중한 개인정보 보호를 위해<br>
+          포지션제안 설정과 이력서 정보를 확인해 주시기 바랍니다.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>`
+  },
+  {
+    id: 'resume_summary_card',
+    name: '대표 이력서 요약 카드',
+    target: 'personal',
+    category: 'partial',
+    description: '학력/경력/희망직종/직무기술 4줄 요약 (회색 박스). 항목은 자유롭게 추가/삭제 가능',
+    html: `<div style="margin: 10px 0;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="padding: 20px 20px 20px; border: 1px solid #E7E7E7; border-radius: 8px; background: #F8F8F8; box-sizing: border-box; border-collapse: separate;">
+    <tbody>
+      <tr>
+        <td align="left" style="font-family: Malgun Gothic, sans-serif; font-size: 14px; color: #333; font-weight: bold; padding-bottom: 18px;">대표 이력서 제목 영역입니다.</td>
+      </tr>
+      <tr>
+        <td align="left" style="padding: 10px 0 0; border-top: dashed 1px #E1E1E1;">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tbody>
+              <tr>
+                <td valign="top" width="4"><img src="https://c.incru.it/2023/smart_mail/dotted_icon.png" alt=""></td>
+                <td valign="top" align="left" style="font-size: 15px; line-height: 26px; color: #333333; padding: 0 0 0 7px;">최종학력 : 대학교(4년) / 서울대학교</td>
+              </tr>
+              <tr>
+                <td valign="top" width="4"><img src="https://c.incru.it/2023/smart_mail/dotted_icon.png" alt=""></td>
+                <td valign="top" align="left" style="font-size: 15px; line-height: 26px; color: #333333; padding: 0 0 0 7px;">최종경력 : 5년 3개월 / 인**트</td>
+              </tr>
+              <tr>
+                <td valign="top" width="4"><img src="https://c.incru.it/2023/smart_mail/dotted_icon.png" alt=""></td>
+                <td valign="top" align="left" style="font-size: 15px; line-height: 26px; color: #333333; padding: 0 0 0 7px;">희망직종 : 서비스기획, 웹기획, 앱기획</td>
+              </tr>
+              <tr>
+                <td valign="top" width="4"><img src="https://c.incru.it/2023/smart_mail/dotted_icon.png" alt=""></td>
+                <td valign="top" align="left" style="font-size: 15px; line-height: 26px; color: #333333; padding: 0 0 0 7px;">직무기술 : <span style="color:#ff460a;">등록된 직무기술이 없습니다.</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>`
+  }
+];
+
+/* ============================================================
+   템플릿 파트 (헤더/푸터/SNS/공지문구)
+============================================================ */
+const COLOR = {
+  personal: { line: '#ff460a', cta: '#ff460a', card: '#ffece7' },
+  corporate: { line: '#344f77', cta: '#2772d0', card: '#eef4ff' }
+};
+
+const HEADER_COMMON = (target) => `
+<tr>
+  <td align="left" style="padding: 20px 0 15px 0; border-bottom: 3px solid ${COLOR[target].line}">
+    <table width="100%" border="0" cellspacing="0" cellpadding="0"${target==='corporate'?' style="border-collapse: collapse"':''}>
+      <tr>
+        <td align="left" valign="bottom" width="70%" height="35">
+          <a href="http://www.incruit.com/"><img src="http://img.incruit.com/common/new_mail/v2/common/mail_logo.png" border="0" alt="인크루트" /></a>
+        </td>
+        <td align="right" valign="bottom" width="30%" style="font-family: Malgun Gothic, sans-serif; font-size: 14px; color: #696969; padding-right: 10px">__SENDDATE__</td>
+      </tr>
+    </table>
+  </td>
+</tr>`;
+
+const HEADER_ROUND = () => `
+<tr>
+  <td align="left" style="padding: 20px 0 0">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr>
+        <td height="35" style="text-align: left; vertical-align: bottom" valign="bottom" width="70%">
+          <a href="http://www.incruit.com/"><img src="http://img.incruit.com/common/new_mail/v2/common/mail_logo.png" border="0" alt="인크루트" /></a>
+        </td>
+        <td style="font-family: Malgun Gothic, sans-serif; font-size: 14px; color: #696969; text-align: right; vertical-align: bottom" valign="bottom" width="30%">__SENDDATE__</td>
+      </tr>
+    </table>
+  </td>
+</tr>`;
+
+const SNS = {
+  personal: `
+<a href="https://incruitapp.deeplink.page/u4mecx" target="_blank" style="display: inline-block; margin: 0 8px"><img src="https://c.incru.it/mail/mail_footer/link_icon_favoritecompany.png" alt="일하고싶은 기업" width="32" /></a>
+<a href="https://incruitapp.deeplink.page/kbpde8" target="_blank" style="display: inline-block; margin: 0 8px"><img src="https://c.incru.it/mail/mail_footer/link_icon_event.png" alt="인크루트 이벤트" width="32" /></a>
+<a href="https://www.instagram.com/incruit1998/" target="_blank" style="display: inline-block; margin: 0 8px"><img src="https://c.incru.it/mail/mail_footer/sns_icon_instagram.png" alt="instagram" width="32" /></a>
+<a href="https://blog.naver.com/incruit1" target="_blank" style="display: inline-block; margin: 0 8px"><img src="https://c.incru.it/mail/mail_footer/sns_icon_blog.png" alt="blog" width="32" /></a>
+<a href="https://incruitapp.deeplink.page/1vvltg" target="_blank" style="display: inline-block; margin: 0 8px"><img src="https://c.incru.it/mail/mail_footer/link_icon_its_career.png" alt="인크루트 잇츠커리어" width="32" /></a>`,
+  corporate: `
+<a href="https://incruitapp.deeplink.page/teqxn5" target="_blank" style="display: inline-block; margin: 0 8px"><img src="https://c.incru.it/mail/mail_footer/link_icon_favoritecompany.png" alt="일하고싶은 기업" width="32" /></a>
+<a href="https://incruitapp.deeplink.page/wh89b1" target="_blank" style="display: inline-block; margin: 0 8px"><img src="https://c.incru.it/mail/mail_footer/link_icon_event.png" alt="인크루트 이벤트" width="32" /></a>
+<a href="https://www.instagram.com/incruit1998/" target="_blank" style="display: inline-block; margin: 0 8px"><img src="https://c.incru.it/mail/mail_footer/sns_icon_instagram.png" alt="instagram" width="32" /></a>
+<a href="https://blog.naver.com/incruit1" target="_blank" style="display: inline-block; margin: 0 8px"><img src="https://c.incru.it/mail/mail_footer/sns_icon_blog.png" alt="blog" width="32" /></a>
+<a href="https://incruitapp.deeplink.page/nrcxyv" target="_blank" style="display: inline-block; margin: 0 8px"><img src="https://c.incru.it/mail/mail_footer/link_icon_hr_dive.png" alt="인크루트 HR DIVE" width="32" /></a>`
+};
+
+const NOTICE_RECEIVABLE = `본 메일은 <span style="color: #ff460a">YYYY.MM.DD</span> 기준으로 메일 수신에 동의한 회원님을 대상으로 발송되었습니다.<br />
+메일 수신을 원하지 않으시면 <a href="https://edit.incruit.com/support/email_cmplt.asp" target="_blank" style="color: #ff460a; text-decoration: none">[수신거부]</a>를 클릭 해 주세요.<br />
+If you don't want to receive this information again, please <a href="https://edit.incruit.com/support/email_cmplt.asp" target="_blank" style="color: #ff460a; text-decoration: underline">click here!</a><br />
+대표 : 서미영 | 주소 : 서울시 중구 중림로 49 | 문의처 : 1588-6577, <a href="mailto:incruit@incruit.com" style="color: #222; text-decoration: none">incruit@incruit.com</a>`;
+
+const NOTICE_SENDONLY = `본 메일은 발신전용으로 회신할 수 없습니다. 문의사항은 <a href="http://help.incruit.com/qna/qnawrite.asp?utm_source=incruit&amp;utm_medium=email&amp;utm_content=incMailFooter&amp;utm_campaign=incmail_sys_noreject" target="_blank" style="color: #ff460a">[고객센터]</a>를 이용해 주세요.<br />
+대표 : 서미영 | 주소 : 서울시 중구 중림로 49 | 문의처 : 1588-6577, <a href="mailto:incruit@incruit.com" style="color: #222; text-decoration: none">incruit@incruit.com</a>`;
+
+/* 푸터 (공용 / 라운드 공통) */
+function buildFooter(target, footerType, shape) {
+  if (shape === 'bare') return '';
+  const notice = footerType === 'sendonly' ? NOTICE_SENDONLY : NOTICE_RECEIVABLE;
+  const padding = shape === 'round' && footerType === 'sendonly' ? '0' : '30px 10px 0';
+  return `
+<tr>
+  <td style="padding: ${padding}; font-family: Malgun Gothic, sans-serif; letter-spacing: -1px">
+    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+      <tbody>
+        <tr>
+          <td align="center" style="padding: 0 0 25px; text-align: center; font-size: 0">${SNS[target]}</td>
+        </tr>
+        <tr>
+          <td align="center" style="text-align: center; padding: 0; font-family: Malgun Gothic, sans-serif; font-size: 11px; line-height: 20px; color: #222; letter-spacing: -1px">${notice}</td>
+        </tr>
+        <tr>
+          <td align="center" style="font-size: 11px; line-height: 20px; color: #222; font-family: Malgun Gothic, sans-serif; letter-spacing: 0">COPYRIGHT(C) <span style="color: #ff460a">INCRUIT CORPORATION</span>. ALL RIGHT RESERVED.</td>
+        </tr>
+      </tbody>
+    </table>
+  </td>
+</tr>
+${shape === 'round' ? '<tr><td style="height: 30px"></td></tr>' : '<tr><td><ul style="max-width: 700px; height: 1px; padding: 0; margin: 0"></ul></td></tr>'}`;
+}
+
+/* 본문 영역 - 형태별로 다름 */
+function buildBodySection(shape, target, bodyHTML, cta) {
+  if (shape === 'round') {
+    const ctaRow = cta && cta.enable ? `
+    <tr>
+      <td align="center" style="padding: 0 0 30px">
+        <table width="230" border="0" cellspacing="0" cellpadding="0">
+          <tbody><tr>
+            <td align="center">
+              <a href="${escapeAttr(cta.url||'#')}" target="_blank" style="display: block; text-decoration: none; width: 100%; border-radius: 25px; background-color: ${COLOR[target].cta}; color: #fff; font-size: 18px; font-weight: bold; border: 0; padding: 13px 0; text-align: center; letter-spacing: -1px">${escapeText(cta.text||'자세히 보기')}</a>
+            </td>
+          </tr></tbody>
+        </table>
+      </td>
+    </tr>` : '';
+    return `
+<tr>
+  <td align="center" valign="top" style="padding: 10px 0 30px;">
+    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background: ${COLOR[target].card}; border-radius: 20px">
+      <tbody>
+        <tr>
+          <td style="padding: 16px 16px 20px">
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+              <tbody>
+                <tr>
+                  <td style="font-family: Malgun Gothic, sans-serif; letter-spacing: -0.08em; padding: 4.02% 4.02% 4.502%; background: #fff; border-radius: 8px">
+                    ${bodyHTML}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+        ${ctaRow}
+      </tbody>
+    </table>
+  </td>
+</tr>`;
+  }
+  // 공용 / bare
+  return `
+<tr>
+  <td align="center" valign="top" style="padding: 5% 0 0">
+    ${bodyHTML}
+  </td>
+</tr>`;
+}
+
+/* 공지 텍스트형 — noticeTemp wrap + 외부 CSS */
+function buildNoticeHTML(target, bodyHTML) {
+  const classMod = target === 'corporate' ? 'beforehand' : 'basics';
+  return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>인크루트 공지사항</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body>
+<div class="noticeTemp ${classMod}">
+<link type="text/css" rel="stylesheet" href="https://i.incru.it/ui/static/css/notice/common.css?20220812">
+${bodyHTML}
+</div>
+</body>
+</html>`;
+}
+
+/* 공지 이미지형 — 940px raw 테이블 wrapper, 클래스/외부 CSS 없음 */
+function buildNoticeImageHTML(bodyHTML) {
+  return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>인크루트 공지사항</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body>
+<div style="width:100%;max-width:940px;margin:0 auto;">
+${bodyHTML}
+</div>
+</body>
+</html>`;
+}
+
+/* 전체 HTML 조립 */
+function buildFullHTML({ target, shape, footerType, ctaConfig, dateMode, bodyHTML }) {
+  if (shape === 'notice') return buildNoticeHTML(target, bodyHTML);
+  if (shape === 'notice_image') return buildNoticeImageHTML(bodyHTML);
+
+  const maxW = shape === 'round' ? 640 : 700;
+  const sendDate = dateMode === 'today' ? formatToday() : '${SENDDATE}';
+  const titleText = shape === 'bare' ? '인크루트' : (target === 'corporate' ? '인크루트 - 기업' : '인크루트 - 개인');
+
+  let header = '';
+  if (shape === 'common') header = HEADER_COMMON(target);
+  else if (shape === 'round') header = HEADER_ROUND();
+  // bare는 헤더 없음
+
+  const body = buildBodySection(shape, target, bodyHTML, ctaConfig);
+  const footer = buildFooter(target, footerType, shape);
+
+  const html = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>${titleText}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body>
+<table align="center" border="0" cellpadding="0" cellspacing="0" style="width: 100%" id="bodyTable">
+  <tr>
+    <td align="center">
+      <!--[if (gte mso 9)|(IE)]><table border="0" cellpadding="0" cellspacing="0"><tr><td width="${maxW}"><![endif]-->
+      <div style="max-width: ${maxW}px; margin: 0 auto">
+        <table align="left" border="0" cellspacing="0" cellpadding="0" style="width: 100%; max-width: ${maxW}px; font-family: '맑은고딕', Malgun Gothic, sans-serif; -webkit-text-size-adjust: 100%; text-align: left">
+          <tr>
+            <td style="padding: 0">
+              <table align="left" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse">
+                ${header}
+                ${body}
+                ${footer}
+              </table>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <!--[if mso]></td></tr></table><![endif]-->
+    </td>
+  </tr>
+</table>
+</body>
+</html>`;
+
+  return html.replace(/__SENDDATE__/g, sendDate);
+}
+
+function escapeAttr(s) { return String(s).replace(/"/g, '&quot;'); }
+function escapeText(s) { return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function formatToday() {
+  const d = new Date();
+  return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+}
+
+/* 본문 작성 캔버스의 헤더/푸터 미리보기 HTML — 미리보기 iframe과 동일한 소스를 부분만 추출 */
+function buildHeaderPreviewHTML() {
+  if (state.shape === 'bare') return '';
+  const sendDate = state.datemode === 'today' ? formatToday() : '${SENDDATE}';
+  const header = state.shape === 'common' ? HEADER_COMMON(state.target) : HEADER_ROUND();
+  const html = `<table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse;"><tbody>${header}</tbody></table>`;
+  return html.replace(/__SENDDATE__/g, sendDate);
+}
+
+function buildFooterPreviewHTML() {
+  if (state.shape === 'bare') return '';
+  const footer = buildFooter(state.target, state.footer, state.shape);
+  if (!footer) return '';
+  return `<table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse;"><tbody>${footer}</tbody></table>`;
+}
+
+/* ============================================================
+   상태 + 컨트롤
+============================================================ */
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+const state = {
+  target: 'personal',
+  shape: 'common',
+  footer: 'receivable',
+  datemode: 'token',
+  mode: 'editor',
+  libTab: 'full',  // 'full' | 'partial'
+  cta: { enable: false, text: '자세히 보기', url: 'https://www.incruit.com/' }
+};
+
+function readControls() {
+  state.target = document.querySelector('input[name=target]:checked').value;
+  state.shape = document.querySelector('input[name=shape]:checked').value;
+  state.footer = document.querySelector('input[name=footer]:checked').value;
+  state.datemode = document.querySelector('input[name=datemode]:checked').value;
+  state.cta.enable = $('#ctaEnable').checked;
+  state.cta.text = $('#ctaText').value;
+  state.cta.url = $('#ctaUrl').value;
+}
+
+function getBodyHTML() {
+  return state.mode === 'html' ? $('#htmlsrc').value : $('#wysiwyg').innerHTML;
+}
+
+function refresh() {
+  readControls();
+
+  // body 색 액센트 토글
+  document.body.classList.toggle('corporate', state.target === 'corporate');
+
+  // CTA 섹션 노출 (라운드만)
+  $('#ctaSection').style.display = state.shape === 'round' ? '' : 'none';
+  $('#ctaFields').classList.toggle('show', state.cta.enable);
+
+  // 푸터 그룹: bare / notice / notice_image면 비활성
+  const noFooter = state.shape === 'bare' || state.shape === 'notice' || state.shape === 'notice_image';
+  $('#footerGroup').style.opacity = noFooter ? '0.4' : '1';
+  $('#footerHint').style.display = noFooter ? '' : 'none';
+  if (state.shape === 'notice') {
+    $('#footerHint').textContent = '⚠ 공지 텍스트형은 외부 CSS 의존 (noticeTemp). 사내 메일 시스템 전용 — Gmail/Outlook에서 깨질 수 있음';
+  } else if (state.shape === 'notice_image') {
+    $('#footerHint').textContent = '🟢 공지 이미지형 — 940px raw 테이블, 외부 의존 없음. 이미지/링크만으로 구성';
+  } else {
+    $('#footerHint').textContent = '⚠ 헤더·푸터 없음 형태에서는 푸터가 적용되지 않습니다.';
+  }
+
+  // 본문 작성 캔버스
+  $('#emailCanvas').setAttribute('data-shape', state.shape);
+  $('#headerPreview').innerHTML = buildHeaderPreviewHTML();
+  $('#footerPreview').innerHTML = buildFooterPreviewHTML();
+
+  // 공지 텍스트형이면 본문에 noticeTemp 클래스 적용 (외부 CSS 스타일링용)
+  // 이미지형은 클래스 없음
+  const bodyWrap = $('#bodyEditorWrap');
+  bodyWrap.classList.remove('noticeTemp','basics','beforehand');
+  if (state.shape === 'notice') {
+    bodyWrap.classList.add('noticeTemp');
+    bodyWrap.classList.add(state.target === 'corporate' ? 'beforehand' : 'basics');
+  }
+
+  // 미리보기
+  const html = buildFullHTML({
+    target: state.target,
+    shape: state.shape,
+    footerType: state.footer,
+    ctaConfig: state.cta,
+    dateMode: state.datemode,
+    bodyHTML: getBodyHTML()
+  });
+  $('#preview').srcdoc = html;
+
+  // 라벨
+  const shapeLabel = { common: '공용', round: '라운드', bare: '헤더·푸터 없음' }[state.shape];
+  const targetLabel = state.target === 'corporate' ? '기업' : '개인';
+  const footerLabel = state.shape === 'bare' ? '' : ` · ${state.footer === 'sendonly' ? '발신전용' : '수신거부'}`;
+  $('#previewLabel').textContent = `${shapeLabel} · ${targetLabel}${footerLabel}`;
+  $('#filenameHint').textContent = '저장: ' + buildFilename();
+
+  // 라이브러리 필터
+  renderSnippets();
+}
+
+function buildFilename() {
+  const stamp = formatToday().replace(/\./g, '');
+  if (state.shape === 'bare') return `incruit_bare_${stamp}.html`;
+  return `incruit_${state.shape}_${state.target}_${state.footer}_${stamp}.html`;
+}
+
+/* ============================================================
+   본문 템플릿 라이브러리 렌더
+============================================================ */
+/* 본문 HTML을 빠르게 스캔해서 시각 단서(배지) 자동 추출 */
+function detectSnippetBadges(html) {
+  const badges = [];
+  if (/border-radius:\s*\d+px/i.test(html)) badges.push('라운드 카드');
+  if (/<img\s/i.test(html)) badges.push('이미지 포함');
+  if (/background-color:\s*#(ff460a|2772d0|344f77)/i.test(html) && /display:\s*block/i.test(html)) badges.push('CTA 버튼');
+  if (/<th\b/i.test(html) || /<table[^>]+border-collapse/i.test(html)) badges.push('표');
+  if (/color:\s*#ff460a/i.test(html)) badges.push('강조색');
+  return badges;
+}
+
+function renderSnippets() {
+  const list = $('#snippetList');
+  const isNoticeShape = state.shape === 'notice' || state.shape === 'notice_image';
+
+  const allForTarget = SNIPPETS.filter(s => s.target === state.target || s.target === 'common');
+  const full = allForTarget.filter(s => (s.category || 'full') === 'full');
+  const partial = allForTarget.filter(s => (s.category || 'full') === 'partial');
+  const notice = allForTarget.filter(s => (s.category || 'full') === 'notice');
+
+  // 탭 카운트 + 활성/비활성
+  $('#cntFull').textContent = full.length;
+  $('#cntPartial').textContent = partial.length;
+  $('#cntNotice').textContent = notice.length;
+
+  document.querySelectorAll('#libTabs .lib-tab').forEach(tab => {
+    const tabName = tab.dataset.tab;
+    if (isNoticeShape) {
+      // 공지 형태: 공지 탭만 활성
+      tab.classList.toggle('disabled', tabName !== 'notice');
+      tab.disabled = (tabName !== 'notice');
+    } else {
+      // 일반 형태: 공지 탭만 비활성
+      tab.classList.toggle('disabled', tabName === 'notice');
+      tab.disabled = (tabName === 'notice');
+    }
+  });
+
+  // 형태에 맞지 않는 탭이 active면 강제 전환
+  if (isNoticeShape && state.libTab !== 'notice') {
+    state.libTab = 'notice';
+    document.querySelectorAll('#libTabs .lib-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'notice'));
+  } else if (!isNoticeShape && state.libTab === 'notice') {
+    state.libTab = 'full';
+    document.querySelectorAll('#libTabs .lib-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'full'));
+  }
+
+  // 공지 탭은 항상 "준비중" 표시 (등록된 항목 있어도 일단 가림 — 추후 진짜 공지 본문 받으면 해제)
+  if (state.libTab === 'notice') {
+    list.innerHTML = `<div class="snippet-empty">
+      <svg class="icon icon-lg" style="margin-bottom:6px;color:var(--muted)"><use href="#i-construction"/></svg><br />
+      <strong>준비중</strong><br />
+      공지사항용 본문 템플릿은<br />
+      별도 전달 예정입니다.<br /><br />
+      <span style="font-size: 10px; color: #999;">공지 텍스트형(noticeTemp) /<br />공지 이미지형(940px) 양쪽<br />본문 샘플 받으면 등록</span>
+    </div>`;
+    return;
+  }
+
+  const items = state.libTab === 'full' ? full : partial;
+
+  if (items.length === 0) {
+    if (state.libTab === 'partial') {
+      list.innerHTML = `<div class="snippet-empty">
+        <svg class="icon icon-lg" style="margin-bottom:6px;color:var(--muted)"><use href="#i-construction"/></svg><br />
+        <strong>준비중</strong><br />
+        부분 템플릿(작은 단위 컴포넌트)은<br />
+        추후 개발 예정입니다.<br /><br />
+        <span style="font-size: 10px; color: #999;">예: 인재 카드 1개, 공고 카드 1개,<br />섹션 헤더, CTA 버튼 등을<br />조립식으로 추가</span>
+      </div>`;
+    } else {
+      list.innerHTML = `<div class="snippet-empty">
+        <strong>전체 템플릿이 없습니다.</strong><br />
+        ${state.target === 'corporate' ? '기업용' : '개인용'} 본문 템플릿 HTML을<br />
+        보내주시면 검수 후 등록됩니다.
+      </div>`;
+    }
+    return;
+  }
+  list.innerHTML = items.map(s => {
+    const badges = detectSnippetBadges(s.html);
+    return `
+    <div class="snippet-card" data-id="${s.id}">
+      <div class="nm">${s.name}</div>
+      ${s.description ? `<div class="ds">${s.description}</div>` : ''}
+      ${badges.length ? `<div class="meta">${badges.map(b=>`<span class="badge">${b}</span>`).join('')}</div>` : ''}
+      <div class="preview-hint"><svg class="icon icon-sm"><use href="#i-eye"/></svg> 클릭 → 미리보기 / 적용</div>
+    </div>
+    `;
+  }).join('');
+  list.querySelectorAll('.snippet-card').forEach(card => {
+    card.addEventListener('click', () => askApplySnippet(card.dataset.id));
+  });
+}
+
+// 탭 클릭 이벤트
+document.querySelectorAll('#libTabs .lib-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (btn.classList.contains('disabled')) return;  // 비활성 탭은 클릭 무시
+    state.libTab = btn.dataset.tab;
+    document.querySelectorAll('#libTabs .lib-tab').forEach(t => {
+      t.classList.toggle('active', t === btn);
+    });
+    renderSnippets();
+  });
+});
+
+/* ============================================================
+   템플릿 적용 모달
+============================================================ */
+let pendingSnippet = null;
+function askApplySnippet(id) {
+  const s = SNIPPETS.find(x => x.id === id);
+  if (!s) return;
+  pendingSnippet = s;
+
+  const category = s.category || 'full';
+
+  // 제목 / 메타
+  $('#modalTitle').textContent = (category === 'full' ? '전체 템플릿 적용 — ' : '부분 템플릿 삽입 — ') + s.name;
+  const targetBadge = s.target === 'corporate' ? '기업' : (s.target === 'personal' ? '개인' : '공통');
+  const categoryBadge = category === 'full' ? '전체 본문' : '부분 컴포넌트';
+  const detect = detectSnippetBadges(s.html);
+  $('#modalMeta').innerHTML =
+    `<span class="badge accent">${targetBadge}</span>` +
+    `<span class="badge" style="background:#fff3cd;color:#856404;">${categoryBadge}</span>` +
+    detect.map(b => `<span class="badge">${b}</span>`).join('');
+
+  if (category === 'full') {
+    $('#modalBody').innerHTML = (s.description ? s.description + '<br />' : '') +
+      '⚠ 이 템플릿은 <strong>메일 1건의 전체 본문</strong>입니다. 적용 시 <strong style="color:#d9534f">기존 본문이 모두 교체</strong>됩니다.';
+  } else {
+    $('#modalBody').innerHTML = (s.description ? s.description + '<br />' : '') +
+      '부분 컴포넌트입니다. <strong>현재 커서 위치에 삽입</strong>되며 기존 본문은 유지됩니다.';
+  }
+
+  // 공지 본문인 경우 noticeTemp wrap + 외부 CSS link 자동 inject
+  const isNotice = !!s.noticeMode;
+  const noticeCSS = isNotice
+    ? '<link type="text/css" rel="stylesheet" href="https://i.incru.it/ui/static/css/notice/common.css?20220812">'
+    : '';
+  const innerWrapOpen = isNotice
+    ? `<div class="noticeTemp ${s.noticeMode}">`
+    : '<div class="wrap">';
+  const innerWrapClose = '</div>';
+
+  const previewHTML = `<!DOCTYPE html>
+<html><head><meta charset="utf-8" />${noticeCSS}<style>
+body { margin:0; padding: 8px 12px; font-family: 'Malgun Gothic','맑은고딕',sans-serif; background: #e8eaed; }
+.wrap { max-width: 700px; margin: 0 auto; background: #fff; padding: 10px 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); border-radius: 4px; }
+.noticeTemp { max-width: 700px; margin: 0 auto; background: #fff; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+</style></head>
+<body>
+${innerWrapOpen}${s.html}${innerWrapClose}
+</body></html>`;
+  $('#modalPreview').srcdoc = previewHTML;
+
+  $('#modalBg').classList.add('show');
+}
+
+$('#modalCancel').addEventListener('click', () => {
+  $('#modalBg').classList.remove('show');
+  pendingSnippet = null;
+});
+
+$('#modalOk').addEventListener('click', () => {
+  if (pendingSnippet) {
+    const category = pendingSnippet.category || 'full';
+    if (category === 'full') {
+      // 전체 본문 교체
+      $('#wysiwyg').innerHTML = pendingSnippet.html;
+      if (state.mode === 'html') $('#htmlsrc').value = pendingSnippet.html;
+    } else {
+      // 부분 - 현재 커서 위치 삽입
+      insertHTMLAtCursor(pendingSnippet.html);
+    }
+    refresh();
+  }
+  $('#modalBg').classList.remove('show');
+  pendingSnippet = null;
+});
+
+/* 본문 selection 저장 — 모달 열리면 포커스가 빠져나가니 미리 보관 */
+let savedRange = null;
+function saveSelection() {
+  const sel = window.getSelection();
+  if (sel && sel.rangeCount > 0) {
+    const range = sel.getRangeAt(0);
+    if ($('#wysiwyg').contains(range.commonAncestorContainer)) {
+      savedRange = range.cloneRange();
+    }
+  }
+}
+
+function insertHTMLAtCursor(html) {
+  if (state.mode === 'html') {
+    // HTML 모드: textarea 커서 위치에 삽입
+    const ta = $('#htmlsrc');
+    const s = ta.selectionStart, e = ta.selectionEnd;
+    ta.value = ta.value.substring(0, s) + html + ta.value.substring(e);
+    ta.selectionStart = ta.selectionEnd = s + html.length;
+    ta.focus();
+    return;
+  }
+
+  $('#wysiwyg').focus();
+
+  // 저장된 selection이 있으면 복원해서 그 자리에 삽입
+  if (savedRange) {
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(savedRange);
+    document.execCommand('insertHTML', false, html);
+    savedRange = null;
+  } else {
+    // 한 번도 본문에 커서 놓은 적 없으면 → 본문 끝에 추가
+    $('#wysiwyg').insertAdjacentHTML('beforeend', html);
+  }
+}
+
+/* ============================================================
+   에디터 / HTML 토글
+============================================================ */
+$('#modeEditor').addEventListener('click', () => {
+  if (state.mode === 'editor') return;
+  $('#wysiwyg').innerHTML = $('#htmlsrc').value;
+  state.mode = 'editor';
+  $('#emailCanvas').style.display = '';
+  $('#htmlsrc').style.display = 'none';
+  $('#modeEditor').classList.add('active');
+  $('#modeHtml').classList.remove('active');
+  $('#toolbar').style.display = '';
+  refresh();
+});
+
+$('#modeHtml').addEventListener('click', () => {
+  if (state.mode === 'html') return;
+  $('#htmlsrc').value = $('#wysiwyg').innerHTML.replace(/></g, '>\n<').trim();
+  state.mode = 'html';
+  $('#emailCanvas').style.display = 'none';
+  $('#htmlsrc').style.display = '';
+  $('#htmlsrc').style.minHeight = '600px';
+  $('#modeHtml').classList.add('active');
+  $('#modeEditor').classList.remove('active');
+  $('#toolbar').style.display = 'none';
+  refresh();
+});
+
+/* ============================================================
+   에디터 핵심 헬퍼 — Range API 직접 사용 (span 중첩 차단)
+============================================================ */
+
+/* 본문에서 selection 유효한지 + 본문 안에 있는지 확인 */
+function getEditorRange() {
+  $('#wysiwyg').focus();
+  if (savedRange && $('#wysiwyg').contains(savedRange.commonAncestorContainer)) {
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(savedRange);
+    return savedRange;
+  }
+  const sel = window.getSelection();
+  if (sel.rangeCount && $('#wysiwyg').contains(sel.getRangeAt(0).commonAncestorContainer)) {
+    return sel.getRangeAt(0);
+  }
+  return null;
+}
+
+/* 인라인 스타일 적용 (color / backgroundColor / fontSize 등) — span 1개만 생성, 중첩 차단 */
+function applyInlineStyle(prop, value) {
+  const range = getEditorRange();
+  if (!range) return;
+  const sel = window.getSelection();
+
+  if (range.collapsed) {
+    // 선택 없음 → zero-width span 만들고 그 안에 커서
+    const span = document.createElement('span');
+    span.style[prop] = value;
+    const zw = document.createTextNode('​');
+    span.appendChild(zw);
+    range.insertNode(span);
+    const r2 = document.createRange();
+    r2.setStart(zw, 1);
+    r2.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(r2);
+    saveSelection();
+    debouncedRefresh();
+    return;
+  }
+
+  // 선택 영역 있음
+  const wrapper = document.createElement('span');
+  wrapper.style[prop] = value;
+  try {
+    range.surroundContents(wrapper);
+  } catch (e) {
+    // selection이 여러 노드 가로지르는 경우
+    const fragment = range.extractContents();
+    wrapper.appendChild(fragment);
+    range.insertNode(wrapper);
+  }
+
+  flattenSpans(wrapper.parentElement || wrapper);
+
+  // selection 재설정
+  const r2 = document.createRange();
+  r2.selectNodeContents(wrapper);
+  sel.removeAllRanges();
+  sel.addRange(r2);
+  saveSelection();
+  debouncedRefresh();
+}
+
+/* 중첩 span 평탄화 + 빈 span 제거 */
+function flattenSpans(root) {
+  let safety = 12;
+  let changed = true;
+  while (changed && safety-- > 0) {
+    changed = false;
+    // 1) 부모 span 안의 자식 span을 부모로 머지 후 자식 unwrap
+    const innerSpans = root.querySelectorAll('span span');
+    for (const inner of innerSpans) {
+      const outer = inner.parentElement;
+      if (!outer || outer.tagName !== 'SPAN') continue;
+      // inner 스타일을 outer에 머지 (inner 우선)
+      for (let i = 0; i < inner.style.length; i++) {
+        const key = inner.style[i];
+        outer.style.setProperty(key, inner.style.getPropertyValue(key));
+      }
+      while (inner.firstChild) outer.insertBefore(inner.firstChild, inner);
+      inner.remove();
+      changed = true;
+    }
+    // 2) 빈 span 제거 (단 zero-width만 있는 건 보존 — 입력 중일 수 있음)
+    const allSpans = root.querySelectorAll('span');
+    for (const s of allSpans) {
+      const hasContent = s.textContent.replace(/​/g, '').length > 0
+                       || s.querySelector('img, br, hr');
+      const hasStyle = s.style.length > 0;
+      if (!hasContent && !hasStyle) { s.remove(); changed = true; }
+    }
+  }
+}
+
+/* 본문 전체 클린업 + 메일 호환성 보정 */
+function cleanupBody() {
+  const wy = $('#wysiwyg');
+
+  // 1) 비호환 태그를 안전한 인라인 style로 치환
+  // <font size="X" color="...">  →  <span style="font-size:..; color:..">
+  wy.querySelectorAll('font').forEach(f => {
+    const span = document.createElement('span');
+    if (f.color) span.style.color = f.color;
+    if (f.face) span.style.fontFamily = f.face;
+    // size 1~7 → px 매핑
+    if (f.size) {
+      const sizeMap = { '1':'10px','2':'12px','3':'14px','4':'16px','5':'18px','6':'24px','7':'32px' };
+      span.style.fontSize = sizeMap[f.size] || '14px';
+    }
+    while (f.firstChild) span.appendChild(f.firstChild);
+    f.replaceWith(span);
+  });
+
+  // <s> / <strike>  →  <span style="text-decoration: line-through">
+  wy.querySelectorAll('s, strike').forEach(el => {
+    const span = document.createElement('span');
+    span.style.textDecoration = 'line-through';
+    while (el.firstChild) span.appendChild(el.firstChild);
+    el.replaceWith(span);
+  });
+
+  // <hr>  →  table 기반 HR (Outlook 호환)
+  wy.querySelectorAll('hr').forEach(hr => {
+    const t = document.createElement('table');
+    t.setAttribute('width','100%');
+    t.setAttribute('border','0');
+    t.setAttribute('cellspacing','0');
+    t.setAttribute('cellpadding','0');
+    t.style.margin = '16px 0';
+    t.innerHTML = '<tr><td style="border-top:1px solid #dddddd; font-size:0; line-height:0; height:1px;">&nbsp;</td></tr>';
+    hr.replaceWith(t);
+  });
+
+  // <blockquote>  →  Outlook 미호환이므로 일반 div로 평탄화 (border 효과 손실 알림)
+  wy.querySelectorAll('blockquote').forEach(bq => {
+    const div = document.createElement('div');
+    div.style.padding = '8px 14px';
+    div.style.color = '#555';
+    while (bq.firstChild) div.appendChild(bq.firstChild);
+    bq.replaceWith(div);
+  });
+
+  // 2) deprecated align 속성을 text-align style로 이동
+  wy.querySelectorAll('[align]').forEach(el => {
+    const v = el.getAttribute('align');
+    if (v && ['left','center','right','justify'].includes(v)) {
+      el.style.textAlign = v;
+      el.removeAttribute('align');
+    }
+  });
+
+  // 3) 이미지 보정: border="0" + 인라인 border:0
+  wy.querySelectorAll('img').forEach(img => {
+    if (!img.hasAttribute('border')) img.setAttribute('border','0');
+    if (!img.style.border) img.style.border = '0';
+    if (!img.hasAttribute('alt')) img.setAttribute('alt','');
+  });
+
+  // 4) ul/ol에 메일 호환 padding 보정
+  wy.querySelectorAll('ul, ol').forEach(list => {
+    if (!list.style.paddingLeft) list.style.paddingLeft = '20px';
+    if (!list.style.margin) list.style.margin = '6px 0';
+  });
+
+  // 5) span 중첩 평탄화
+  flattenSpans(wy);
+
+  // 6) 연속 빈 br 정리
+  wy.querySelectorAll('br + br + br').forEach(br => br.remove());
+}
+
+/* ============================================================
+   툴바 이벤트
+============================================================ */
+$$('#toolbar button[data-cmd]').forEach(btn => {
+  btn.addEventListener('mousedown', e => e.preventDefault());
+  btn.addEventListener('click', () => {
+    $('#wysiwyg').focus();
+    if (savedRange) {
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(savedRange);
+    }
+    document.execCommand(btn.dataset.cmd, false, btn.dataset.val || null);
+    saveSelection();
+    debouncedRefresh();
+  });
+});
+
+/* 폰트 사이즈 (px 단위 직접 적용) */
+$('#fontSize').addEventListener('change', e => {
+  applyInlineStyle('fontSize', e.target.value + 'px');
+  e.target.blur();
+});
+
+/* 컬러 팔레트 ======================================== */
+const PALETTE = [
+  '#000000','#333333','#666666','#999999','#cccccc','#ffffff',
+  '#ff460a','#ff8c00','#ffe600','#7cb342','#2772d0','#344f77',
+  '#2f80e5','#9c27b0','#e91e63','#795548','#607d8b','#f5f5f5',
+  '#ffece7','#fff3cd','#fffde7','#e8f5e9','#eef4ff','#f3e5f5'
+];
+
+function buildPalette(paletteEl, applyFn) {
+  paletteEl.innerHTML = PALETTE.map(c =>
+    `<span class="swatch" data-c="${c}" style="background:${c}"></span>`
+  ).join('') +
+  `<span class="swatch transparent" data-c="transparent" title="제거"></span>` +
+  `<div class="custom-row">
+    <input type="color" class="picker" value="#ff460a" />
+    <input type="text" class="hex" value="#ff460a" placeholder="#ff460a" />
+    <button class="btn" style="padding:3px 8px;font-size:11px;">적용</button>
+  </div>`;
+  paletteEl.querySelectorAll('.swatch').forEach(sw => {
+    sw.addEventListener('mousedown', e => e.preventDefault());
+    sw.addEventListener('click', () => {
+      applyFn(sw.dataset.c);
+      paletteEl.parentElement.classList.remove('open');
+    });
+  });
+  const picker = paletteEl.querySelector('.picker');
+  const hex = paletteEl.querySelector('.hex');
+  picker.addEventListener('input', () => hex.value = picker.value);
+  hex.addEventListener('input', () => {
+    if (/^#[0-9a-fA-F]{6}$/.test(hex.value)) picker.value = hex.value;
+  });
+  paletteEl.querySelector('button').addEventListener('mousedown', e => e.preventDefault());
+  paletteEl.querySelector('button').addEventListener('click', () => {
+    if (/^#[0-9a-fA-F]{3,6}$/.test(hex.value)) {
+      applyFn(hex.value);
+      paletteEl.parentElement.classList.remove('open');
+    }
+  });
+}
+
+function setupColorDropdown(btnId, paletteId, applyFn) {
+  buildPalette($('#'+paletteId), applyFn);
+  $('#'+btnId).addEventListener('mousedown', e => e.preventDefault());
+  $('#'+btnId).addEventListener('click', () => {
+    const wrap = $('#'+btnId).parentElement;
+    document.querySelectorAll('.color-wrap.open').forEach(w => { if (w !== wrap) w.classList.remove('open'); });
+    wrap.classList.toggle('open');
+  });
+}
+setupColorDropdown('fgColorBtn', 'fgPalette', c => {
+  if (c === 'transparent') applyInlineStyle('color', '');
+  else applyInlineStyle('color', c);
+});
+setupColorDropdown('bgColorBtn', 'bgPalette', c => {
+  if (c === 'transparent') applyInlineStyle('backgroundColor', '');
+  else applyInlineStyle('backgroundColor', c);
+});
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.color-wrap')) {
+    document.querySelectorAll('.color-wrap.open').forEach(w => w.classList.remove('open'));
+  }
+});
+
+/* 링크/이미지/구분선/인용 ======================================== */
+$('#insertLink').addEventListener('click', () => {
+  $('#wysiwyg').focus();
+  if (savedRange) { const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(savedRange); }
+  const u = prompt('링크 URL', 'https://');
+  if (!u) return;
+  document.execCommand('createLink', false, u);
+  const sel = window.getSelection();
+  if (sel.anchorNode) {
+    let a = sel.anchorNode.parentElement;
+    if (a && a.tagName === 'A') { a.setAttribute('target','_blank'); a.style.color = '#ff460a'; a.style.textDecoration = 'none'; }
+  }
+  saveSelection();
+  debouncedRefresh();
+});
+
+$('#insertImage').addEventListener('click', () => {
+  $('#wysiwyg').focus();
+  if (savedRange) { const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(savedRange); }
+  const u = prompt('이미지 URL', 'https://');
+  if (!u) return;
+  const altText = prompt('이미지 설명 (alt 텍스트)', '') || '';
+  // Outlook 자동 border 방지: border="0" + 인라인 display block 권장
+  const imgHTML = `<img src="${u.replace(/"/g,'&quot;')}" alt="${altText.replace(/"/g,'&quot;')}" border="0" style="max-width:100%; border:0; display:inline-block; vertical-align:top;" />`;
+  document.execCommand('insertHTML', false, imgHTML);
+  saveSelection();
+  debouncedRefresh();
+});
+
+/* 구분선 — Outlook은 <hr> 스타일을 무시하므로 table 기반 HR 사용 */
+$('#insertHr').addEventListener('click', () => {
+  $('#wysiwyg').focus();
+  if (savedRange) { const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(savedRange); }
+  const hrTable = '<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin:16px 0;"><tr><td style="border-top:1px solid #dddddd; font-size:0; line-height:0; height:1px;">&nbsp;</td></tr></table>';
+  document.execCommand('insertHTML', false, hrTable);
+  saveSelection();
+  debouncedRefresh();
+});
+
+/* 취소선 — execCommand strikeThrough 대신 인라인 text-decoration */
+$('#btnStrike').addEventListener('mousedown', e => e.preventDefault());
+$('#btnStrike').addEventListener('click', () => {
+  applyInlineStyle('textDecoration', 'line-through');
+});
+
+/* 글머리표 / 번호 매기기 — 생성 후 ul/ol에 인라인 padding 자동 보정 (Outlook 호환) */
+function insertList(tag) {
+  $('#wysiwyg').focus();
+  if (savedRange) { const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(savedRange); }
+  const cmd = tag === 'ul' ? 'insertUnorderedList' : 'insertOrderedList';
+  document.execCommand(cmd, false, null);
+  // 방금 만들어진 ul/ol에 인라인 style 보정
+  setTimeout(() => {
+    $('#wysiwyg').querySelectorAll('ul, ol').forEach(list => {
+      if (!list.style.paddingLeft) list.style.paddingLeft = '20px';
+      if (!list.style.margin) list.style.margin = '6px 0';
+    });
+    saveSelection();
+    debouncedRefresh();
+  }, 0);
+}
+$('#btnUL').addEventListener('mousedown', e => e.preventDefault());
+$('#btnUL').addEventListener('click', () => insertList('ul'));
+$('#btnOL').addEventListener('mousedown', e => e.preventDefault());
+$('#btnOL').addEventListener('click', () => insertList('ol'));
+
+/* ============================================================
+   표 삽입 popover (5x8 그리드)
+============================================================ */
+const TABLE_GRID_ROWS = 5;
+const TABLE_GRID_COLS = 8;
+(function initTableGrid() {
+  const grid = $('#tableGrid');
+  const cells = [];
+  for (let r = 0; r < TABLE_GRID_ROWS; r++) {
+    for (let c = 0; c < TABLE_GRID_COLS; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'table-grid-cell';
+      cell.dataset.r = r;
+      cell.dataset.c = c;
+      grid.appendChild(cell);
+      cells.push(cell);
+    }
+  }
+  function highlight(rh, ch) {
+    cells.forEach(cell => {
+      const r = +cell.dataset.r, c = +cell.dataset.c;
+      cell.classList.toggle('hover', r <= rh && c <= ch);
+    });
+    $('#tableGridInfo').textContent = `${rh+1} × ${ch+1}`;
+  }
+  cells.forEach(cell => {
+    cell.addEventListener('mouseenter', () => highlight(+cell.dataset.r, +cell.dataset.c));
+    cell.addEventListener('mousedown', e => e.preventDefault());
+    cell.addEventListener('click', () => {
+      insertTable(+cell.dataset.r + 1, +cell.dataset.c + 1);
+      $('#tableInsertBtn').parentElement.classList.remove('open');
+    });
+  });
+  $('#tableInsertBtn').addEventListener('mousedown', e => e.preventDefault());
+  $('#tableInsertBtn').addEventListener('click', () => {
+    const wrap = $('#tableInsertBtn').parentElement;
+    document.querySelectorAll('.color-wrap.open').forEach(w => w.classList.remove('open'));
+    wrap.classList.toggle('open');
+    highlight(-1, -1);
+  });
+  // 외부 클릭 시 닫기
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.table-wrap')) {
+      document.querySelectorAll('.table-wrap.open').forEach(w => w.classList.remove('open'));
+    }
+  });
+})();
+
+function insertTable(rows, cols) {
+  $('#wysiwyg').focus();
+  if (savedRange) { const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(savedRange); }
+  let html = '<table class="editable-table" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse; margin:10px 0; table-layout:fixed;"><tbody>';
+  for (let r = 0; r < rows; r++) {
+    html += '<tr>';
+    for (let c = 0; c < cols; c++) {
+      html += '<td style="border:1px solid #ddd; padding:8px; vertical-align:top;">&nbsp;</td>';
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table><p>&nbsp;</p>';
+  document.execCommand('insertHTML', false, html);
+  saveSelection();
+  debouncedRefresh();
+}
+
+/* ============================================================
+   표 셀 컨텍스트 메뉴 (행/열 추가·삭제)
+============================================================ */
+let ctxActiveCell = null;
+
+function showTableCtxMenu(td, x, y) {
+  // 이전 active 제거
+  document.querySelectorAll('#wysiwyg td.ctx-active').forEach(el => el.classList.remove('ctx-active'));
+  td.classList.add('ctx-active');
+  ctxActiveCell = td;
+
+  const menu = $('#tableCtxMenu');
+  menu.classList.add('show');
+  // 위치 보정: 화면 밖으로 안 나가게
+  const mw = menu.offsetWidth || 180;
+  const mh = menu.offsetHeight || 240;
+  const maxX = window.innerWidth - mw - 10;
+  const maxY = window.innerHeight - mh - 10;
+  menu.style.left = Math.min(x, maxX) + 'px';
+  menu.style.top  = Math.min(y, maxY) + 'px';
+}
+
+function hideTableCtxMenu() {
+  $('#tableCtxMenu').classList.remove('show');
+  document.querySelectorAll('#wysiwyg td.ctx-active').forEach(el => el.classList.remove('ctx-active'));
+  ctxActiveCell = null;
+}
+
+// 본문 안에서 표 셀 우클릭 시 메뉴
+$('#wysiwyg').addEventListener('contextmenu', e => {
+  const td = e.target.closest('td');
+  if (td && $('#wysiwyg').contains(td)) {
+    e.preventDefault();
+    showTableCtxMenu(td, e.clientX, e.clientY);
+  }
+});
+
+// 외부 클릭 시 메뉴 닫기
+document.addEventListener('click', e => {
+  if (!e.target.closest('.table-ctx-menu')) hideTableCtxMenu();
+});
+
+// 메뉴 항목 클릭
+document.querySelectorAll('#tableCtxMenu .ctx-item').forEach(item => {
+  item.addEventListener('mousedown', e => e.preventDefault());
+  item.addEventListener('click', () => {
+    if (!ctxActiveCell) return;
+    const act = item.dataset.act;
+    handleTableAction(act, ctxActiveCell);
+    hideTableCtxMenu();
+    debouncedRefresh();
+  });
+});
+
+function handleTableAction(act, td) {
+  const tr = td.parentElement;
+  const tbody = tr.parentElement;
+  const table = tbody.closest('table');
+  const colIdx = Array.from(tr.children).indexOf(td);
+  const rowIdx = Array.from(tbody.children).indexOf(tr);
+  const colCount = tr.children.length;
+
+  switch (act) {
+    case 'row-above': insertRow(tbody, rowIdx, colCount); break;
+    case 'row-below': insertRow(tbody, rowIdx + 1, colCount); break;
+    case 'col-left':  insertCol(tbody, colIdx); break;
+    case 'col-right': insertCol(tbody, colIdx + 1); break;
+    case 'row-del':
+      if (tbody.children.length > 1) tr.remove();
+      else alert('마지막 행은 삭제할 수 없습니다. 표 전체 삭제를 선택해 주세요.');
+      break;
+    case 'col-del':
+      if (colCount > 1) {
+        Array.from(tbody.children).forEach(row => {
+          if (row.children[colIdx]) row.children[colIdx].remove();
+        });
+      } else {
+        alert('마지막 열은 삭제할 수 없습니다. 표 전체 삭제를 선택해 주세요.');
+      }
+      break;
+    case 'merge': mergeSelectedCells(table); break;
+    case 'split-row': splitRowspan(td); break;
+    case 'split-col': splitColspan(td); break;
+    case 'width-even': evenWidths(table); break;
+    case 'table-del':
+      if (confirm('표 전체를 삭제하시겠습니까?')) table.remove();
+      break;
+  }
+}
+
+/* ============================================================
+   드래그 셀 선택
+============================================================ */
+let dragStart = null;
+let dragTable = null;
+let isDragging = false;
+
+$('#wysiwyg').addEventListener('mousedown', e => {
+  const td = e.target.closest('td');
+  if (!td || !$('#wysiwyg').contains(td)) return;
+  const table = td.closest('table.editable-table');
+  if (!table) return;
+  // 우클릭은 dragselect 대상이 아님
+  if (e.button !== 0) return;
+
+  // 기존 선택 초기화
+  clearDragSelection();
+  dragStart = td;
+  dragTable = table;
+  isDragging = false;
+  table.classList.add('drag-mode');
+});
+
+$('#wysiwyg').addEventListener('mousemove', e => {
+  if (!dragStart || !dragTable) return;
+  const td = e.target.closest('td');
+  if (!td || !dragTable.contains(td)) return;
+  if (td === dragStart && !isDragging) return;
+  isDragging = true;
+  highlightCellRange(dragStart, td);
+});
+
+document.addEventListener('mouseup', () => {
+  if (dragTable) dragTable.classList.remove('drag-mode');
+  dragStart = null;
+  dragTable = null;
+  // isDragging 유지 → 사용자가 컨텍스트 메뉴 띄울 때 selectedCells 사용
+});
+
+function cellPos(td) {
+  const tr = td.parentElement;
+  const tbody = tr.parentElement;
+  return {
+    row: Array.from(tbody.children).indexOf(tr),
+    col: Array.from(tr.children).indexOf(td),
+    tbody
+  };
+}
+
+function highlightCellRange(a, b) {
+  const pa = cellPos(a), pb = cellPos(b);
+  if (pa.tbody !== pb.tbody) return;
+  const r1 = Math.min(pa.row, pb.row), r2 = Math.max(pa.row, pb.row);
+  const c1 = Math.min(pa.col, pb.col), c2 = Math.max(pa.col, pb.col);
+  clearDragSelection();
+  for (let r = r1; r <= r2; r++) {
+    const row = pa.tbody.children[r];
+    if (!row) continue;
+    for (let c = c1; c <= c2; c++) {
+      if (row.children[c]) row.children[c].classList.add('dragsel');
+    }
+  }
+}
+
+function getSelectedCells(table) {
+  return Array.from(table.querySelectorAll('td.dragsel'));
+}
+
+function clearDragSelection() {
+  document.querySelectorAll('#wysiwyg td.dragsel').forEach(td => td.classList.remove('dragsel'));
+}
+
+/* ============================================================
+   셀 병합 / 분할 / 너비 균등
+============================================================ */
+function mergeSelectedCells(table) {
+  const cells = getSelectedCells(table);
+  if (cells.length < 2) {
+    alert('병합할 셀을 먼저 드래그로 선택해 주세요. (2개 이상)');
+    return;
+  }
+  // 직사각형 영역 확인
+  const positions = cells.map(cellPos);
+  const rows = positions.map(p => p.row);
+  const cols = positions.map(p => p.col);
+  const r1 = Math.min(...rows), r2 = Math.max(...rows);
+  const c1 = Math.min(...cols), c2 = Math.max(...cols);
+  const expected = (r2 - r1 + 1) * (c2 - c1 + 1);
+  if (cells.length !== expected) {
+    alert('직사각형 영역만 병합할 수 있습니다.');
+    return;
+  }
+  // 첫 셀에 rowspan/colspan 적용
+  const tbody = positions[0].tbody;
+  const firstCell = tbody.children[r1].children[c1];
+  firstCell.setAttribute('rowspan', r2 - r1 + 1);
+  firstCell.setAttribute('colspan', c2 - c1 + 1);
+  // 나머지 셀 내용 합쳐서 first에 넣고 제거
+  let mergedHTML = firstCell.innerHTML.replace(/&nbsp;/g, '').trim();
+  cells.forEach(td => {
+    if (td !== firstCell) {
+      const inner = td.innerHTML.replace(/&nbsp;/g, '').trim();
+      if (inner) mergedHTML += ' ' + inner;
+      td.remove();
+    }
+  });
+  firstCell.innerHTML = mergedHTML || '&nbsp;';
+  firstCell.classList.remove('dragsel');
+}
+
+function splitRowspan(td) {
+  const span = parseInt(td.getAttribute('rowspan') || '1', 10);
+  if (span <= 1) { alert('이 셀은 rowspan이 없어 분할할 수 없습니다.'); return; }
+  const tbody = td.closest('tbody');
+  const pos = cellPos(td);
+  td.removeAttribute('rowspan');
+  // 아래 행들에 같은 colspan을 가진 빈 셀 추가
+  const cs = parseInt(td.getAttribute('colspan') || '1', 10);
+  for (let r = 1; r < span; r++) {
+    const row = tbody.children[pos.row + r];
+    if (!row) continue;
+    const newTd = document.createElement('td');
+    newTd.style.cssText = 'border:1px solid #ddd; padding:8px; vertical-align:top;';
+    if (cs > 1) newTd.setAttribute('colspan', cs);
+    newTd.innerHTML = '&nbsp;';
+    // 적절한 위치에 삽입 (colSpan으로 인해 위치 추정 어려움 — 일단 끝에 append)
+    row.insertBefore(newTd, row.children[pos.col] || null);
+  }
+}
+
+function splitColspan(td) {
+  const span = parseInt(td.getAttribute('colspan') || '1', 10);
+  if (span <= 1) { alert('이 셀은 colspan이 없어 분할할 수 없습니다.'); return; }
+  td.removeAttribute('colspan');
+  for (let c = 1; c < span; c++) {
+    const newTd = document.createElement('td');
+    newTd.style.cssText = 'border:1px solid #ddd; padding:8px; vertical-align:top;';
+    newTd.innerHTML = '&nbsp;';
+    td.parentElement.insertBefore(newTd, td.nextSibling);
+  }
+}
+
+function evenWidths(table) {
+  // 1행 기준으로 colCount 파악, 각 td에 동일 width% 적용
+  const firstRow = table.querySelector('tr');
+  if (!firstRow) return;
+  // colspan 합산해서 실제 column 수 계산
+  let totalCols = 0;
+  Array.from(firstRow.children).forEach(td => {
+    totalCols += parseInt(td.getAttribute('colspan') || '1', 10);
+  });
+  if (totalCols === 0) return;
+  const unitWidth = (100 / totalCols).toFixed(2);
+  Array.from(firstRow.children).forEach(td => {
+    const cs = parseInt(td.getAttribute('colspan') || '1', 10);
+    td.style.width = (unitWidth * cs).toFixed(2) + '%';
+  });
+  // table-layout: fixed 보장
+  table.style.tableLayout = 'fixed';
+}
+
+function insertRow(tbody, atIndex, colCount) {
+  const newRow = document.createElement('tr');
+  for (let i = 0; i < colCount; i++) {
+    const td = document.createElement('td');
+    td.style.cssText = 'border:1px solid #ddd; padding:8px; vertical-align:top;';
+    td.innerHTML = '&nbsp;';
+    newRow.appendChild(td);
+  }
+  const ref = tbody.children[atIndex];
+  if (ref) tbody.insertBefore(newRow, ref);
+  else tbody.appendChild(newRow);
+}
+
+function insertCol(tbody, atIndex) {
+  Array.from(tbody.children).forEach(row => {
+    const td = document.createElement('td');
+    td.style.cssText = 'border:1px solid #ddd; padding:8px; vertical-align:top;';
+    td.innerHTML = '&nbsp;';
+    const ref = row.children[atIndex];
+    if (ref) row.insertBefore(td, ref);
+    else row.appendChild(td);
+  });
+}
+
+/* HTML 클린업 수동 버튼 */
+$('#cleanupBtn').addEventListener('click', () => {
+  cleanupBody();
+  saveSelection();
+  refresh();
+  const b = $('#cleanupBtn');
+  b.style.background = '#28a745';
+  b.style.color = '#fff';
+  setTimeout(() => { b.style.background = ''; b.style.color = ''; }, 600);
+});
+
+/* ============================================================
+   다운로드 / 복사
+============================================================ */
+function download(filename, html) {
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
+}
+
+$('#btnDownload').addEventListener('click', () => {
+  readControls();
+  const html = buildFullHTML({
+    target: state.target, shape: state.shape, footerType: state.footer,
+    ctaConfig: state.cta, dateMode: state.datemode, bodyHTML: getBodyHTML()
+  });
+  download(buildFilename(), html);
+});
+
+$('#btnDownloadAll').addEventListener('click', () => {
+  readControls();
+  const body = getBodyHTML();
+  const combos = state.shape === 'bare'
+    ? [{ target:'personal', shape:'bare', footer:'receivable' }]
+    : [
+      { target:'personal',  footer:'receivable' },
+      { target:'personal',  footer:'sendonly' },
+      { target:'corporate', footer:'receivable' },
+      { target:'corporate', footer:'sendonly' }
+    ];
+  combos.forEach((c, i) => {
+    setTimeout(() => {
+      const html = buildFullHTML({
+        target: c.target,
+        shape: state.shape,
+        footerType: c.footer,
+        ctaConfig: state.cta,
+        dateMode: state.datemode,
+        bodyHTML: body
+      });
+      const stamp = formatToday().replace(/\./g,'');
+      const fn = state.shape === 'bare'
+        ? `incruit_bare_${stamp}.html`
+        : `incruit_${state.shape}_${c.target}_${c.footer}_${stamp}.html`;
+      download(fn, html);
+    }, i * 280);
+  });
+});
+
+$('#btnCopy').addEventListener('click', async () => {
+  readControls();
+  const html = buildFullHTML({
+    target: state.target, shape: state.shape, footerType: state.footer,
+    ctaConfig: state.cta, dateMode: state.datemode, bodyHTML: getBodyHTML()
+  });
+  try {
+    await navigator.clipboard.writeText(html);
+    const b = $('#btnCopy'); const o = b.innerHTML;
+    b.innerHTML = '<svg class="icon"><use href="#i-check"/></svg><span>복사됨</span>';
+    setTimeout(() => b.innerHTML = o, 1500);
+  } catch (e) { alert('복사 실패: ' + e.message); }
+});
+
+/* ============================================================
+   바인딩
+============================================================ */
+/* 디바운스: 너무 잦은 iframe 리렌더 방지(200ms) */
+let refreshTimer = null;
+function debouncedRefresh() {
+  clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(refresh, 200);
+}
+
+document.querySelectorAll('input[type=radio], #ctaEnable').forEach(r => r.addEventListener('change', refresh));
+['ctaText','ctaUrl'].forEach(id => $('#'+id).addEventListener('input', debouncedRefresh));
+
+/* 본문 에디터: input/keyup/paste/cut/drop 모두 잡기 (브라우저별 contenteditable 차이 보강) */
+const wy = $('#wysiwyg');
+['input','keyup','paste','cut','drop'].forEach(ev => wy.addEventListener(ev, debouncedRefresh));
+$('#htmlsrc').addEventListener('input', debouncedRefresh);
+
+/* 본문 selection 저장: 커서 이동/입력/포커스 잃기 직전에 항상 저장
+   → 모달 클릭으로 포커스가 빠져도 마지막 커서 위치를 복원할 수 있게 */
+['mouseup','keyup','focus','blur','input'].forEach(ev => wy.addEventListener(ev, saveSelection));
+
+/* 본문 blur 시 자동 클린업 — 사용자가 본문에서 손 떼면 중첩 span 정리 */
+wy.addEventListener('blur', () => {
+  setTimeout(() => {
+    // 모달이 열린 상태면 정리 미루기 (커서 위치 복원에 방해)
+    if ($('#modalBg').classList.contains('show')) return;
+    cleanupBody();
+  }, 150);
+});
+
+/* 수동 미리보기 갱신 버튼 */
+$('#btnRefreshPreview').addEventListener('click', () => {
+  refresh();
+  const b = $('#btnRefreshPreview');
+  b.classList.remove('flash');
+  void b.offsetWidth;  // reflow
+  b.classList.add('flash');
+});
+
+// 초기
+refresh();
+</script>
+</body>
+</html>
