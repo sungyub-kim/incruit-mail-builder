@@ -1119,7 +1119,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.23</span>
+    <span class="sub">v2.24</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -3739,12 +3739,17 @@ function removeInsertMarker() {
    - Case B: 본문에 자체 wrap 없음 → 본문 전체를 라운드 wrap + 흰 카드 구조로 자동 변환 + 외부 CTA를 wrap의 흰 카드 외부에 배치 */
 function injectOuterCtaIntoRoundCard(html) {
   const wy = $('#wysiwyg');
-  // outer_cta의 inner tr들 추출
+  // outer_cta의 inner tr들 추출 (가장 외곽 table의 직속 tr만 — 중첩 table 안 tr 제외)
   const tmp = document.createElement('div');
   tmp.innerHTML = html;
-  const innerTrs = tmp.querySelectorAll('table > tbody > tr, table > tr');
-  if (innerTrs.length === 0) return false;
-  const outerTrsHTML = Array.from(innerTrs).map(tr => tr.outerHTML).join('');
+  const outerTable = tmp.querySelector('table');
+  if (!outerTable) return false;
+  const outerTbody = outerTable.querySelector(':scope > tbody');
+  const directRows = outerTbody
+    ? outerTbody.querySelectorAll(':scope > tr')
+    : outerTable.querySelectorAll(':scope > tr');
+  if (directRows.length === 0) return false;
+  const outerTrsHTML = Array.from(directRows).map(tr => tr.outerHTML).join('');
 
   // Case A: 본문이 자체 라운드 wrap 가짐
   const roundTable = wy.querySelector(
