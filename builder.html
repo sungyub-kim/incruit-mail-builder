@@ -986,7 +986,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.9</span>
+    <span class="sub">v2.10</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -3314,6 +3314,36 @@ function removeInsertMarker() {
   const m = document.getElementById('__insert_marker__');
   if (m) m.remove();
 }
+/* 부분 템플릿 즉시 적용 — 모달 없이 현재 커서 위치에 execCommand로 삽입 (undo 가능) */
+function applyPartialImmediate(s) {
+  if (state.mode === 'html') {
+    const ta = $('#htmlsrc');
+    const start = ta.selectionStart, end = ta.selectionEnd;
+    ta.value = ta.value.substring(0, start) + s.html + ta.value.substring(end);
+    ta.selectionStart = ta.selectionEnd = start + s.html.length;
+    ta.focus();
+  } else {
+    $('#wysiwyg').focus();
+    if (savedRange) {
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(savedRange);
+    }
+    // execCommand 사용 → 브라우저 undo 스택에 등록됨 (Ctrl+Z로 되돌리기 가능)
+    document.execCommand('insertHTML', false, s.html);
+    saveSelection();
+  }
+  // 적용 피드백: 카드 짧은 깜빡임
+  const card = document.querySelector(`.snippet-card[data-id="${s.id}"]`);
+  if (card) {
+    card.style.transition = 'background 0.15s';
+    card.style.background = 'var(--accent-soft)';
+    setTimeout(() => { card.style.background = ''; }, 400);
+  }
+  hideSnippetPopover();
+  refresh();
+}
+
 function insertAtMarker(html) {
   const marker = document.getElementById('__insert_marker__');
   if (marker) {
@@ -3328,14 +3358,20 @@ function insertAtMarker(html) {
 function askApplySnippet(id) {
   const s = SNIPPETS.find(x => x.id === id);
   if (!s) return;
-  pendingSnippet = s;
 
   const category = s.category || 'full';
 
-  // 부분 템플릿이면 모달 열기 전에 마커 박아두기 (에디터 모드에서만)
-  if (category !== 'full' && state.mode === 'editor') {
-    placeInsertMarker();
+  // 부분 템플릿은 모달 없이 즉시 적용 (Ctrl+Z로 undo 가능)
+  if (category === 'partial') {
+    applyPartialImmediate(s);
+    return;
   }
+
+  pendingSnippet = s;
+
+  // 전체/공지는 모달 거침 (기존 로직 유지)
+  // 마커는 더 이상 부분에서 안 쓰지만, 안전망 차원에서 본문 외 카테고리는 그대로
+  // (현재 전체/공지는 본문 통째 교체라 마커 불필요)
 
   // 제목 / 메타
   $('#modalTitle').textContent = (category === 'full' ? '전체 템플릿 적용 — ' : '부분 템플릿 삽입 — ') + s.name;
