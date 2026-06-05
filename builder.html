@@ -1119,7 +1119,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.25</span>
+    <span class="sub">v2.26</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -3491,9 +3491,13 @@ function resolveSnippetHTML(s) {
   if (!isCommon) return s.html;
   if (state.target === 'corporate') {
     return s.html
+      // 메인 액센트
       .replace(/#ff460a/gi, '#2f80e5')
       .replace(/#fe450a/gi, '#2f80e5')
-      .replace(/#ffece7/gi, '#eef4ff');
+      // 라운드 외곽 배경
+      .replace(/#ffece7/gi, '#eef4ff')
+      // 강조 박스 보더
+      .replace(/#ffc7b6/gi, '#c8def9');
   }
   return s.html;
 }
@@ -4929,7 +4933,8 @@ function debouncedRefresh() {
 }
 
 /* 대상 변경 시 본문에 박힌 컬러도 양방향 자동 치환
-   (이미 부분 적용된 본문이 대상 변경에 따라가도록) */
+   (이미 부분 적용된 본문이 대상 변경에 따라가도록)
+   ⚠ 정밀 매핑: 메인 액센트 + 마감일 변종 + 라운드 외곽 배경 + 강조 박스 보더 모두 처리 */
 function syncBodyColorsToTarget(newTarget) {
   const wy = $('#wysiwyg');
   const ta = $('#htmlsrc');
@@ -4937,19 +4942,29 @@ function syncBodyColorsToTarget(newTarget) {
   let next = html;
   if (newTarget === 'corporate') {
     next = next
+      // 메인 액센트
       .replace(/#ff460a/gi, '#2f80e5')
       .replace(/#fe450a/gi, '#2f80e5')
-      .replace(/#ffece7/gi, '#eef4ff');
+      // 라운드 외곽 배경
+      .replace(/#ffece7/gi, '#eef4ff')
+      // 강조 박스 보더 (피치 → 라이트 블루)
+      .replace(/#ffc7b6/gi, '#c8def9');
   } else {
     next = next
+      // 메인 액센트 (기업 라이트 + 다크 모두 개인 메인으로 통일)
       .replace(/#2f80e5/gi, '#ff460a')
       .replace(/#2772d0/gi, '#ff460a')
-      .replace(/#eef4ff/gi, '#ffece7');
+      // 라운드 외곽 배경
+      .replace(/#eef4ff/gi, '#ffece7')
+      // 강조 박스 보더
+      .replace(/#c8def9/gi, '#ffc7b6');
   }
   if (next !== html) {
     if (state.mode === 'editor') wy.innerHTML = next;
     else ta.value = next;
   }
+  // 본문 변경 후 미리보기/라이브러리 카드 색상도 즉시 갱신
+  if (typeof refresh === 'function') refresh();
 }
 
 document.querySelectorAll('input[name=target]').forEach(r => {
