@@ -126,7 +126,9 @@
     display: grid;
     grid-template-columns: 280px 1fr 1fr;
     overflow: hidden;
+    transition: grid-template-columns 0.25s ease;
   }
+  body.lib-expanded main { grid-template-columns: 480px 1fr 1fr; }
 
   /* ============ 좌측 ============ */
   aside.left {
@@ -264,7 +266,14 @@
   .check-card.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 600; }
   .check-card input { margin: 0; accent-color: var(--accent); }
 
-  .snippet-list { display: flex; flex-direction: column; gap: 6px; min-height: 240px; }
+  .snippet-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    min-height: 240px;
+    --thumb-scale: 0.16;
+  }
+  body.lib-expanded .snippet-list { grid-template-columns: repeat(3, 1fr); --thumb-scale: 0.18; }
   .snippet-card {
     border: 1.5px solid var(--line);
     border-radius: 6px;
@@ -274,6 +283,8 @@
     transition: all 0.15s;
     overflow: hidden;
     position: relative;
+    display: flex;
+    flex-direction: column;
   }
   .snippet-card:hover {
     border-color: var(--accent);
@@ -282,7 +293,7 @@
   }
   .snippet-card .thumb {
     width: 100%;
-    height: 92px;
+    aspect-ratio: 1 / 1.3;
     border-radius: 4px;
     overflow: hidden;
     position: relative;
@@ -293,7 +304,7 @@
     width: 800px;
     height: 1100px;
     border: 0;
-    transform: scale(0.28);
+    transform: scale(var(--thumb-scale));
     transform-origin: 0 0;
     pointer-events: none;
     background: #fff;
@@ -877,6 +888,61 @@
   }
   body.move-mode .move-mode-banner { display: block; }
 
+  /* 라이브러리 헤더 (제목 + 확장 토글) */
+  .lib-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .lib-expand-btn {
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 3px 7px;
+    font-size: 10px;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .lib-expand-btn:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .lib-expand-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* 확장 모드: 컨트롤 섹션 숨김 */
+  body.lib-expanded .left-section:not(.scroll) { display: none; }
+
+  /* 부분 태그 필터 칩 */
+  .tag-filter {
+    display: none;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .tag-filter.show { display: flex; }
+  .tag-chip {
+    padding: 3px 8px;
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    background: #fff;
+    font-size: 10px;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.12s;
+  }
+  .tag-chip:hover { border-color: var(--line2); color: var(--text); }
+  .tag-chip.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+
   /* 라이브러리 탭 */
   .lib-tabs {
     display: flex;
@@ -998,7 +1064,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.11</span>
+    <span class="sub">v2.12</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -1109,12 +1175,19 @@
     </div>
 
     <div class="left-section scroll">
-      <h3>본문 템플릿 라이브러리</h3>
+      <div class="lib-header">
+        <h3 style="margin:0">본문 템플릿 라이브러리</h3>
+        <button class="lib-expand-btn" id="libExpandBtn" title="라이브러리 확장 / 축소">
+          <svg class="icon" style="width:11px;height:11px;"><use href="#i-columns"/></svg>
+          <span id="libExpandLabel">확장</span>
+        </button>
+      </div>
       <div class="lib-tabs" id="libTabs">
         <button class="lib-tab active" data-tab="full">전체 <span class="count" id="cntFull">0</span></button>
         <button class="lib-tab" data-tab="notice">공지사항용 <span class="count" id="cntNotice">0</span></button>
         <button class="lib-tab" data-tab="partial">부분 <span class="count" id="cntPartial">0</span></button>
       </div>
+      <div class="tag-filter" id="tagFilter"></div>
       <div id="snippetList" class="snippet-list"></div>
     </div>
   </aside>
@@ -2272,6 +2345,7 @@ const SNIPPETS = [
     name: '공고 섹션 카드 (제목 + 아이콘 + 공고 3개)',
     target: 'personal',
     category: 'partial',
+    tags: ['목록', '섹션', '공고'],
     description: '흰 카드 안에 섹션 제목(아이콘 포함) + 공고 row 3개. 라운드 메일의 한 섹션 재사용 단위',
     html: `<div style="margin: 10px 0;">
   <table width="100%" border="0" cellspacing="0" cellpadding="0">
@@ -2519,6 +2593,7 @@ const SNIPPETS = [
     name: '공고 row (회사 + 마감일 + 직무명 + 화살표)',
     target: 'personal',
     category: 'partial',
+    tags: ['목록', '공고'],
     description: '공고 1개 row — 회사명/마감일/직무명/화살표. 흰 카드 안 섹션에 반복 사용. \\${t.COMPANY_NM}, \\${t.INVITE_CLOSE_DT}, \\${t_JOB_TITLE}',
     html: `<table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; table-layout: fixed; border-top: 1px solid #efefef;">
   <colgroup><col width="*"><col width="30px"></colgroup>
@@ -2536,6 +2611,7 @@ const SNIPPETS = [
     name: 'CTA 버튼 - 라운드 (개인 #ff460a, 230px)',
     target: 'personal',
     category: 'partial',
+    tags: ['버튼'],
     description: '라운드형 풀폭 CTA 버튼 (230px, #ff460a). 텍스트와 링크는 삽입 후 직접 수정',
     html: `<div style="margin: 10px 0; text-align: center;">
   <table width="230" border="0" cellspacing="0" cellpadding="0" align="center">
@@ -2657,6 +2733,7 @@ const SNIPPETS = [
     name: '안내 박스 (회색 배경 + 강조어)',
     target: 'personal',
     category: 'partial',
+    tags: ['강조 박스', '본문 텍스트'],
     description: '회색 배경 + 둥근 테두리 안내 박스. 법령·공지·중요 문구 강조에 재사용. 강조어는 #ff460a',
     html: `<div style="margin: 10px 0;">
   <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: separate">
@@ -2675,6 +2752,7 @@ const SNIPPETS = [
     name: '타이틀 + 텍스트 블록',
     target: 'personal',
     category: 'partial',
+    tags: ['타이틀+본문'],
     description: '상단 타이틀(강조어 #ff460a) + 본문 인사말/안내 텍스트. 흰 카드 안에 들어가는 기본 블록',
     html: `<div style="margin: 10px 0;">
   <table align="left" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse">
@@ -2706,6 +2784,7 @@ const SNIPPETS = [
     name: '타이틀 + 텍스트 블록',
     target: 'corporate',
     category: 'partial',
+    tags: ['타이틀+본문'],
     description: '상단 타이틀(강조어 #2f80e5) + 본문 인사말/안내 텍스트. 흰 카드 안에 들어가는 기본 블록',
     html: `<div style="margin: 10px 0;">
   <table align="left" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse">
@@ -2737,6 +2816,7 @@ const SNIPPETS = [
     name: '대표 이력서 요약 카드',
     target: 'personal',
     category: 'partial',
+    tags: ['정보 카드', '목록'],
     description: '학력/경력/희망직종/직무기술 4줄 요약 (회색 박스). 항목은 자유롭게 추가/삭제 가능',
     html: `<div style="margin: 10px 0;">
   <table width="100%" border="0" cellspacing="0" cellpadding="0" style="padding: 20px 20px 20px; border: 1px solid #E7E7E7; border-radius: 8px; background: #F8F8F8; box-sizing: border-box; border-collapse: separate;">
@@ -3157,13 +3237,15 @@ function detectSnippetBadges(html) {
   return badges;
 }
 
+let activeTagFilter = 'all';
+
 function renderSnippets() {
   const list = $('#snippetList');
   const isNoticeShape = state.shape === 'notice' || state.shape === 'notice_image';
 
   const allForTarget = SNIPPETS.filter(s => s.target === state.target || s.target === 'common');
   const full = allForTarget.filter(s => (s.category || 'full') === 'full');
-  const partial = allForTarget.filter(s => (s.category || 'full') === 'partial');
+  let partial = allForTarget.filter(s => (s.category || 'full') === 'partial');
   const notice = allForTarget.filter(s => (s.category || 'full') === 'notice');
 
   // 탭 카운트 + 활성/비활성
@@ -3203,6 +3285,31 @@ function renderSnippets() {
       <span style="font-size: 10px; color: #999;">공지 텍스트형(noticeTemp) /<br />공지 이미지형(940px) 양쪽<br />본문 샘플 받으면 등록</span>
     </div>`;
     return;
+  }
+
+  // 부분 탭: 태그 필터 칩 + 적용
+  const tagFilterEl = $('#tagFilter');
+  if (state.libTab === 'partial') {
+    const allTags = [...new Set(partial.flatMap(s => s.tags || []))].sort();
+    const chips = ['all', ...allTags];
+    tagFilterEl.innerHTML = chips.map(t => {
+      const isActive = activeTagFilter === t;
+      const label = t === 'all' ? '전체' : '#' + t;
+      return `<button class="tag-chip ${isActive ? 'active' : ''}" data-tag="${t}">${label}</button>`;
+    }).join('');
+    tagFilterEl.classList.add('show');
+    tagFilterEl.querySelectorAll('.tag-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        activeTagFilter = chip.dataset.tag;
+        renderSnippets();
+      });
+    });
+    if (activeTagFilter !== 'all') {
+      partial = partial.filter(s => (s.tags || []).includes(activeTagFilter));
+    }
+  } else {
+    tagFilterEl.classList.remove('show');
+    tagFilterEl.innerHTML = '';
   }
 
   const items = state.libTab === 'full' ? full : partial;
@@ -3297,11 +3404,22 @@ document.querySelectorAll('#libTabs .lib-tab').forEach(btn => {
   btn.addEventListener('click', () => {
     if (btn.classList.contains('disabled')) return;  // 비활성 탭은 클릭 무시
     state.libTab = btn.dataset.tab;
+    activeTagFilter = 'all';  // 탭 변경 시 태그 초기화
     document.querySelectorAll('#libTabs .lib-tab').forEach(t => {
       t.classList.toggle('active', t === btn);
     });
     renderSnippets();
   });
+});
+
+// 라이브러리 확장 토글
+$('#libExpandBtn').addEventListener('click', () => {
+  document.body.classList.toggle('lib-expanded');
+  const expanded = document.body.classList.contains('lib-expanded');
+  $('#libExpandBtn').classList.toggle('active', expanded);
+  $('#libExpandLabel').textContent = expanded ? '축소' : '확장';
+  // 그리드 변경 후 카드 다시 렌더 (썸네일 scale 갱신용)
+  renderSnippets();
 });
 
 /* ============================================================
