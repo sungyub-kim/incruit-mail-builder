@@ -372,6 +372,25 @@
   }
   .email-canvas[data-shape="round"]  { max-width: 640px; }
   .email-canvas[data-shape="bare"]   { max-width: 700px; box-shadow:none; border:0; background: transparent; }
+
+  /* 라운드 형태일 때 본문 작성 영역도 미리보기와 동일하게 라운드 카드 wrap 시각화 */
+  .email-canvas[data-shape="round"] #bodyEditorWrap {
+    background: #ffece7;
+    border-radius: 20px;
+    padding: 16px;
+    margin: 10px 16px 30px;
+  }
+  body.corporate .email-canvas[data-shape="round"] #bodyEditorWrap {
+    background: #eef4ff;
+  }
+  .email-canvas[data-shape="round"] #wysiwyg {
+    background: #fff;
+    border-radius: 8px;
+    padding: 18px 20px 22px;
+    min-height: 200px;
+    font-family: Malgun Gothic, sans-serif;
+    letter-spacing: -0.08em;
+  }
   .email-canvas[data-shape="notice"] { max-width: 940px; }
   .email-canvas[data-shape="notice"] .meta-section { display: none !important; }
   .email-canvas[data-shape="notice"] #bodyEditorWrap { background: #fff; padding: 20px; }
@@ -731,7 +750,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.3</span>
+    <span class="sub">v2.4</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
