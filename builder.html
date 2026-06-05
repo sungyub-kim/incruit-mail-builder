@@ -1064,7 +1064,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.13</span>
+    <span class="sub">v2.14</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -2308,7 +2308,7 @@ const SNIPPETS = [
   {
     id: 'info_box_pin_list',
     name: '정보 박스 - 📌 라벨 리스트',
-    target: 'personal',
+    target: 'common',
     category: 'partial',
     tags: ['정보 카드', '목록'],
     description: '회색 배경 박스에 📌 + 라벨/값 행 반복. 기업명/공고명/마감일 등 정보 안내에 재사용',
@@ -2469,7 +2469,7 @@ const SNIPPETS = [
   {
     id: 'job_section_card',
     name: '공고 섹션 카드 (제목 + 아이콘 + 공고 3개)',
-    target: 'personal',
+    target: 'common',
     category: 'partial',
     tags: ['목록', '섹션', '공고'],
     description: '흰 카드 안에 섹션 제목(아이콘 포함) + 공고 row 3개. 라운드 메일의 한 섹션 재사용 단위',
@@ -2717,7 +2717,7 @@ const SNIPPETS = [
   {
     id: 'job_row_card',
     name: '공고 row (회사 + 마감일 + 직무명 + 화살표)',
-    target: 'personal',
+    target: 'common',
     category: 'partial',
     tags: ['목록', '공고'],
     description: '공고 1개 row — 회사명/마감일/직무명/화살표. 흰 카드 안 섹션에 반복 사용. \\${t.COMPANY_NM}, \\${t.INVITE_CLOSE_DT}, \\${t_JOB_TITLE}',
@@ -2733,12 +2733,12 @@ const SNIPPETS = [
 </table>`
   },
   {
-    id: 'cta_round_personal',
-    name: 'CTA 버튼 - 라운드 (개인 #ff460a, 230px)',
-    target: 'personal',
+    id: 'cta_round_common',
+    name: 'CTA 버튼 - 라운드 (230px)',
+    target: 'common',
     category: 'partial',
     tags: ['버튼'],
-    description: '라운드형 풀폭 CTA 버튼 (230px, #ff460a). 텍스트와 링크는 삽입 후 직접 수정',
+    description: '라운드형 풀폭 CTA 버튼 (230px). 대상에 따라 색 자동(개인 #ff460a / 기업 #2f80e5)',
     html: `<div style="margin: 10px 0; text-align: center;">
   <table width="230" border="0" cellspacing="0" cellpadding="0" align="center" style="margin: 0 auto;">
     <tbody>
@@ -2857,7 +2857,7 @@ const SNIPPETS = [
   {
     id: 'info_callout_box',
     name: '안내 박스 (회색 배경 + 강조어)',
-    target: 'personal',
+    target: 'common',
     category: 'partial',
     tags: ['강조 박스', '본문 텍스트'],
     description: '회색 배경 + 둥근 테두리 안내 박스. 법령·공지·중요 문구 강조에 재사용. 강조어는 #ff460a',
@@ -2874,12 +2874,12 @@ const SNIPPETS = [
 </div>`
   },
   {
-    id: 'title_text_personal',
+    id: 'title_text_common',
     name: '타이틀 + 텍스트 블록',
-    target: 'personal',
+    target: 'common',
     category: 'partial',
     tags: ['타이틀+본문'],
-    description: '상단 타이틀(강조어 #ff460a) + 본문 인사말/안내 텍스트. 흰 카드 안에 들어가는 기본 블록',
+    description: '상단 타이틀(강조어 — 대상에 따라 색 자동) + 본문 인사말/안내 텍스트',
     html: `<div style="margin: 10px 0;">
   <table align="left" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse">
     <tbody>
@@ -2906,41 +2906,9 @@ const SNIPPETS = [
 </div>`
   },
   {
-    id: 'title_text_corporate',
-    name: '타이틀 + 텍스트 블록',
-    target: 'corporate',
-    category: 'partial',
-    tags: ['타이틀+본문'],
-    description: '상단 타이틀(강조어 #2f80e5) + 본문 인사말/안내 텍스트. 흰 카드 안에 들어가는 기본 블록',
-    html: `<div style="margin: 10px 0;">
-  <table align="left" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse">
-    <tbody>
-      <tr>
-        <th align="left" style="font-size: 20px; letter-spacing: -2px; color: #333; padding-bottom: 20px; text-align: left;">
-          포지션제안 회원 <span style="color: #2f80e5;">개인정보</span> 확인 안내
-        </th>
-      </tr>
-      <tr>
-        <td align="left" style="font-size: 15px; line-height: 25px; color: #333">
-          안녕하세요. 인크루트입니다.<br>
-          <br>
-          항상 포지션제안 서비스를 이용해 주시는 회원님께 진심으로 감사드립니다.<br>
-          <br>
-          회원님의 계정은 최근 1년간 이력서 정보 업데이트 이력 없이<br>
-          포지션제안 공개 중임을 안내 드립니다.<br>
-          <br>
-          회원님의 소중한 개인정보 보호를 위해<br>
-          포지션제안 설정과 이력서 정보를 확인해 주시기 바랍니다.
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>`
-  },
-  {
     id: 'resume_summary_card',
     name: '대표 이력서 요약 카드',
-    target: 'personal',
+    target: 'common',
     category: 'partial',
     tags: ['정보 카드', '목록'],
     description: '학력/경력/희망직종/직무기술 4줄 요약 (회색 박스). 항목은 자유롭게 추가/삭제 가능',
@@ -3341,12 +3309,29 @@ function buildFilename() {
 /* ============================================================
    본문 템플릿 라이브러리 렌더
 ============================================================ */
+/* 부분 템플릿(common): 현재 대상 액센트 색으로 동적 치환
+   - 개인: 그대로 (#ff460a)
+   - 기업: 모든 #ff460a/#fe450a/#ffece7 → 기업 컬러로 치환 */
+function resolveSnippetHTML(s) {
+  const cat = s.category || 'full';
+  const isCommon = (s.target || 'common') === 'common' || cat === 'partial';
+  if (!isCommon) return s.html;
+  if (state.target === 'corporate') {
+    return s.html
+      .replace(/#ff460a/gi, '#2f80e5')
+      .replace(/#fe450a/gi, '#2f80e5')
+      .replace(/#ffece7/gi, '#eef4ff');
+  }
+  return s.html;
+}
+
 /* 라이브러리 카드 썸네일용 srcdoc 빌더 */
 function buildThumbSrcdoc(s) {
   const noticeCSS = s.noticeMode ? '<link rel="stylesheet" href="https://i.incru.it/ui/static/css/notice/common.css?20220812">' : '';
   const wrapOpen = s.noticeMode ? `<div class="noticeTemp ${s.noticeMode}">` : '<div>';
   const wrapClose = '</div>';
-  return `<!DOCTYPE html><html><head><meta charset="utf-8">${noticeCSS}<style>html,body{margin:0;padding:0;background:#fff;}body{font-family:'Malgun Gothic',sans-serif;padding:8px;font-size:13px;line-height:1.5;color:#222;}</style></head><body>${wrapOpen}${s.html}${wrapClose}</body></html>`;
+  const html = resolveSnippetHTML(s);
+  return `<!DOCTYPE html><html><head><meta charset="utf-8">${noticeCSS}<style>html,body{margin:0;padding:0;background:#fff;}body{font-family:'Malgun Gothic',sans-serif;padding:8px;font-size:13px;line-height:1.5;color:#222;}</style></head><body>${wrapOpen}${html}${wrapClose}</body></html>`;
 }
 function escapeAttrFull(s) {
   return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -3578,11 +3563,12 @@ function removeInsertMarker() {
 }
 /* 부분 템플릿 즉시 적용 — 모달 없이 현재 커서 위치에 execCommand로 삽입 (undo 가능) */
 function applyPartialImmediate(s) {
+  const resolvedHTML = resolveSnippetHTML(s);
   if (state.mode === 'html') {
     const ta = $('#htmlsrc');
     const start = ta.selectionStart, end = ta.selectionEnd;
-    ta.value = ta.value.substring(0, start) + s.html + ta.value.substring(end);
-    ta.selectionStart = ta.selectionEnd = start + s.html.length;
+    ta.value = ta.value.substring(0, start) + resolvedHTML + ta.value.substring(end);
+    ta.selectionStart = ta.selectionEnd = start + resolvedHTML.length;
     ta.focus();
   } else {
     $('#wysiwyg').focus();
@@ -3592,7 +3578,7 @@ function applyPartialImmediate(s) {
       sel.addRange(savedRange);
     }
     // execCommand 사용 → 브라우저 undo 스택에 등록됨 (Ctrl+Z로 되돌리기 가능)
-    document.execCommand('insertHTML', false, s.html);
+    document.execCommand('insertHTML', false, resolvedHTML);
     saveSelection();
   }
   // 적용 피드백: 카드 짧은 깜빡임
@@ -3663,6 +3649,7 @@ function askApplySnippet(id) {
     : '<div class="wrap">';
   const innerWrapClose = '</div>';
 
+  const resolvedHTML = resolveSnippetHTML(s);
   const previewHTML = `<!DOCTYPE html>
 <html><head><meta charset="utf-8" />${noticeCSS}<style>
 body { margin:0; padding: 8px 12px; font-family: 'Malgun Gothic','맑은고딕',sans-serif; background: #e8eaed; }
@@ -3670,7 +3657,7 @@ body { margin:0; padding: 8px 12px; font-family: 'Malgun Gothic','맑은고딕',
 .noticeTemp { max-width: 700px; margin: 0 auto; background: #fff; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
 </style></head>
 <body>
-${innerWrapOpen}${s.html}${innerWrapClose}
+${innerWrapOpen}${resolvedHTML}${innerWrapClose}
 </body></html>`;
   $('#modalPreview').srcdoc = previewHTML;
 
@@ -3689,8 +3676,9 @@ $('#modalOk').addEventListener('click', () => {
     if (category === 'full') {
       // 전체 본문 교체
       removeInsertMarker();
-      $('#wysiwyg').innerHTML = pendingSnippet.html;
-      if (state.mode === 'html') $('#htmlsrc').value = pendingSnippet.html;
+      const resolved = resolveSnippetHTML(pendingSnippet);
+      $('#wysiwyg').innerHTML = resolved;
+      if (state.mode === 'html') $('#htmlsrc').value = resolved;
     } else {
       // 부분 — 마커 위치에 삽입 (selection 흔들림 무관)
       if (state.mode === 'html') {
