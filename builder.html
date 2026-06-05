@@ -1119,7 +1119,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.24</span>
+    <span class="sub">v2.25</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -3822,12 +3822,24 @@ function applyPartialImmediate(s) {
         $('#wysiwyg').insertAdjacentHTML('beforeend', resolvedHTML);
       }
     } else {
+      // 일반 부분 — savedRange 유효성 재확인 후 그 자리에 삽입
+      let inserted = false;
       if (savedRange) {
-        const sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(savedRange);
+        try {
+          // savedRange의 노드가 여전히 wysiwyg 안에 있는지 확인 (본문 변경으로 invalid될 수 있음)
+          if ($('#wysiwyg').contains(savedRange.commonAncestorContainer)) {
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(savedRange);
+            document.execCommand('insertHTML', false, resolvedHTML);
+            inserted = true;
+          }
+        } catch (e) { /* invalid range */ }
       }
-      document.execCommand('insertHTML', false, resolvedHTML);
+      if (!inserted) {
+        // fallback: 본문 시작이 아니라 본문 끝에 추가
+        $('#wysiwyg').insertAdjacentHTML('beforeend', resolvedHTML);
+      }
     }
     saveSelection();
   }
