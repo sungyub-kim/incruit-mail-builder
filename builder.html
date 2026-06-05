@@ -1119,7 +1119,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.20</span>
+    <span class="sub">v2.21</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -3679,25 +3679,54 @@ function removeInsertMarker() {
   const m = document.getElementById('__insert_marker__');
   if (m) m.remove();
 }
-/* 외부 CTA를 본문의 라운드 외곽 카드(#ffece7/#eef4ff) tbody 끝에 직접 삽입
-   - 본문이 자체 라운드 wrap을 가진 경우: tbody 마지막에 외부 CTA tr들 추가 → 흰 카드 다음 위치
-   - 라운드 wrap 없으면 false 반환 (fallback) */
+/* 외부 CTA를 본문의 라운드 외곽 카드(#ffece7/#eef4ff) tbody 끝에 정확 삽입
+   - Case A: 본문에 자체 라운드 wrap 있음 → 그 tbody에 외부 CTA tr 추가
+   - Case B: 본문에 자체 wrap 없음 → 본문 전체를 라운드 wrap + 흰 카드 구조로 자동 변환 + 외부 CTA를 wrap의 흰 카드 외부에 배치 */
 function injectOuterCtaIntoRoundCard(html) {
   const wy = $('#wysiwyg');
-  const roundTable = wy.querySelector(
-    'table[style*="background: #ffece7"], table[style*="background:#ffece7"], ' +
-    'table[style*="background: #eef4ff"], table[style*="background:#eef4ff"]'
-  );
-  if (!roundTable) return false;
-  const tbody = roundTable.querySelector(':scope > tbody');
-  if (!tbody) return false;
-  // outer_cta_section HTML은 <div><table><tbody><tr>...</tr></tbody></table></div> 구조
-  // 안쪽 tr들만 추출해서 본문 라운드 wrap tbody에 append
+  // outer_cta의 inner tr들 추출
   const tmp = document.createElement('div');
   tmp.innerHTML = html;
   const innerTrs = tmp.querySelectorAll('table > tbody > tr, table > tr');
   if (innerTrs.length === 0) return false;
-  innerTrs.forEach(tr => tbody.appendChild(tr.cloneNode(true)));
+  const outerTrsHTML = Array.from(innerTrs).map(tr => tr.outerHTML).join('');
+
+  // Case A: 본문이 자체 라운드 wrap 가짐
+  const roundTable = wy.querySelector(
+    'table[style*="background: #ffece7"], table[style*="background:#ffece7"], ' +
+    'table[style*="background: #eef4ff"], table[style*="background:#eef4ff"]'
+  );
+  if (roundTable) {
+    const tbody = roundTable.querySelector(':scope > tbody');
+    if (tbody) {
+      tbody.insertAdjacentHTML('beforeend', outerTrsHTML);
+      return true;
+    }
+  }
+
+  // Case B: 자체 wrap 없음 → 본문 전체를 라운드 wrap 구조로 자동 변환
+  const accent = state.target === 'corporate' ? '#eef4ff' : '#ffece7';
+  const bodyContent = wy.innerHTML;
+  wy.innerHTML = `<div style="padding: 10px 0 30px; text-align: center;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background: ${accent}; border-radius: 12px;">
+    <tbody>
+      <tr>
+        <td style="padding: 15px;">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tbody>
+              <tr>
+                <td style="font-family: Malgun Gothic, sans-serif; padding: 25px; background: #fff; border-radius: 8px;">
+                  ${bodyContent}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+      ${outerTrsHTML}
+    </tbody>
+  </table>
+</div>`;
   return true;
 }
 
