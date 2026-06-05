@@ -1119,7 +1119,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.22</span>
+    <span class="sub">v2.23</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -2418,6 +2418,49 @@ const SNIPPETS = [
             </tbody>
           </table>
         </td>
+      </tr>
+    </tbody>
+  </table>
+</div>`
+  },
+  {
+    id: 'label_value_table',
+    name: '라벨/값 표 (헤더 + 행 반복)',
+    target: 'common',
+    category: 'partial',
+    tags: ['표', '정보 카드', '목록'],
+    description: '회색 라벨 셀 + 값 셀 구조. 상단 검정 라인 + 각 행 하단 회색 라인. 행 자유 추가/삭제 가능',
+    html: `<div style="margin: 10px 0;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; border-top: 1px solid #121212; border-bottom: 1px solid #e1e1e1; table-layout: fixed">
+    <tbody>
+      <tr>
+        <th width="150" align="left" bgcolor="#f7f7f7" style="min-width: 150px; padding: 15px 10px; color: #333; font-size: 14px; font-weight: bold; letter-spacing: -1px; font-family: Malgun Gothic, sans-serif; text-align: left">항목</th>
+        <td align="left" valign="middle" style="padding: 15px 12px; font-size: 14px; font-weight: normal; letter-spacing: -1px; font-family: Malgun Gothic, sans-serif; color: #333; text-align: left; border-bottom: 1px solid #e1e1e1;">알림 내용</td>
+      </tr>
+      <tr>
+        <th width="150" align="left" bgcolor="#f7f7f7" style="min-width: 150px; padding: 15px 10px; color: #333; font-size: 14px; font-weight: bold; letter-spacing: -1px; font-family: Malgun Gothic, sans-serif; text-align: left">맞춤 인재 메일</th>
+        <td align="left" valign="middle" style="padding: 15px 12px; font-size: 14px; font-weight: normal; letter-spacing: -1px; font-family: Malgun Gothic, sans-serif; color: #333; text-align: left; border-bottom: 1px solid #e1e1e1;">설정된 맞춤 인재 조건에 부합하는 인재 정보를 발송</td>
+      </tr>
+      <tr>
+        <th width="150" align="left" bgcolor="#f7f7f7" style="min-width: 150px; padding: 15px 10px; color: #333; font-size: 14px; font-weight: bold; letter-spacing: -1px; font-family: Malgun Gothic, sans-serif; text-align: left">추천 인재 메일</th>
+        <td align="left" valign="middle" style="padding: 15px 12px; font-size: 14px; font-weight: normal; letter-spacing: -1px; font-family: Malgun Gothic, sans-serif; color: #333; text-align: left;">등록된 공고 또는 추천 기반의 인재 정보를 발송</td>
+      </tr>
+    </tbody>
+  </table>
+</div>`
+  },
+  {
+    id: 'cta_round_dark',
+    name: 'CTA 버튼 - 다크 라운드 (200px)',
+    target: 'common',
+    category: 'partial',
+    tags: ['버튼'],
+    description: '작은 라운드 CTA (200px). 메일 수신 변경 등 보조 행동 유도. 대상에 따라 색 자동',
+    html: `<div style="margin: 30px 0 10px; text-align: center;">
+  <table width="200" border="0" cellspacing="0" cellpadding="0" align="center" style="margin: 0 auto;">
+    <tbody>
+      <tr>
+        <td align="center"><a href="" target="_blank" style="background: #ff460a; border: 1px solid #ff460a; text-decoration: none; text-align: center; padding: 12px 10px 15px; color: #ffffff; display: block; border-radius: 30px; font-size: 18px; line-height: 27px; font-weight: bold; font-family: Malgun Gothic, sans-serif;">메일 수신 변경</a></td>
       </tr>
     </tbody>
   </table>
