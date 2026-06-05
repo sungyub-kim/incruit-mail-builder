@@ -1119,7 +1119,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.28</span>
+    <span class="sub">v2.29</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -3822,28 +3822,30 @@ function applyPartialImmediate(s) {
         $('#wysiwyg').insertAdjacentHTML('beforeend', resolvedHTML);
       }
     } else {
-      // 일반 부분 — DOM 직접 삽입 (selection API 우회, focus 부작용 없이 정확 위치)
+      // 일반 부분 — Range API로 정확 위치에 DocumentFragment 삽입
+      const wy = $('#wysiwyg');
       let inserted = false;
       if (savedRange) {
         try {
-          if ($('#wysiwyg').contains(savedRange.commonAncestorContainer)) {
-            // 1) savedRange 위치에 임시 마커 박기 (DOM 노드 = focus와 무관하게 위치 보존)
+          const startNode = savedRange.startContainer;
+          // 검증: startContainer가 wy 자체(=빈 영역 클릭)가 아니라 wy의 후손이고 connected 상태
+          if (startNode && startNode.isConnected && startNode !== wy && wy.contains(startNode)) {
             const range = savedRange.cloneRange();
             range.collapse(true);
-            const marker = document.createElement('span');
-            marker.setAttribute('data-temp-marker', '1');
-            range.insertNode(marker);
-            // 2) 마커 직전에 HTML 삽입 → 정확히 사용자가 클릭한 위치
-            marker.insertAdjacentHTML('beforebegin', resolvedHTML);
-            // 3) 마커 제거
-            marker.remove();
+            // HTML 문자열을 DocumentFragment로 변환 (모든 자식 일괄)
+            const tmp = document.createElement('div');
+            tmp.innerHTML = resolvedHTML;
+            const fragment = document.createDocumentFragment();
+            while (tmp.firstChild) fragment.appendChild(tmp.firstChild);
+            // range 정확한 위치에 fragment 삽입
+            range.insertNode(fragment);
             inserted = true;
           }
         } catch (e) { /* invalid range */ }
       }
       if (!inserted) {
         // fallback: 본문 끝 (맨 위 X)
-        $('#wysiwyg').insertAdjacentHTML('beforeend', resolvedHTML);
+        wy.insertAdjacentHTML('beforeend', resolvedHTML);
       }
     }
     saveSelection();
