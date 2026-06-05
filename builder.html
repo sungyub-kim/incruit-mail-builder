@@ -321,6 +321,65 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
+  /* 카드 hover 시 큰 미리보기 popover */
+  .snippet-popover {
+    position: fixed;
+    display: none;
+    background: #fff;
+    border: 1px solid var(--line2);
+    border-radius: 8px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+    padding: 8px;
+    z-index: 90;
+    pointer-events: none;
+    width: 380px;
+  }
+  .snippet-popover.show { display: block; }
+  .snippet-popover .pop-thumb {
+    width: 100%;
+    height: 320px;
+    overflow: hidden;
+    border-radius: 5px;
+    background: #fff;
+    border: 1px solid var(--line);
+  }
+  .snippet-popover .pop-thumb iframe {
+    width: 800px;
+    height: 1200px;
+    border: 0;
+    transform: scale(0.475);
+    transform-origin: 0 0;
+    background: #fff;
+  }
+  .snippet-popover .pop-nm {
+    margin-top: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.2px;
+  }
+  .snippet-popover .pop-meta {
+    margin-top: 3px;
+    font-size: 10px;
+    color: var(--muted);
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .snippet-popover .pop-meta .chip {
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: #f1f3f7;
+  }
+  .snippet-popover .pop-hint {
+    margin-top: 6px;
+    font-size: 10px;
+    color: var(--accent);
+    text-align: center;
+    border-top: 1px dashed var(--line);
+    padding-top: 6px;
+  }
   .snippet-empty {
     padding: 30px 12px;
     text-align: center;
@@ -927,7 +986,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.8</span>
+    <span class="sub">v2.9</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -3164,7 +3223,55 @@ function renderSnippets() {
   }).join('');
   list.querySelectorAll('.snippet-card').forEach(card => {
     card.addEventListener('click', () => askApplySnippet(card.dataset.id));
+    card.addEventListener('mouseenter', () => showSnippetPopover(card));
+    card.addEventListener('mouseleave', hideSnippetPopover);
   });
+}
+
+/* hover 시 우측 popover로 큰 미리보기 표시 */
+let _popoverEl = null;
+let _popoverTimer = null;
+function ensurePopoverEl() {
+  if (_popoverEl) return _popoverEl;
+  _popoverEl = document.createElement('div');
+  _popoverEl.className = 'snippet-popover';
+  _popoverEl.innerHTML = `<div class="pop-thumb"><iframe sandbox="allow-same-origin"></iframe></div><div class="pop-nm"></div><div class="pop-meta"></div><div class="pop-hint">클릭하면 큰 모달에서 적용 가능</div>`;
+  document.body.appendChild(_popoverEl);
+  return _popoverEl;
+}
+function showSnippetPopover(card) {
+  clearTimeout(_popoverTimer);
+  _popoverTimer = setTimeout(() => {
+    const id = card.dataset.id;
+    const s = SNIPPETS.find(x => x.id === id);
+    if (!s) return;
+    const el = ensurePopoverEl();
+    el.querySelector('iframe').srcdoc = buildThumbSrcdoc(s);
+    el.querySelector('.pop-nm').textContent = s.name;
+    const targetTxt = s.target === 'corporate' ? '기업' : (s.target === 'personal' ? '개인' : '공통');
+    const catTxt = (s.category || 'full') === 'partial' ? '부분 컴포넌트' : ((s.category || 'full') === 'notice' ? '공지 본문' : '전체 본문');
+    el.querySelector('.pop-meta').innerHTML = `<span class="chip">${targetTxt}</span><span class="chip">${catTxt}</span>`;
+
+    // 위치: 카드 오른쪽 + 8px, 화면 밖이면 왼쪽으로
+    const rect = card.getBoundingClientRect();
+    const popW = 396; // padding 포함
+    const popH = el.offsetHeight || 420;
+    let left = rect.right + 8;
+    if (left + popW > window.innerWidth - 8) {
+      left = rect.left - popW - 8;
+    }
+    let top = rect.top;
+    if (top + popH > window.innerHeight - 8) {
+      top = Math.max(8, window.innerHeight - popH - 8);
+    }
+    el.style.left = left + 'px';
+    el.style.top = top + 'px';
+    el.classList.add('show');
+  }, 180);  // 살짝 지연 — 빠르게 지나가면 안 뜨게
+}
+function hideSnippetPopover() {
+  clearTimeout(_popoverTimer);
+  if (_popoverEl) _popoverEl.classList.remove('show');
 }
 
 // 탭 클릭 이벤트
