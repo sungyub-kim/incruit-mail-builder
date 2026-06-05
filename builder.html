@@ -551,23 +551,35 @@
   .email-canvas[data-shape="round"]  { max-width: 640px; }
   .email-canvas[data-shape="bare"]   { max-width: 700px; box-shadow:none; border:0; background: transparent; }
 
-  /* 라운드 형태일 때 본문 작성 영역도 미리보기와 동일하게 라운드 카드 wrap 시각화 */
-  .email-canvas[data-shape="round"] #bodyEditorWrap {
+  /* 라운드 형태일 때 본문 작성 영역도 미리보기와 동일하게 라운드 카드 wrap 시각화
+     ⚠ 본문이 자체적으로 라운드 wrap을 가지고 있으면 .no-builder-round 클래스가 붙어서 빌더 wrap 제거됨 (이중 wrap 방지) */
+  .email-canvas[data-shape="round"]:not(.no-builder-round) #bodyEditorWrap {
     background: #ffece7;
     border-radius: 20px;
     padding: 16px;
     margin: 10px 16px 30px;
   }
-  body.corporate .email-canvas[data-shape="round"] #bodyEditorWrap {
+  body.corporate .email-canvas[data-shape="round"]:not(.no-builder-round) #bodyEditorWrap {
     background: #eef4ff;
   }
-  .email-canvas[data-shape="round"] #wysiwyg {
+  .email-canvas[data-shape="round"]:not(.no-builder-round) #wysiwyg {
     background: #fff;
     border-radius: 8px;
     padding: 18px 20px 22px;
     min-height: 200px;
     font-family: Malgun Gothic, sans-serif;
     letter-spacing: -0.08em;
+  }
+  /* 본문 자체 라운드 wrap 있을 땐 본문이 다 처리 — 빌더는 그냥 컨테이너로 */
+  .email-canvas[data-shape="round"].no-builder-round #bodyEditorWrap {
+    background: transparent;
+    padding: 0;
+    margin: 0;
+  }
+  .email-canvas[data-shape="round"].no-builder-round #wysiwyg {
+    background: transparent;
+    padding: 8px;
+    min-height: 200px;
   }
 
   /* CTA 미리보기 — 라운드 카드 안, 흰 카드 밖에 위치. 라운드 + CTA on 일 때만 표시 */
@@ -986,7 +998,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.10</span>
+    <span class="sub">v2.11</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -3066,6 +3078,12 @@ function refresh() {
   $('#emailCanvas').setAttribute('data-shape', state.shape);
   $('#headerPreview').innerHTML = buildHeaderPreviewHTML();
   $('#footerPreview').innerHTML = buildFooterPreviewHTML();
+
+  // 본문이 자체적으로 라운드 외곽 카드를 가지고 있는지 검출 → 이중 wrap 방지
+  const currentBody = getBodyHTML();
+  const hasOwnRound = /background\s*:\s*#(?:ffece7|eef4ff)/i.test(currentBody)
+                   || /border-radius\s*:\s*20px/i.test(currentBody);
+  $('#emailCanvas').classList.toggle('no-builder-round', hasOwnRound);
 
   // 공지 텍스트형이면 본문에 noticeTemp 클래스 적용 (외부 CSS 스타일링용)
   // 이미지형은 클래스 없음
