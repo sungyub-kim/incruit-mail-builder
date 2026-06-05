@@ -1064,7 +1064,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.15</span>
+    <span class="sub">v2.16</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -1098,14 +1098,14 @@
       <h3>형태</h3>
       <div class="radio-grid">
         <label class="radio-card">
-          <input type="radio" name="shape" value="common" checked />
-          <span class="card-title">공용</span>
-          <span class="card-desc">700px 기본</span>
-        </label>
-        <label class="radio-card">
-          <input type="radio" name="shape" value="round" />
+          <input type="radio" name="shape" value="round" checked />
           <span class="card-title">라운드</span>
           <span class="card-desc">640px 카드형</span>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="shape" value="common" />
+          <span class="card-title">공용</span>
+          <span class="card-desc">700px 기본</span>
         </label>
         <label class="radio-card">
           <input type="radio" name="shape" value="bare" />
@@ -3232,7 +3232,7 @@ const $$ = s => document.querySelectorAll(s);
 
 const state = {
   target: 'personal',
-  shape: 'common',
+  shape: 'round',
   footer: 'receivable',
   datemode: 'token',
   mode: 'editor',
