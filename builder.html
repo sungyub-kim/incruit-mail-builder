@@ -674,7 +674,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.1</span>
+    <span class="sub">v2.2</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -2435,12 +2435,52 @@ document.querySelectorAll('#libTabs .lib-tab').forEach(btn => {
    템플릿 적용 모달
 ============================================================ */
 let pendingSnippet = null;
+
+/* DOM 마커: 부분 템플릿 적용 시 모달 클릭으로 selection이 흔들려도 정확한 위치 보존 */
+function placeInsertMarker() {
+  removeInsertMarker();
+  const wy = $('#wysiwyg');
+  let range;
+  if (savedRange && wy.contains(savedRange.commonAncestorContainer)) {
+    range = savedRange.cloneRange();
+  } else {
+    // 본문에 한 번도 커서 놓은 적 없으면 끝에 마커
+    range = document.createRange();
+    range.selectNodeContents(wy);
+    range.collapse(false);
+  }
+  const marker = document.createElement('span');
+  marker.id = '__insert_marker__';
+  marker.setAttribute('data-marker', '1');
+  marker.style.cssText = 'display:inline; width:0; height:0; overflow:hidden;';
+  range.insertNode(marker);
+}
+function removeInsertMarker() {
+  const m = document.getElementById('__insert_marker__');
+  if (m) m.remove();
+}
+function insertAtMarker(html) {
+  const marker = document.getElementById('__insert_marker__');
+  if (marker) {
+    // outerHTML 교체로 마커 자리에 HTML 삽입
+    marker.insertAdjacentHTML('beforebegin', html);
+    marker.remove();
+    return true;
+  }
+  return false;
+}
+
 function askApplySnippet(id) {
   const s = SNIPPETS.find(x => x.id === id);
   if (!s) return;
   pendingSnippet = s;
 
   const category = s.category || 'full';
+
+  // 부분 템플릿이면 모달 열기 전에 마커 박아두기 (에디터 모드에서만)
+  if (category !== 'full' && state.mode === 'editor') {
+    placeInsertMarker();
+  }
 
   // 제목 / 메타
   $('#modalTitle').textContent = (category === 'full' ? '전체 템플릿 적용 — ' : '부분 템플릿 삽입 — ') + s.name;
@@ -2485,6 +2525,7 @@ ${innerWrapOpen}${s.html}${innerWrapClose}
 }
 
 $('#modalCancel').addEventListener('click', () => {
+  removeInsertMarker();  // 적용 안 하면 마커도 정리
   $('#modalBg').classList.remove('show');
   pendingSnippet = null;
 });
@@ -2494,11 +2535,21 @@ $('#modalOk').addEventListener('click', () => {
     const category = pendingSnippet.category || 'full';
     if (category === 'full') {
       // 전체 본문 교체
+      removeInsertMarker();
       $('#wysiwyg').innerHTML = pendingSnippet.html;
       if (state.mode === 'html') $('#htmlsrc').value = pendingSnippet.html;
     } else {
-      // 부분 - 현재 커서 위치 삽입
-      insertHTMLAtCursor(pendingSnippet.html);
+      // 부분 — 마커 위치에 삽입 (selection 흔들림 무관)
+      if (state.mode === 'html') {
+        // HTML 모드는 textarea 커서 위치
+        insertHTMLAtCursor(pendingSnippet.html);
+      } else {
+        const ok = insertAtMarker(pendingSnippet.html);
+        if (!ok) {
+          // 마커가 없으면 (혹시 모를 fallback) 커서/끝 위치에
+          insertHTMLAtCursor(pendingSnippet.html);
+        }
+      }
     }
     refresh();
   }
@@ -2672,6 +2723,9 @@ function flattenSpans(root) {
 /* 본문 전체 클린업 + 메일 호환성 보정 */
 function cleanupBody() {
   const wy = $('#wysiwyg');
+
+  // 0) 잔여 삽입 마커 제거 (혹시 모달에서 끝까지 안 닫혔을 때 안전망)
+  wy.querySelectorAll('span[data-marker]').forEach(m => m.remove());
 
   // 1) 비호환 태그를 안전한 인라인 style로 치환
   // <font size="X" color="...">  →  <span style="font-size:..; color:..">
