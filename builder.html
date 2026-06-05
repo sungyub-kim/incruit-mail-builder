@@ -1119,7 +1119,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.21</span>
+    <span class="sub">v2.22</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -3154,6 +3154,18 @@ ${shape === 'round' ? '<tr><td style="height: 30px"></td></tr>' : '<tr><td><ul s
 /* 본문 영역 - 형태별로 다름 */
 function buildBodySection(shape, target, bodyHTML, cta) {
   if (shape === 'round') {
+    // 본문이 자체 라운드 wrap을 가졌으면 빌더는 wrap 안 그림 (이중 방지)
+    // + 외부 CTA가 본문에 자체 포함된 상태이므로 자동 ctaRow도 추가 X
+    const hasOwnRound = /background\s*:\s*#(?:ffece7|eef4ff)/i.test(bodyHTML);
+    if (hasOwnRound) {
+      return `
+<tr>
+  <td>
+    ${bodyHTML}
+  </td>
+</tr>`;
+    }
+    // 자체 wrap 없음 → 빌더가 라운드 wrap + 흰 카드 생성, 옵션 CTA 추가
     const ctaRow = cta && cta.enable ? `
     <tr>
       <td align="center" style="padding: 0 0 30px">
@@ -3750,6 +3762,11 @@ function applyPartialImmediate(s) {
   } else {
     $('#wysiwyg').focus();
     if (isOuterCta) {
+      // 빌더의 자동 CTA 옵션 비활성 (외부 CTA와 중복 방지)
+      if ($('#ctaEnable').checked) {
+        $('#ctaEnable').checked = false;
+        state.cta.enable = false;
+      }
       // 본문에 라운드 wrap이 있으면 그 안 tbody 끝에 정확 위치 삽입
       const injected = injectOuterCtaIntoRoundCard(resolvedHTML);
       if (!injected) {
