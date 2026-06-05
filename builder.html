@@ -293,7 +293,7 @@
   }
   .snippet-card .thumb {
     width: 100%;
-    aspect-ratio: 1 / 1.3;
+    aspect-ratio: 1 / 0.95;
     border-radius: 4px;
     overflow: hidden;
     position: relative;
@@ -1064,7 +1064,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.12</span>
+    <span class="sub">v2.13</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -2205,6 +2205,132 @@ const SNIPPETS = [
 </div>`
   },
   {
+    id: 'smartcalry_personal',
+    name: '스마트캠리 - 기업 핵심인재 제안 안내',
+    target: 'personal',
+    category: 'full',
+    description: '${기업명} 핵심인재로 선별된 회원에게 발송. 라운드 외곽 + 인사말 + 회색 정보 박스(기업명/공고명/마감일) + 상세보기 CTA + 이력서 업데이트',
+    html: `<div style="padding: 10px 0 30px; text-align: center;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background: #ffece7; border-radius: 20px">
+    <tbody>
+      <tr>
+        <td align="center" style="font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; padding: 25px 10px; font-size: 17px; line-height: 25px; font-weight: bold; color: #333333">
+          <span style="color: #ff460a">\${기업명}</span>에서<br>
+          스마트캠리 합니다.
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 0 2.563% 2.563%">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tbody>
+              <tr>
+                <td style="font-family: Malgun Gothic, sans-serif; padding: 4.387%; background: #fff; border-radius: 8px">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse">
+                    <tbody>
+                      <tr>
+                        <td align="left" style="text-align: left; font-size: 15px; line-height: 23px; color: #333333; letter-spacing: -1px; padding-bottom: 20px; word-break: keep-all">
+                          \${개인회원명} 님, 안녕하세요.<br>
+                          인크루트입니다.<br>
+                          <br>
+                          <b>스마트캠리</b>는 학교로 찾아가는 캠퍼스 리크루팅 대신,<br>
+                          기업이 먼저 전공 및 직무에 맞는 인재를 찾아 포지션을 제안하는 서비스입니다.<br>
+                          <br>
+                          기업의 요구사항 분석을 통해 <b>\${기업명} 핵심인재</b>로 선별된<br>
+                          \${개인회원명}님께 아래와 같이 안내드립니다.<br>
+                          <br>
+                          자세한 내용은 '상세보기'를 눌러 확인해주세요.
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 0 0 25px">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: separate">
+                            <tbody>
+                              <tr>
+                                <td align="left" bgcolor="#F8F8F8" style="border: 1px solid #e7e7e7; border-radius: 8px; padding: 15px 4%">
+                                  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                    <tbody>
+                                      <tr>
+                                        <td valign="top" align="left" style="font-size: 15px; line-height: 26px; letter-spacing: -0.7px; color: #333333">
+                                          📌 <b>기업명</b> : <span style="font-size: 15px; color: #333333">\${COMPANY_NAME}</span>
+                                        </td>
+                                      </tr>
+                                      <tr>
+                                        <td valign="top" align="left" style="font-size: 15px; line-height: 26px; letter-spacing: -0.7px; color: #333333">📌 <b>공고명</b> : <a href="https://incruitapp.deeplink.page/@incruitapp/incruit?ad_creative=\${JOB_POST_NO}&amp;campaign=0518&amp;content=jobpost&amp;routing_short_id=o4d8u2&amp;t.JOB_POST_NO=\${JOB_POST_NO}" target="_blank" style="font-size: 15px; color: #333333; text-decoration: none">\${JOB_TITLE}</a></td>
+                                      </tr>
+                                      <tr>
+                                        <td valign="top" align="left" style="font-size: 15px; line-height: 26px; letter-spacing: -0.7px; color: #333333">📌 <b>마감일</b> : <span style="font-size: 15px; color: #333333">\${JOB_CLOSE}</span></td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="center" style="padding: 0 0 20px">
+                          <div style="width: 100%; max-width: 200px; display: inline-block; vertical-align: middle">
+                            <div style="padding: 0; font-size: 18px; line-height: 24px; text-align: center">
+                              <p style="margin: 0; font-family: Malgun Gothic, sans-serif">
+                                <a href="" target="_blank" style="background: #ff460a; border: 1px solid #ff460a; text-decoration: none; text-align: center; padding: 13px 10px 14px; color: #ffffff; display: block; border-radius: 30px">
+                                  <span style="font-weight: bold">상세보기</span>
+                                </a>
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="center" style="text-align: center">
+                          <span style="display: block; font-size: 14px; color: #333333; line-height: 23px; padding: 0 0 8px; letter-spacing: -1px">제안 공고를 놓치지 않으려면? 이력서를 업데이트해 주세요</span>
+                          <a href="https://www.incruit.com/resume/resumelist.asp" target="_blank" style="display: inline-block; height: 17px; line-height: 17px; color: #333333; font-size: 14px; border: 0; text-decoration: underline; font-weight: normal; letter-spacing: -1px">이력서 업데이트하기 &gt;</a>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="text-align: center; font-size: 13px; font-weight: normal; line-height: 23px; color: #666; letter-spacing: -1px; padding: 20px 0 0">
+                          이 메시지는 마이핏 '추천 채용정보'에 수신 동의한 경우 발송됩니다.<br>
+                          이 메일을 원하지 않으실 경우, 수신거부를 눌러주세요.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>`
+  },
+  {
+    id: 'info_box_pin_list',
+    name: '정보 박스 - 📌 라벨 리스트',
+    target: 'personal',
+    category: 'partial',
+    tags: ['정보 카드', '목록'],
+    description: '회색 배경 박스에 📌 + 라벨/값 행 반복. 기업명/공고명/마감일 등 정보 안내에 재사용',
+    html: `<div style="margin: 10px 0;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: separate">
+    <tbody>
+      <tr>
+        <td align="left" bgcolor="#F8F8F8" style="border: 1px solid #e7e7e7; border-radius: 8px; padding: 15px 4%; font-family: Malgun Gothic, sans-serif;">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tbody>
+              <tr><td valign="top" align="left" style="font-size: 15px; line-height: 26px; letter-spacing: -0.7px; color: #333333">📌 <b>라벨1</b> : <span>값1</span></td></tr>
+              <tr><td valign="top" align="left" style="font-size: 15px; line-height: 26px; letter-spacing: -0.7px; color: #333333">📌 <b>라벨2</b> : <span>값2</span></td></tr>
+              <tr><td valign="top" align="left" style="font-size: 15px; line-height: 26px; letter-spacing: -0.7px; color: #333333">📌 <b>라벨3</b> : <span>값3</span></td></tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>`
+  },
+  {
     id: 'highschool_recommend_2section',
     name: '취업비서 - 고졸 신입 추천 (2섹션)',
     target: 'personal',
@@ -2614,7 +2740,7 @@ const SNIPPETS = [
     tags: ['버튼'],
     description: '라운드형 풀폭 CTA 버튼 (230px, #ff460a). 텍스트와 링크는 삽입 후 직접 수정',
     html: `<div style="margin: 10px 0; text-align: center;">
-  <table width="230" border="0" cellspacing="0" cellpadding="0" align="center">
+  <table width="230" border="0" cellspacing="0" cellpadding="0" align="center" style="margin: 0 auto;">
     <tbody>
       <tr>
         <td align="center"><a href="#none" target="_blank" style="display: block; text-decoration: none; width: 100%; border-radius: 25px; background-color: #ff460a; color: #fff; font-size: 18px; font-weight: bold; border: 0; padding: 13px 0; text-align: center; letter-spacing: -1px">더 많은 공고 보기</a></td>
