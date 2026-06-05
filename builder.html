@@ -124,7 +124,7 @@
   main {
     flex: 1;
     display: grid;
-    grid-template-columns: 280px 1fr 1fr;
+    grid-template-columns: 260px 1fr 1fr;
     overflow: hidden;
   }
 
@@ -137,7 +137,7 @@
     overflow: hidden;
   }
   .left-section {
-    padding: 14px 16px;
+    padding: 10px 14px;
     border-bottom: 1px solid var(--line);
   }
   .left-section:last-child { border-bottom: 0; }
@@ -145,15 +145,18 @@
     flex: 1;
     overflow-y: auto;
     border-bottom: 0;
+    padding-top: 12px;
   }
   .left-section h3 {
-    margin: 0 0 8px 0;
-    font-size: 11px;
-    color: #696969;
+    margin: 0 0 6px 0;
+    font-size: 10px;
+    color: var(--muted);
     font-weight: 600;
     letter-spacing: 0.5px;
     text-transform: uppercase;
   }
+
+  /* (구) radio-row — 폴백 호환용 */
   .radio-row label {
     display: flex;
     align-items: center;
@@ -168,22 +171,91 @@
   .radio-row input[type=radio], .radio-row input[type=checkbox] { margin-right: 6px; }
   .radio-row input:checked + span { font-weight: 600; color: var(--accent); }
 
-  .cta-fields { margin-top: 8px; display: none; }
-  .cta-fields.show { display: block; }
-  .cta-fields label {
+  /* 카드형 라디오 그리드 */
+  .radio-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 5px;
+  }
+  .radio-grid.full-col { grid-template-columns: 1fr; }
+  .radio-card {
+    position: relative;
     display: block;
-    font-size: 11px;
-    color: #696969;
-    margin: 8px 0 3px;
+    padding: 7px 9px 8px;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    text-align: left;
   }
-  .cta-fields input {
-    width: 100%;
-    padding: 5px 8px;
-    border: 1px solid var(--line2);
+  .radio-card:hover {
+    border-color: var(--line2);
+    background: #fafbfc;
+  }
+  .radio-card input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .radio-card:has(input:checked) {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    box-shadow: 0 0 0 1px var(--accent), 0 2px 6px rgba(255,70,10,0.12);
+  }
+  body.corporate .radio-card:has(input:checked) {
+    box-shadow: 0 0 0 1px var(--accent), 0 2px 6px rgba(39,114,208,0.12);
+  }
+  .radio-card .card-tag {
+    display: inline-block;
+    padding: 1px 6px;
+    font-size: 9px;
+    font-weight: 700;
+    color: #fff;
     border-radius: 3px;
-    font-family: inherit;
-    font-size: 12px;
+    letter-spacing: 0.3px;
+    line-height: 1.4;
   }
+  .card-tag.tag-personal { background: #ff460a; }
+  .card-tag.tag-corporate { background: #2772d0; }
+  .card-tag.tag-common { background: #6b7280; }
+  .card-tag.tag-accent { background: var(--accent); }
+  .radio-card .card-title {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    margin-top: 3px;
+    letter-spacing: -0.2px;
+  }
+  .radio-card .card-desc {
+    display: block;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 1px;
+    line-height: 1.35;
+  }
+  .radio-card.disabled {
+    opacity: 0.45;
+    pointer-events: none;
+  }
+  .radio-grid.disabled-grid { opacity: 0.4; pointer-events: none; }
+
+  /* CTA 체크 카드 */
+  .check-card {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 9px;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 11px;
+    transition: all 0.12s;
+  }
+  .check-card:hover { border-color: var(--line2); background: #fafbfc; }
+  .check-card.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .check-card input { margin: 0; accent-color: var(--accent); }
 
   .snippet-list { display: flex; flex-direction: column; gap: 6px; }
   .snippet-card {
@@ -700,7 +772,36 @@
   .lib-tab.active .count { background: var(--accent); color: #fff; }
   .lib-tab.disabled { cursor: default; opacity: 0.55; }
 
-  .hint { font-size: 11px; color: var(--muted); line-height: 1.5; margin-top: 6px; }
+  .hint {
+    font-size: 10.5px;
+    color: var(--muted);
+    line-height: 1.45;
+    margin-top: 6px;
+    padding: 6px 8px;
+    background: #f7f8fa;
+    border-radius: 4px;
+    border-left: 2px solid var(--line2);
+  }
+  .cta-fields { margin-top: 6px; display: none; }
+  .cta-fields.show { display: block; }
+  .cta-fields label {
+    display: block;
+    font-size: 10px;
+    color: var(--muted);
+    margin: 6px 0 2px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    text-transform: uppercase;
+  }
+  .cta-fields input {
+    width: 100%;
+    padding: 5px 8px;
+    border: 1px solid var(--line2);
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 11px;
+  }
+  .cta-fields input:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
 </style>
 </head>
 <body>
@@ -750,7 +851,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.4</span>
+    <span class="sub">v2.5</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -764,37 +865,78 @@
   <aside class="left">
     <div class="left-section">
       <h3>대상</h3>
-      <div class="radio-row">
-        <label><input type="radio" name="target" value="personal" checked /><span>개인 (#ff460a)</span></label>
-        <label><input type="radio" name="target" value="corporate" /><span>기업 (#344f77)</span></label>
+      <div class="radio-grid">
+        <label class="radio-card">
+          <input type="radio" name="target" value="personal" checked />
+          <span class="card-tag tag-personal">개인</span>
+          <span class="card-title">개인 회원</span>
+          <span class="card-desc">강조 #ff460a</span>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="target" value="corporate" />
+          <span class="card-tag tag-corporate">기업</span>
+          <span class="card-title">기업 회원</span>
+          <span class="card-desc">강조 #2772d0</span>
+        </label>
       </div>
     </div>
 
     <div class="left-section">
       <h3>형태</h3>
-      <div class="radio-row">
-        <label><input type="radio" name="shape" value="common" checked /><span>공용 (700px)</span></label>
-        <label><input type="radio" name="shape" value="round" /><span>라운드 (640px, 카드형)</span></label>
-        <label><input type="radio" name="shape" value="bare" /><span>헤더·푸터 없음</span></label>
-        <label><input type="radio" name="shape" value="notice" /><span>공지 텍스트형 (noticeTemp · 외부 CSS)</span></label>
-        <label><input type="radio" name="shape" value="notice_image" /><span>공지 이미지형 (940px · raw 테이블)</span></label>
+      <div class="radio-grid">
+        <label class="radio-card">
+          <input type="radio" name="shape" value="common" checked />
+          <span class="card-title">공용</span>
+          <span class="card-desc">700px 기본</span>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="shape" value="round" />
+          <span class="card-title">라운드</span>
+          <span class="card-desc">640px 카드형</span>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="shape" value="bare" />
+          <span class="card-title">헤더·푸터 X</span>
+          <span class="card-desc">본문만</span>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="shape" value="notice" />
+          <span class="card-tag tag-common">공지</span>
+          <span class="card-title">텍스트형</span>
+          <span class="card-desc">noticeTemp</span>
+        </label>
+        <label class="radio-card" style="grid-column: span 2;">
+          <input type="radio" name="shape" value="notice_image" />
+          <span class="card-tag tag-common">공지</span>
+          <span class="card-title">이미지형</span>
+          <span class="card-desc">940px raw 테이블</span>
+        </label>
       </div>
     </div>
 
     <div class="left-section">
-      <h3>푸터 / 발수신 유형</h3>
-      <div class="radio-row" id="footerGroup">
-        <label><input type="radio" name="footer" value="receivable" checked /><span>수신거부 가능</span></label>
-        <label><input type="radio" name="footer" value="sendonly" /><span>발신전용</span></label>
+      <h3>푸터 / 발수신</h3>
+      <div class="radio-grid" id="footerGroup">
+        <label class="radio-card">
+          <input type="radio" name="footer" value="receivable" checked />
+          <span class="card-title">수신거부 가능</span>
+          <span class="card-desc">발수신 + 동의</span>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="footer" value="sendonly" />
+          <span class="card-title">발신전용</span>
+          <span class="card-desc">회신 X · 광고용</span>
+        </label>
       </div>
-      <div class="hint" id="footerHint" style="display:none">⚠ 헤더·푸터 없음 형태에서는 푸터가 적용되지 않습니다.</div>
+      <div class="hint" id="footerHint" style="display:none; margin-top:6px"></div>
     </div>
 
     <div class="left-section" id="ctaSection" style="display:none">
-      <h3>외부 CTA 버튼 (라운드 전용)</h3>
-      <div class="radio-row">
-        <label><input type="checkbox" id="ctaEnable" /><span>버튼 포함</span></label>
-      </div>
+      <h3>외부 CTA (라운드)</h3>
+      <label class="check-card" id="ctaCheckCard">
+        <input type="checkbox" id="ctaEnable" />
+        <span>버튼 포함</span>
+      </label>
       <div class="cta-fields" id="ctaFields">
         <label>버튼 텍스트</label>
         <input type="text" id="ctaText" value="자세히 보기" />
@@ -804,10 +946,18 @@
     </div>
 
     <div class="left-section">
-      <h3>발송일 (${SENDDATE})</h3>
-      <div class="radio-row">
-        <label><input type="radio" name="datemode" value="token" checked /><span>${SENDDATE} 토큰 유지</span></label>
-        <label><input type="radio" name="datemode" value="today" /><span>오늘 날짜로 치환</span></label>
+      <h3>발송일 표시</h3>
+      <div class="radio-grid">
+        <label class="radio-card">
+          <input type="radio" name="datemode" value="token" checked />
+          <span class="card-title">토큰 유지</span>
+          <span class="card-desc">${SENDDATE}</span>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="datemode" value="today" />
+          <span class="card-title">오늘 날짜</span>
+          <span class="card-desc">치환 발송</span>
+        </label>
       </div>
     </div>
 
@@ -2566,10 +2716,13 @@ function refresh() {
   // CTA 섹션 노출 (라운드만)
   $('#ctaSection').style.display = state.shape === 'round' ? '' : 'none';
   $('#ctaFields').classList.toggle('show', state.cta.enable);
+  // CTA 체크 카드 ON/OFF 시각
+  const ctaCard = $('#ctaCheckCard');
+  if (ctaCard) ctaCard.classList.toggle('on', state.cta.enable);
 
   // 푸터 그룹: bare / notice / notice_image면 비활성
   const noFooter = state.shape === 'bare' || state.shape === 'notice' || state.shape === 'notice_image';
-  $('#footerGroup').style.opacity = noFooter ? '0.4' : '1';
+  $('#footerGroup').classList.toggle('disabled-grid', noFooter);
   $('#footerHint').style.display = noFooter ? '' : 'none';
   if (state.shape === 'notice') {
     $('#footerHint').textContent = '⚠ 공지 텍스트형은 외부 CSS 의존 (noticeTemp). 사내 메일 시스템 전용 — Gmail/Outlook에서 깨질 수 있음';
