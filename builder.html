@@ -1064,7 +1064,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.14</span>
+    <span class="sub">v2.15</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -2296,6 +2296,37 @@ const SNIPPETS = [
                     </tbody>
                   </table>
                 </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>`
+  },
+  {
+    id: 'outer_cta_section',
+    name: '외부 CTA 섹션 (유도 안내 + 큰 버튼)',
+    target: 'common',
+    category: 'partial',
+    tags: ['버튼', '외부 CTA', '강조 박스'],
+    description: '라운드 외곽 카드 안에 들어가는 결제/액션 유도 영역. 큰 제목 + 2줄 안내 + 286px 라운드 CTA. 대상에 따라 색 자동',
+    html: `<div style="margin: 10px 0;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background: #ffece7; border-radius: 12px;">
+    <tbody>
+      <tr>
+        <td align="center" style="text-align: center; font-size: 18px; font-weight: 700; line-height: 24px; letter-spacing: -1px; color: #121212; word-break: keep-all; padding: 25px 15px 0 15px; font-family: Malgun Gothic, sans-serif;">유사한 인재를 더 모집해보세요!</td>
+      </tr>
+      <tr>
+        <td align="center" style="text-align: center; font-size: 15px; font-weight: normal; line-height: 23px; letter-spacing: -1px; color: #494949; word-break: keep-all; padding: 3px 15px 0 15px; font-family: Malgun Gothic, sans-serif;">지금 스마트매칭을 유료 결제하시면<br>제안수락 인재 전원 연락처 공개와 추가 모집이 진행됩니다.</td>
+      </tr>
+      <tr>
+        <td style="padding: 15px 15px 30px 15px; text-align: center;">
+          <table width="286" border="0" cellspacing="0" cellpadding="0" align="center" style="margin: 0 auto;">
+            <tbody>
+              <tr>
+                <td align="center"><a href="" target="_blank" style="background: #ff460a; border: 1px solid #ff460a; text-decoration: none; text-align: center; padding: 10px 12px 11px; color: #ffffff; display: block; border-radius: 30px; font-size: 18px; line-height: 27px; font-weight: bold; font-family: Malgun Gothic, sans-serif;">스마트매칭 적용하기</a></td>
               </tr>
             </tbody>
           </table>
