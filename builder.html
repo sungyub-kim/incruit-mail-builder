@@ -124,7 +124,7 @@
   main {
     flex: 1;
     display: grid;
-    grid-template-columns: 260px 1fr 1fr;
+    grid-template-columns: 280px 1fr 1fr;
     overflow: hidden;
   }
 
@@ -264,23 +264,63 @@
   .check-card.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 600; }
   .check-card input { margin: 0; accent-color: var(--accent); }
 
-  .snippet-list { display: flex; flex-direction: column; gap: 5px; min-height: 220px; }
+  .snippet-list { display: flex; flex-direction: column; gap: 6px; min-height: 240px; }
   .snippet-card {
-    border: 1px solid var(--line);
-    border-radius: 5px;
-    padding: 8px 10px;
+    border: 1.5px solid var(--line);
+    border-radius: 6px;
+    padding: 4px;
     background: #fff;
     cursor: pointer;
     transition: all 0.15s;
+    overflow: hidden;
+    position: relative;
   }
   .snippet-card:hover {
     border-color: var(--accent);
-    background: var(--accent-soft);
     transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   }
-  .snippet-card .nm { font-size: 11.5px; font-weight: 600; color: var(--text); letter-spacing: -0.2px; }
-  .snippet-card .ds { font-size: 10px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
+  .snippet-card .thumb {
+    width: 100%;
+    height: 92px;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    background: #f8f9fa;
+    pointer-events: none;
+  }
+  .snippet-card .thumb iframe {
+    width: 800px;
+    height: 1100px;
+    border: 0;
+    transform: scale(0.28);
+    transform-origin: 0 0;
+    pointer-events: none;
+    background: #fff;
+  }
+  .snippet-card .thumb-tag {
+    position: absolute;
+    top: 4px; left: 4px;
+    padding: 1px 6px;
+    font-size: 9px;
+    font-weight: 700;
+    color: #fff;
+    border-radius: 3px;
+    letter-spacing: 0.3px;
+    z-index: 2;
+    backdrop-filter: blur(2px);
+  }
+  .snippet-card .nm {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.2px;
+    margin-top: 5px;
+    padding: 0 4px 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .snippet-empty {
     padding: 30px 12px;
     text-align: center;
@@ -887,7 +927,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.7</span>
+    <span class="sub">v2.8</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -3018,6 +3058,17 @@ function buildFilename() {
 /* ============================================================
    본문 템플릿 라이브러리 렌더
 ============================================================ */
+/* 라이브러리 카드 썸네일용 srcdoc 빌더 */
+function buildThumbSrcdoc(s) {
+  const noticeCSS = s.noticeMode ? '<link rel="stylesheet" href="https://i.incru.it/ui/static/css/notice/common.css?20220812">' : '';
+  const wrapOpen = s.noticeMode ? `<div class="noticeTemp ${s.noticeMode}">` : '<div>';
+  const wrapClose = '</div>';
+  return `<!DOCTYPE html><html><head><meta charset="utf-8">${noticeCSS}<style>html,body{margin:0;padding:0;background:#fff;}body{font-family:'Malgun Gothic',sans-serif;padding:8px;font-size:13px;line-height:1.5;color:#222;}</style></head><body>${wrapOpen}${s.html}${wrapClose}</body></html>`;
+}
+function escapeAttrFull(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 /* 본문 HTML을 빠르게 스캔해서 시각 단서(배지) 자동 추출 */
 function detectSnippetBadges(html) {
   const badges = [];
@@ -3098,13 +3149,16 @@ function renderSnippets() {
     return;
   }
   list.innerHTML = items.map(s => {
-    const badges = detectSnippetBadges(s.html);
+    const tagColor = s.target === 'corporate' ? '#2772d0' : (s.target === 'personal' ? '#ff460a' : '#6b7280');
+    const tagText = (s.category || 'full') === 'partial' ? '부분' : ((s.category || 'full') === 'notice' ? '공지' : '전체');
+    const thumbHTML = buildThumbSrcdoc(s);
     return `
     <div class="snippet-card" data-id="${s.id}">
+      <span class="thumb-tag" style="background:${tagColor}">${tagText}</span>
+      <div class="thumb">
+        <iframe loading="lazy" srcdoc="${escapeAttrFull(thumbHTML)}" sandbox="allow-same-origin"></iframe>
+      </div>
       <div class="nm">${s.name}</div>
-      ${s.description ? `<div class="ds">${s.description}</div>` : ''}
-      ${badges.length ? `<div class="meta">${badges.map(b=>`<span class="badge">${b}</span>`).join('')}</div>` : ''}
-      <div class="preview-hint"><svg class="icon icon-sm"><use href="#i-eye"/></svg> 클릭 → 미리보기 / 적용</div>
     </div>
     `;
   }).join('');
