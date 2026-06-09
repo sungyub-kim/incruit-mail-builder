@@ -1119,7 +1119,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.29</span>
+    <span class="sub">v2.30</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -3098,6 +3098,88 @@ const SNIPPETS = [
               <tr>
                 <td valign="top" width="4"><img src="https://c.incru.it/2023/smart_mail/dotted_icon.png" alt=""></td>
                 <td valign="top" align="left" style="font-size: 15px; line-height: 26px; color: #333333; padding: 0 0 0 7px;">직무기술 : <span style="color:#ff460a;">등록된 직무기술이 없습니다.</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>`
+  },
+  {
+    id: 'system_notice_round_2box',
+    name: '시스템 안내 - 라운드 2박스 (표+CTA)',
+    target: 'personal',
+    category: 'full',
+    tags: ['시스템', '안내', '표'],
+    description: '라운드 외곽(연주황) + 흰 박스 2개: 박스1=타이틀+본문 / 박스2=라벨값 표+안내링크+라운드 CTA. 시스템 안내 메일 범용 (발신전용·정책 안내 등)',
+    html: `<div style="padding: 10px 0 30px; text-align: center;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background: #ffece7; border-radius: 12px;">
+    <tbody>
+      <tr>
+        <td style="padding: 15px 15px 0;">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tbody>
+              <tr>
+                <td style="font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; padding: 25px 25px 30px; background: #fff; border-radius: 8px">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse">
+                    <tbody>
+                      <tr>
+                        <th align="left" style="text-align: left; font-size: 20px; letter-spacing: -2px; color: #333; padding-bottom: 20px; padding-top: 5px">타이틀 <span style="color: #ff460a">강조 문구</span> 입력 영역.</th>
+                      </tr>
+                      <tr>
+                        <td align="left" style="text-align: left; font-size: 15px; line-height: 25px; color: #333">내용을 입력해 주세요.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 15px;">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tbody>
+              <tr>
+                <td style="font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; padding: 25px 25px 30px; background: #fff; border-radius: 8px">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse">
+                    <tbody>
+                      <tr>
+                        <td style="padding: 0">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; border-top: 1px solid #121212; border-bottom: 1px solid #e1e1e1; table-layout: fixed">
+                            <tbody>
+                              <tr>
+                                <th width="150" align="left" bgcolor="#f7f7f7" style="min-width: 150px; padding: 15px 10px; color: #333; font-size: 14px; font-weight: bold; letter-spacing: -1px; font-family: Malgun Gothic, sans-serif; text-align: left">항목명</th>
+                                <td align="left" valign="middle" style="padding: 15px 12px; font-size: 14px; font-weight: normal; letter-spacing: -1px; font-family: Malgun Gothic, sans-serif; color: #333; text-align: left; border-bottom: 1px solid #e1e1e1;">상세내용</td>
+                              </tr>
+                              <tr>
+                                <th width="150" align="left" bgcolor="#f7f7f7" style="min-width: 150px; padding: 15px 10px; color: #333; font-size: 14px; font-weight: bold; letter-spacing: -1px; font-family: Malgun Gothic, sans-serif; text-align: left">항목명</th>
+                                <td align="left" valign="middle" style="padding: 15px 12px; font-size: 14px; font-weight: normal; letter-spacing: -1px; font-family: Malgun Gothic, sans-serif; color: #333; text-align: left;">상세내용</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="left" style="text-align: left; font-size: 14px; line-height: 25px; color: #333; padding-top: 13px">* 공지내용 <a href="#" target="_blank" style="color: #3983c0; text-decoration: none">링크</a> 연결.</td>
+                      </tr>
+                      <tr>
+                        <td align="center" style="padding: 30px 0 10px 0">
+                          <table width="200" border="0" cellspacing="0" cellpadding="0" align="center" style="margin: 0 auto;">
+                            <tbody>
+                              <tr>
+                                <td align="center"><a href="#" target="_blank" style="background: #ff460a; border: 1px solid #ff460a; text-decoration: none; text-align: center; padding: 12px 10px 15px; color: #ffffff; display: block; border-radius: 30px; font-size: 18px; line-height: 27px; font-weight: bold; font-family: Malgun Gothic, sans-serif;">버튼명</a></td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </td>
               </tr>
             </tbody>
           </table>
