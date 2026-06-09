@@ -1119,7 +1119,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.31</span>
+    <span class="sub">v2.32</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -3384,6 +3384,92 @@ const SNIPPETS = [
                             <tbody>
                               <tr>
                                 <td align="center"><a href="#" target="_blank" style="background: #ff460a; border: 1px solid #ff460a; text-decoration: none; text-align: center; padding: 12px 10px 13px; color: #ffffff; display: block; border-radius: 30px; font-size: 18px; line-height: 27px; font-weight: bold; font-family: Malgun Gothic, sans-serif;">보조 CTA 버튼</a></td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>`
+  },
+  {
+    id: 'policy_change_box',
+    name: '정책 안내 박스 (다항목, 번호+본문)',
+    target: 'common',
+    category: 'partial',
+    tags: ['강조 박스', '정책', '공지'],
+    description: '회색 배경 + 1px 테두리 + 굵은 번호 항목. 정책 변경·이용약관 개정·서비스 안내 등 다항목 공지 본문에 재사용. [변경 전]/[변경 후] 강조어 색은 자동 매핑',
+    html: `<div style="margin: 10px 0;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr>
+        <td style="font-family: Malgun Gothic, sans-serif; letter-spacing: -0.7px; padding: 4.3713%; background: #f8f8f8; border: 1px solid #e7e7e7; border-radius: 8px; font-size: 15px; line-height: 25px; color: #333">
+          <b style="font-weight: bold">1. 항목 제목</b><br>
+          항목 본문 또는 일자/내용 입력<br>
+          <br>
+          <b style="font-weight: bold">2. 변경 내용</b><br>
+          <span style="display: block; padding: 0 0 5px"><span style="color: #ff460a">[변경 전]</span> 기존 내용</span>
+          <span style="display: block; padding: 0"><span style="color: #ff460a">[변경 후]</span> 변경된 내용</span>
+          <br>
+          ※ 유의사항<br>
+          <span style="color: #494949">추가 안내 문구를 입력하세요.</span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>`
+  },
+  {
+    id: 'deadline_alert_round',
+    name: '마감 임박 알림 - 라운드 (강조 일자 + CTA)',
+    target: 'personal',
+    category: 'full',
+    tags: ['마감', '안내', '긴급'],
+    description: '라운드 외부에 타이틀(강조) + 부제 직접 노출. 내부 흰 박스에 라벨 + 큰 강조 일자 + 본문 + CTA. 응시·이벤트·지원 마감 등 긴급 안내 메일 범용',
+    html: `<div style="padding: 10px 0 30px; text-align: center;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background: #ffece7; border-radius: 20px">
+    <tbody>
+      <tr>
+        <td align="center" style="text-align: center; font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; padding: 25px 10px 8px; font-size: 17px; line-height: 25px; font-weight: bold; color: #333333">타이틀 <span style="color: #ff460a">강조 문구</span> 안내</td>
+      </tr>
+      <tr>
+        <td align="center" style="text-align: center; font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; padding: 0 10px 25px; font-size: 15px; line-height: 23px; font-weight: normal; color: #333333; word-break: keep-all"><span style="color: #ff460a">{회원명}</span>님께 안내드릴 내용을 입력하세요.</td>
+      </tr>
+      <tr>
+        <td style="padding: 0 2.563% 2.563%">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tbody>
+              <tr>
+                <td style="font-family: Malgun Gothic, sans-serif; padding: 4.387%; background: #fff; border-radius: 8px">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse">
+                    <tbody>
+                      <tr>
+                        <td align="center" style="text-align: center; font-size: 15px; font-weight: normal; line-height: 23px; color: #333333; letter-spacing: -1px; padding-bottom: 2px; word-break: keep-all">라벨 (예: 응시 마감일)</td>
+                      </tr>
+                      <tr>
+                        <td align="center" style="text-align: center; font-size: 18px; font-weight: bold; line-height: 26px; color: #121212; letter-spacing: -1px; padding-bottom: 20px; word-break: keep-all">YYYY년 MM월 DD일(요일) HH:MM까지</td>
+                      </tr>
+                      <tr>
+                        <td align="center" style="text-align: center; font-size: 15px; font-weight: normal; line-height: 23px; color: #333333; letter-spacing: -1px; padding-bottom: 20px; word-break: keep-all">
+                          기한 내에 완료하지 않으실 경우 진행이 불가능합니다.<br>
+                          아래 버튼을 눌러 현황을 확인해 주세요.
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="center" style="padding: 2% 0 10px">
+                          <table width="280" border="0" cellspacing="0" cellpadding="0" align="center" style="margin: 0 auto;">
+                            <tbody>
+                              <tr>
+                                <td align="center"><a href="#" target="_blank" style="background: #ff460a; border: 1px solid #ff460a; text-decoration: none; text-align: center; padding: 12px 10px 13px; color: #ffffff; display: block; border-radius: 30px; font-size: 18px; line-height: 27px; font-weight: bold; font-family: Malgun Gothic, sans-serif; letter-spacing: -1px;">바로가기 버튼</a></td>
                               </tr>
                             </tbody>
                           </table>
