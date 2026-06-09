@@ -1119,7 +1119,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.30</span>
+    <span class="sub">v2.31</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -3172,6 +3172,218 @@ const SNIPPETS = [
                             <tbody>
                               <tr>
                                 <td align="center"><a href="#" target="_blank" style="background: #ff460a; border: 1px solid #ff460a; text-decoration: none; text-align: center; padding: 12px 10px 15px; color: #ffffff; display: block; border-radius: 30px; font-size: 18px; line-height: 27px; font-weight: bold; font-family: Malgun Gothic, sans-serif;">버튼명</a></td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>`
+  },
+  {
+    id: 'stat_highlight_box',
+    name: '통계 강조 박스 (이모지 + 강조숫자)',
+    target: 'common',
+    category: 'partial',
+    tags: ['통계', '리포트', '강조'],
+    description: '회색 배경(#f9f9f9) + 이모지 + 라벨 + 강조 숫자. 트렌드 리포트의 단일 통계 표시에 재사용',
+    html: `<div style="margin: 10px 0;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr>
+        <td style="background-color: #f9f9f9; border-radius: 8px; padding: 20px 3.8%">
+          <b style="font-family: Malgun Gothic, sans-serif; font-size: 16px; font-weight: bold; line-height: 21px; color: #000; letter-spacing: -1px">&#x1F4E9; 받은 제안 평균 <span style="color: #ff460a">13</span>건 <span style="font-size: 13px">(상위 10% 기준)</span></b>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>`
+  },
+  {
+    id: 'ranking_list_box',
+    name: '순위 리스트 박스 (5행, 라벨 + 퍼센트)',
+    target: 'common',
+    category: 'partial',
+    tags: ['통계', '리포트', '순위'],
+    description: '회색 외곽(#f9f9f9) + 흰 내부 표. 좌측 순위·라벨 / 우측 퍼센트. 인기 직무·연차·지역 등 트렌드 순위에 재사용',
+    html: `<div style="margin: 10px 0;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr>
+        <td style="background-color: #f9f9f9; border-radius: 8px; padding: 20px 3.8%">
+          <b style="display: block; text-align: left; font-family: Malgun Gothic, sans-serif; font-size: 16px; font-weight: bold; line-height: 21px; color: #000; letter-spacing: -1px; margin: 0 0 15px">&#x2728; 제목 영역</b>
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: separate; table-layout: fixed; padding: 15px 3.8%; border-radius: 8px; background: #fff; box-sizing: border-box">
+            <colgroup>
+              <col width="*" />
+              <col width="80" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <td style="text-align: left; font-family: Malgun Gothic, sans-serif; font-size: 16px; font-weight: bold; color: #494949; line-height: 28px; letter-spacing: -0.7px">1. 항목명</td>
+                <td style="text-align: right; font-family: Malgun Gothic, sans-serif; font-size: 16px; font-weight: normal; color: #666; line-height: 28px; letter-spacing: -0.5px">(0.0%)</td>
+              </tr>
+              <tr>
+                <td style="text-align: left; font-family: Malgun Gothic, sans-serif; font-size: 16px; font-weight: bold; color: #494949; line-height: 28px; letter-spacing: -0.7px">2. 항목명</td>
+                <td style="text-align: right; font-family: Malgun Gothic, sans-serif; font-size: 16px; font-weight: normal; color: #666; line-height: 28px; letter-spacing: -0.5px">(0.0%)</td>
+              </tr>
+              <tr>
+                <td style="text-align: left; font-family: Malgun Gothic, sans-serif; font-size: 16px; font-weight: bold; color: #494949; line-height: 28px; letter-spacing: -0.7px">3. 항목명</td>
+                <td style="text-align: right; font-family: Malgun Gothic, sans-serif; font-size: 16px; font-weight: normal; color: #666; line-height: 28px; letter-spacing: -0.5px">(0.0%)</td>
+              </tr>
+              <tr>
+                <td style="text-align: left; font-family: Malgun Gothic, sans-serif; font-size: 16px; font-weight: bold; color: #494949; line-height: 28px; letter-spacing: -0.7px">4. 항목명</td>
+                <td style="text-align: right; font-family: Malgun Gothic, sans-serif; font-size: 16px; font-weight: normal; color: #666; line-height: 28px; letter-spacing: -0.5px">(0.0%)</td>
+              </tr>
+              <tr>
+                <td style="text-align: left; font-family: Malgun Gothic, sans-serif; font-size: 16px; font-weight: bold; color: #494949; line-height: 28px; letter-spacing: -0.7px">5. 항목명</td>
+                <td style="text-align: right; font-family: Malgun Gothic, sans-serif; font-size: 16px; font-weight: normal; color: #666; line-height: 28px; letter-spacing: -0.5px">(0.0%)</td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>`
+  },
+  {
+    id: 'dash_bullet_list',
+    name: '대시(-) 글머리 리스트',
+    target: 'common',
+    category: 'partial',
+    tags: ['목록', '안내'],
+    description: '좌측 10px 대시 + 우측 본문 텍스트. 안내·팁·강조 포인트 나열에 사용',
+    html: `<div style="margin: 10px 0;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; table-layout: fixed">
+    <colgroup>
+      <col width="10" />
+      <col width="*" />
+    </colgroup>
+    <tbody>
+      <tr>
+        <td style="text-align: left; vertical-align: top; padding: 1px 0; font-family: Malgun Gothic, sans-serif; font-size: 14px; font-weight: normal; line-height: 23px; color: #121212; letter-spacing: -0.7px; word-break: keep-all">-</td>
+        <td style="text-align: left; vertical-align: top; padding: 1px 0; font-family: Malgun Gothic, sans-serif; font-size: 14px; font-weight: normal; line-height: 23px; color: #121212; letter-spacing: -0.7px; word-break: keep-all">첫 번째 안내 문구를 입력하세요.</td>
+      </tr>
+      <tr>
+        <td style="text-align: left; vertical-align: top; padding: 1px 0; font-family: Malgun Gothic, sans-serif; font-size: 14px; font-weight: normal; line-height: 23px; color: #121212; letter-spacing: -0.7px; word-break: keep-all">-</td>
+        <td style="text-align: left; vertical-align: top; padding: 1px 0; font-family: Malgun Gothic, sans-serif; font-size: 14px; font-weight: normal; line-height: 23px; color: #121212; letter-spacing: -0.7px; word-break: keep-all">두 번째 안내 문구를 입력하세요.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>`
+  },
+  {
+    id: 'trend_report_round',
+    name: '트렌드 리포트 - 라운드 2박스 (통계+CTA)',
+    target: 'personal',
+    category: 'full',
+    tags: ['리포트', '통계'],
+    description: '라운드 외곽 + 흰 박스 2개. 박스1=타이틀+인사말+구분선+통계 강조 박스 + 메인 CTA / 박스2=📌 제목+대시 리스트+보조 CTA. 스마트오퍼·포지션제안 등 트렌드 리포트 메일 범용',
+    html: `<div style="padding: 10px 0 30px; text-align: center;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: separate; background: #ffece7; border-radius: 12px">
+    <tbody>
+      <tr>
+        <td style="padding: 15px 15px 0;">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tbody>
+              <tr>
+                <td style="font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; padding: 25px 25px 30px; background: #fff; border-radius: 8px">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: separate">
+                    <tbody>
+                      <tr>
+                        <th align="left" style="text-align: left; font-family: Malgun Gothic, sans-serif; font-size: 20px; font-weight: bold; line-height: 32px; color: #000; letter-spacing: -1px; padding-bottom: 12px">리포트 타이틀 입력 영역</th>
+                      </tr>
+                      <tr>
+                        <td align="left" style="text-align: left; font-family: Malgun Gothic, sans-serif; font-size: 15px; font-weight: normal; line-height: 23px; color: #494949; letter-spacing: -0.7px">
+                          안녕하세요. 인크루트입니다.<br>
+                          인사말 또는 리포트 소개 문구를 입력하세요.
+                        </td>
+                      </tr>
+                      <tr><td style="height: 20px"></td></tr>
+                      <tr><td style="border-top: 1px solid #e1e1e1"></td></tr>
+                      <tr><td style="height: 30px"></td></tr>
+                      <tr>
+                        <td align="center" style="text-align: center; font-family: Malgun Gothic, sans-serif; font-size: 18px; font-weight: bold; line-height: 25px; color: #ff460a; letter-spacing: -1px">소제목 (강조 영역)</td>
+                      </tr>
+                      <tr>
+                        <td align="center" style="text-align: center; font-family: Malgun Gothic, sans-serif; font-size: 14px; font-weight: normal; line-height: 23px; color: #494949; letter-spacing: -0.7px; padding-bottom: 20px">* 기간 또는 부제</td>
+                      </tr>
+                      <tr>
+                        <td style="background-color: #f9f9f9; border-radius: 8px; padding: 20px 3.8%">
+                          <b style="font-family: Malgun Gothic, sans-serif; font-size: 16px; font-weight: bold; line-height: 21px; color: #000; letter-spacing: -1px">&#x1F4E9; 통계 라벨 <span style="color: #ff460a">0</span>건</b>
+                        </td>
+                      </tr>
+                      <tr><td style="height: 15px"></td></tr>
+                      <tr>
+                        <td style="background-color: #f9f9f9; border-radius: 8px; padding: 20px 3.8%">
+                          <b style="font-family: Malgun Gothic, sans-serif; font-size: 16px; font-weight: bold; line-height: 21px; color: #000; letter-spacing: -1px">&#x2728; 통계 라벨 <span style="color: #ff460a">0</span>건</b>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="center" style="padding: 20px 0 0">
+                          <table width="240" border="0" cellspacing="0" cellpadding="0" align="center" style="margin: 0 auto;">
+                            <tbody>
+                              <tr>
+                                <td align="center"><a href="#" target="_blank" style="background: #ff460a; border: 1px solid #ff460a; text-decoration: none; text-align: center; padding: 12px 10px 13px; color: #ffffff; display: block; border-radius: 30px; font-size: 18px; line-height: 27px; font-weight: bold; font-family: Malgun Gothic, sans-serif;">메인 CTA 버튼</a></td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 15px;">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tbody>
+              <tr>
+                <td style="font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; padding: 25px 25px 30px; background: #fff; border-radius: 8px">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse">
+                    <tbody>
+                      <tr>
+                        <th align="left" style="text-align: left; font-family: Malgun Gothic, sans-serif; font-size: 16px; font-weight: bold; line-height: 21px; color: #000; letter-spacing: -1px; padding-bottom: 10px">&#x1F4CC; 보조 박스 제목</th>
+                      </tr>
+                      <tr>
+                        <td>
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; table-layout: fixed">
+                            <colgroup>
+                              <col width="10" />
+                              <col width="*" />
+                            </colgroup>
+                            <tbody>
+                              <tr>
+                                <td style="text-align: left; vertical-align: top; padding: 1px 0; font-family: Malgun Gothic, sans-serif; font-size: 14px; font-weight: normal; line-height: 23px; color: #121212; letter-spacing: -0.7px; word-break: keep-all">-</td>
+                                <td style="text-align: left; vertical-align: top; padding: 1px 0; font-family: Malgun Gothic, sans-serif; font-size: 14px; font-weight: normal; line-height: 23px; color: #121212; letter-spacing: -0.7px; word-break: keep-all">첫 번째 안내 문구를 입력하세요.</td>
+                              </tr>
+                              <tr>
+                                <td style="text-align: left; vertical-align: top; padding: 1px 0; font-family: Malgun Gothic, sans-serif; font-size: 14px; font-weight: normal; line-height: 23px; color: #121212; letter-spacing: -0.7px; word-break: keep-all">-</td>
+                                <td style="text-align: left; vertical-align: top; padding: 1px 0; font-family: Malgun Gothic, sans-serif; font-size: 14px; font-weight: normal; line-height: 23px; color: #121212; letter-spacing: -0.7px; word-break: keep-all">두 번째 안내 문구를 입력하세요.</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="center" style="padding: 20px 0 0">
+                          <table width="240" border="0" cellspacing="0" cellpadding="0" align="center" style="margin: 0 auto;">
+                            <tbody>
+                              <tr>
+                                <td align="center"><a href="#" target="_blank" style="background: #ff460a; border: 1px solid #ff460a; text-decoration: none; text-align: center; padding: 12px 10px 13px; color: #ffffff; display: block; border-radius: 30px; font-size: 18px; line-height: 27px; font-weight: bold; font-family: Malgun Gothic, sans-serif;">보조 CTA 버튼</a></td>
                               </tr>
                             </tbody>
                           </table>
