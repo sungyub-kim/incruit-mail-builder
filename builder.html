@@ -1119,7 +1119,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.39</span>
+    <span class="sub">v2.40</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -4813,41 +4813,31 @@ function applyPartialImmediate(s) {
         $('#wysiwyg').insertAdjacentHTML('beforeend', resolvedHTML);
       }
     } else {
-      // 일반 부분 — wy 직계 자식 단위로 삽입 (풀템플릿 깊은 구조 보호)
+      // 일반 부분 — 클릭 좌표(Y) 기반으로 wy 직계 자식 다음에 삽입
+      // (사용자가 보는 시각적 위치 = 마지막 마우스 클릭 Y 좌표 기준)
       const wy = $('#wysiwyg');
-      let inserted = false;
-      if (savedRange) {
-        try {
-          const startNode = savedRange.startContainer;
-          if (startNode && startNode.isConnected && wy.contains(startNode)) {
-            const tmp = document.createElement('div');
-            tmp.innerHTML = resolvedHTML;
-            const fragment = document.createDocumentFragment();
-            while (tmp.firstChild) fragment.appendChild(tmp.firstChild);
+      const tmp = document.createElement('div');
+      tmp.innerHTML = resolvedHTML;
+      const fragment = document.createDocumentFragment();
+      while (tmp.firstChild) fragment.appendChild(tmp.firstChild);
 
-            if (startNode === wy) {
-              // wy 자체 (빈 영역 클릭) → 본문 끝
-              wy.appendChild(fragment);
-            } else {
-              // wy의 직계 자식을 찾아 그 다음에 삽입
-              // (텍스트 split / table cell 깊숙이 들어가서 layout 깨지는 것 방지)
-              let directChild = startNode;
-              while (directChild && directChild.parentNode !== wy) {
-                directChild = directChild.parentNode;
-              }
-              if (directChild) {
-                wy.insertBefore(fragment, directChild.nextSibling);
-              } else {
-                wy.appendChild(fragment);
-              }
-            }
+      let inserted = false;
+      if (lastClickY !== null && wy.children.length > 0) {
+        // 클릭 Y 좌표가 어느 직계 자식의 영역에 있는지 찾기
+        for (let i = 0; i < wy.children.length; i++) {
+          const child = wy.children[i];
+          const rect = child.getBoundingClientRect();
+          if (lastClickY <= rect.bottom) {
+            // 이 자식의 영역 안 또는 위 클릭 → 이 자식 다음에 삽입
+            wy.insertBefore(fragment, child.nextSibling);
             inserted = true;
+            break;
           }
-        } catch (e) { /* invalid range */ }
+        }
       }
       if (!inserted) {
-        // fallback: 본문 끝
-        wy.insertAdjacentHTML('beforeend', resolvedHTML);
+        // 클릭 정보 없거나 마지막 자식보다 아래 클릭 → 본문 끝
+        wy.appendChild(fragment);
       }
     }
     saveSelection();
@@ -4971,6 +4961,8 @@ $('#modalOk').addEventListener('click', () => {
 
 /* 본문 selection 저장 — 모달 열리면 포커스가 빠져나가니 미리 보관 */
 let savedRange = null;
+/* 마지막 본문 mousedown 좌표 — 부분 템플릿 정확 위치 삽입에 사용 */
+let lastClickY = null;
 function saveSelection() {
   const sel = window.getSelection();
   if (sel && sel.rangeCount > 0) {
@@ -6067,6 +6059,11 @@ $('#linkModalRemove').addEventListener('click', () => {
 /* 본문 selection 저장: 커서 이동/입력/포커스 잃기 직전에 항상 저장
    → 모달 클릭으로 포커스가 빠져도 마지막 커서 위치를 복원할 수 있게 */
 ['mouseup','keyup','focus','blur','input'].forEach(ev => wy.addEventListener(ev, saveSelection));
+
+/* 본문 mousedown 좌표 capture — 부분 템플릿이 정확한 시각적 위치에 들어가도록 */
+wy.addEventListener('mousedown', e => {
+  lastClickY = e.clientY;
+});
 
 /* 본문 blur 시 자동 클린업 — 사용자가 본문에서 손 떼면 중첩 span 정리 */
 wy.addEventListener('blur', () => {
