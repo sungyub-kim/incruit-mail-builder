@@ -1119,7 +1119,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.40</span>
+    <span class="sub">v2.41</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -4813,8 +4813,8 @@ function applyPartialImmediate(s) {
         $('#wysiwyg').insertAdjacentHTML('beforeend', resolvedHTML);
       }
     } else {
-      // 일반 부분 — 클릭 좌표(Y) 기반으로 wy 직계 자식 다음에 삽입
-      // (사용자가 보는 시각적 위치 = 마지막 마우스 클릭 Y 좌표 기준)
+      // 일반 부분 — caret Y 좌표 기반으로 wy 직계 자식 다음에 삽입
+      // (mouseup/keyup/input/selectionchange로 매번 갱신된 lastCaretY 사용)
       const wy = $('#wysiwyg');
       const tmp = document.createElement('div');
       tmp.innerHTML = resolvedHTML;
@@ -4822,22 +4822,28 @@ function applyPartialImmediate(s) {
       while (tmp.firstChild) fragment.appendChild(tmp.firstChild);
 
       let inserted = false;
-      if (lastClickY !== null && wy.children.length > 0) {
-        // 클릭 Y 좌표가 어느 직계 자식의 영역에 있는지 찾기
+      let insertedAfter = null;
+      if (lastCaretY !== null && wy.children.length > 0) {
         for (let i = 0; i < wy.children.length; i++) {
           const child = wy.children[i];
           const rect = child.getBoundingClientRect();
-          if (lastClickY <= rect.bottom) {
-            // 이 자식의 영역 안 또는 위 클릭 → 이 자식 다음에 삽입
+          if (lastCaretY <= rect.bottom) {
             wy.insertBefore(fragment, child.nextSibling);
+            insertedAfter = child;
             inserted = true;
             break;
           }
         }
       }
       if (!inserted) {
-        // 클릭 정보 없거나 마지막 자식보다 아래 클릭 → 본문 끝
         wy.appendChild(fragment);
+        insertedAfter = wy.lastElementChild;
+      }
+      // 추가 후 인디케이터를 새 위치로 즉시 갱신 (다음 추가 시점도 시각적으로 안내)
+      if (insertedAfter) {
+        const r = insertedAfter.getBoundingClientRect();
+        lastCaretY = r.bottom - 5;
+        updateInsertIndicator();
       }
     }
     saveSelection();
@@ -4961,8 +4967,81 @@ $('#modalOk').addEventListener('click', () => {
 
 /* 본문 selection 저장 — 모달 열리면 포커스가 빠져나가니 미리 보관 */
 let savedRange = null;
-/* 마지막 본문 mousedown 좌표 — 부분 템플릿 정확 위치 삽입에 사용 */
-let lastClickY = null;
+/* 현재 caret의 Y 좌표(viewport 기준) — 부분 템플릿 삽입 위치 산출 + 시각 인디케이터 */
+let lastCaretY = null;
+/* 부분 템플릿 삽입 위치 시각 인디케이터 */
+let _insertIndicator = null;
+function ensureInsertIndicator() {
+  if (_insertIndicator && _insertIndicator.isConnected) return _insertIndicator;
+  const wy = $('#wysiwyg');
+  const parent = wy.parentElement;
+  if (getComputedStyle(parent).position === 'static') parent.style.position = 'relative';
+  const el = document.createElement('div');
+  el.id = 'insertIndicator';
+  el.contentEditable = 'false';
+  el.style.cssText = 'position:absolute;height:0;border-top:2px dashed #2f80e5;pointer-events:none;user-select:none;display:none;z-index:10;';
+  const label = document.createElement('span');
+  label.textContent = '▼ 부분 템플릿이 여기에 추가됩니다';
+  label.style.cssText = 'position:absolute;left:8px;top:-9px;background:#2f80e5;color:#fff;font-size:11px;padding:2px 7px;border-radius:4px;font-family:Malgun Gothic, sans-serif;line-height:14px;';
+  el.appendChild(label);
+  parent.appendChild(el);
+  _insertIndicator = el;
+  return el;
+}
+function updateCaretY() {
+  const sel = window.getSelection();
+  const wy = $('#wysiwyg');
+  if (!sel || sel.rangeCount === 0) return;
+  const r = sel.getRangeAt(0);
+  if (!wy.contains(r.commonAncestorContainer)) return;
+  let rect = r.getBoundingClientRect();
+  if (rect.height === 0 && rect.top === 0) {
+    // collapsed selection이 정확한 좌표 못 줄 때 임시 마커로 측정
+    try {
+      const marker = document.createElement('span');
+      marker.style.cssText = 'display:inline-block;width:0;height:1em;';
+      const tempRange = r.cloneRange();
+      tempRange.insertNode(marker);
+      rect = marker.getBoundingClientRect();
+      marker.parentNode && marker.parentNode.removeChild(marker);
+    } catch (e) {}
+  }
+  if (rect && rect.bottom > 0) {
+    lastCaretY = rect.top + (rect.height / 2);
+    updateInsertIndicator();
+  }
+}
+function updateInsertIndicator() {
+  const ind = ensureInsertIndicator();
+  const wy = $('#wysiwyg');
+  if (lastCaretY === null || wy.children.length === 0) {
+    ind.style.display = 'none';
+    return;
+  }
+  let topPx = null;
+  const parentRect = wy.parentElement.getBoundingClientRect();
+  for (let i = 0; i < wy.children.length; i++) {
+    const child = wy.children[i];
+    const r = child.getBoundingClientRect();
+    if (lastCaretY <= r.bottom) {
+      topPx = r.bottom - parentRect.top;
+      break;
+    }
+  }
+  if (topPx === null && wy.lastElementChild) {
+    const lastRect = wy.lastElementChild.getBoundingClientRect();
+    topPx = lastRect.bottom - parentRect.top;
+  }
+  if (topPx === null) {
+    ind.style.display = 'none';
+    return;
+  }
+  const wyRect = wy.getBoundingClientRect();
+  ind.style.left = (wyRect.left - parentRect.left) + 'px';
+  ind.style.width = wyRect.width + 'px';
+  ind.style.top = topPx + 'px';
+  ind.style.display = 'block';
+}
 function saveSelection() {
   const sel = window.getSelection();
   if (sel && sel.rangeCount > 0) {
@@ -6060,9 +6139,10 @@ $('#linkModalRemove').addEventListener('click', () => {
    → 모달 클릭으로 포커스가 빠져도 마지막 커서 위치를 복원할 수 있게 */
 ['mouseup','keyup','focus','blur','input'].forEach(ev => wy.addEventListener(ev, saveSelection));
 
-/* 본문 mousedown 좌표 capture — 부분 템플릿이 정확한 시각적 위치에 들어가도록 */
-wy.addEventListener('mousedown', e => {
-  lastClickY = e.clientY;
+/* caret Y 좌표 + 시각 인디케이터 갱신 — 부분 템플릿이 정확한 시각적 위치에 들어가도록 */
+['mouseup','keyup','input','focus'].forEach(ev => wy.addEventListener(ev, updateCaretY));
+document.addEventListener('selectionchange', () => {
+  if (document.activeElement === wy) updateCaretY();
 });
 
 /* 본문 blur 시 자동 클린업 — 사용자가 본문에서 손 떼면 중첩 span 정리 */
