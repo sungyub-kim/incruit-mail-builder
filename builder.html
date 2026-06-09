@@ -1119,7 +1119,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.38</span>
+    <span class="sub">v2.39</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -4022,6 +4022,73 @@ const SNIPPETS = [
                     </tbody>
                   </table>
                 </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>`
+  },
+  {
+    id: 'journey_step_guide',
+    name: '다단계 가이드 (타이틀+안내+단계 박스 N개+CTA)',
+    target: 'common',
+    category: 'full',
+    tags: ['가이드', '캠페인', '유도'],
+    description: '큰 타이틀(이모지) + 인사 + 구분선 + 소제목(강조) + 회색 단계 박스 N개(링크) + 최종 CTA. 이력서 작성·수정 유도, 가입 혜택 안내, 단계별 행동 유도 캠페인 메일 범용',
+    html: `<div style="margin: 10px 0;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr>
+        <td style="font-family: Malgun Gothic, sans-serif; letter-spacing: -0.08em; padding: 16px; background: #fff; border-radius: 8px">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: separate">
+            <tbody>
+              <tr>
+                <th align="left" style="text-align: left; font-family: Malgun Gothic, sans-serif; font-size: 20px; font-weight: bold; line-height: 32px; color: #000; letter-spacing: -1px; padding-bottom: 12px">100만 기업이 {회원명}님을 찾고 있어요 &#x1F50D;</th>
+              </tr>
+              <tr>
+                <td align="left" style="text-align: left; font-family: Malgun Gothic, sans-serif; font-size: 15px; font-weight: normal; line-height: 23px; color: #494949; letter-spacing: -0.7px">
+                  <span style="color: #ff460a;">경력 {N}년차</span> 회원님들이<br>
+                  최근 한 달간 <span style="color: #ff460a;">{N}건</span>의 포지션제안을 받았어요.
+                </td>
+              </tr>
+              <tr><td style="height: 20px"></td></tr>
+              <tr><td style="border-top: 1px solid #e1e1e1"></td></tr>
+              <tr><td style="height: 30px"></td></tr>
+              <tr>
+                <td align="center" style="text-align: center; font-family: Malgun Gothic, sans-serif; font-size: 18px; font-weight: bold; line-height: 25px; color: #000; letter-spacing: -1px; padding-bottom: 20px"><b style="color: #ff460a">인크루트</b>와 함께하는<br>취업 성공을 위한 {N}단계 비법</td>
+              </tr>
+              <tr>
+                <td style="text-align: center; background-color: #f9f9f9; border-radius: 8px; padding: 20px 3.8%; font-family: Malgun Gothic, sans-serif; font-size: 16px; font-weight: bold; color: #333; letter-spacing: -1px;"><a href="#" target="_blank" style="color: #333; text-decoration: none;">1단계 – 이력서 작성하기</a></td>
+              </tr>
+              <tr><td style="height: 15px"></td></tr>
+              <tr>
+                <td style="text-align: center; background-color: #f9f9f9; border-radius: 8px; padding: 20px 3.8%; font-family: Malgun Gothic, sans-serif; font-size: 16px; font-weight: bold; color: #333; letter-spacing: -1px;"><a href="#" target="_blank" style="color: #333; text-decoration: none;">2단계 – 마이핏 공고 추천 받기</a></td>
+              </tr>
+              <tr><td style="height: 15px"></td></tr>
+              <tr>
+                <td style="text-align: center; background-color: #f9f9f9; border-radius: 8px; padding: 20px 3.8%; font-family: Malgun Gothic, sans-serif; font-size: 16px; font-weight: bold; color: #333; letter-spacing: -1px;"><a href="#" target="_blank" style="color: #333; text-decoration: none;">3단계 – 포지션제안 받기</a></td>
+              </tr>
+              <tr><td style="height: 15px"></td></tr>
+              <tr>
+                <td style="text-align: center; background-color: #f9f9f9; border-radius: 8px; padding: 20px 3.8%; font-family: Malgun Gothic, sans-serif; font-size: 16px; font-weight: bold; color: #333; letter-spacing: -1px;"><a href="#" target="_blank" style="color: #333; text-decoration: none;">4단계 – 입사지원하기</a></td>
+              </tr>
+              <tr><td style="height: 15px"></td></tr>
+              <tr>
+                <td style="text-align: center; background-color: #f9f9f9; border-radius: 8px; padding: 20px 3.8%; font-family: Malgun Gothic, sans-serif; font-size: 16px; font-weight: bold; color: #ff460a; letter-spacing: -1px;">취업 성공! &#x1F389;</td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td align="center" style="padding: 20px 0 30px">
+          <table width="230" border="0" cellspacing="0" cellpadding="0" align="center" style="margin: 0 auto;">
+            <tbody>
+              <tr>
+                <td align="center"><a href="#" target="_blank" style="display: block; text-decoration: none; width: 100%; border-radius: 25px; background-color: #ff460a; color: #fff; font-size: 18px; font-weight: bold; border: 0; padding: 13px 0; text-align: center; letter-spacing: -1px;">메인 CTA</a></td>
               </tr>
             </tbody>
           </table>
