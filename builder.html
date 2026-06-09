@@ -1119,7 +1119,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.34</span>
+    <span class="sub">v2.35</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -2456,15 +2456,21 @@ const SNIPPETS = [
     category: 'partial',
     tags: ['버튼'],
     description: '작은 라운드 CTA (200px). 메일 수신 변경 등 보조 행동 유도. 대상에 따라 색 자동',
-    html: `<div style="margin: 30px 0 10px; text-align: center;">
-  <table width="200" border="0" cellspacing="0" cellpadding="0" align="center" style="margin: 0 auto;">
-    <tbody>
-      <tr>
-        <td align="center"><a href="" target="_blank" style="background: #ff460a; border: 1px solid #ff460a; text-decoration: none; text-align: center; padding: 12px 10px 15px; color: #ffffff; display: block; border-radius: 30px; font-size: 18px; line-height: 27px; font-weight: bold; font-family: Malgun Gothic, sans-serif;">메일 수신 변경</a></td>
-      </tr>
-    </tbody>
-  </table>
-</div>`
+    html: `<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 30px 0 10px;">
+  <tbody>
+    <tr>
+      <td align="center" style="text-align: center;">
+        <table width="200" border="0" cellspacing="0" cellpadding="0" align="center" style="margin: 0 auto;">
+          <tbody>
+            <tr>
+              <td align="center"><a href="" target="_blank" style="background: #ff460a; border: 1px solid #ff460a; text-decoration: none; text-align: center; padding: 12px 10px 15px; color: #ffffff; display: block; border-radius: 30px; font-size: 18px; line-height: 27px; font-weight: bold; font-family: Malgun Gothic, sans-serif;">메일 수신 변경</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>`
   },
   {
     id: 'info_box_pin_list',
@@ -2900,15 +2906,21 @@ const SNIPPETS = [
     category: 'partial',
     tags: ['버튼'],
     description: '라운드형 풀폭 CTA 버튼 (230px). 대상에 따라 색 자동(개인 #ff460a / 기업 #2f80e5)',
-    html: `<div style="margin: 10px 0; text-align: center;">
-  <table width="230" border="0" cellspacing="0" cellpadding="0" align="center" style="margin: 0 auto;">
-    <tbody>
-      <tr>
-        <td align="center"><a href="#none" target="_blank" style="display: block; text-decoration: none; width: 100%; border-radius: 25px; background-color: #ff460a; color: #fff; font-size: 18px; font-weight: bold; border: 0; padding: 13px 0; text-align: center; letter-spacing: -1px">더 많은 공고 보기</a></td>
-      </tr>
-    </tbody>
-  </table>
-</div>`
+    html: `<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 10px 0;">
+  <tbody>
+    <tr>
+      <td align="center" style="text-align: center;">
+        <table width="230" border="0" cellspacing="0" cellpadding="0" align="center" style="margin: 0 auto;">
+          <tbody>
+            <tr>
+              <td align="center"><a href="#none" target="_blank" style="display: block; text-decoration: none; width: 100%; border-radius: 25px; background-color: #ff460a; color: #fff; font-size: 18px; font-weight: bold; border: 0; padding: 13px 0; text-align: center; letter-spacing: -1px">더 많은 공고 보기</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>`
   },
   {
     id: 'ad_consent_check',
@@ -4446,17 +4458,22 @@ function applyPartialImmediate(s) {
       if (savedRange) {
         try {
           const startNode = savedRange.startContainer;
-          // 검증: startContainer가 wy 자체(=빈 영역 클릭)가 아니라 wy의 후손이고 connected 상태
-          if (startNode && startNode.isConnected && startNode !== wy && wy.contains(startNode)) {
-            const range = savedRange.cloneRange();
-            range.collapse(true);
-            // HTML 문자열을 DocumentFragment로 변환 (모든 자식 일괄)
+          // 검증: startContainer가 wy 후손이고 connected 상태
+          if (startNode && startNode.isConnected && wy.contains(startNode)) {
             const tmp = document.createElement('div');
             tmp.innerHTML = resolvedHTML;
             const fragment = document.createDocumentFragment();
             while (tmp.firstChild) fragment.appendChild(tmp.firstChild);
-            // range 정확한 위치에 fragment 삽입
-            range.insertNode(fragment);
+
+            if (startNode === wy) {
+              // wy 자체가 컨테이너면 (빈 영역 클릭) 본문 끝에 삽입
+              wy.appendChild(fragment);
+            } else {
+              // 텍스트/엘리먼트 노드 → range 정확한 위치에 삽입
+              const range = savedRange.cloneRange();
+              range.collapse(true);
+              range.insertNode(fragment);
+            }
             inserted = true;
           }
         } catch (e) { /* invalid range */ }
