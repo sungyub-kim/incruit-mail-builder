@@ -1119,7 +1119,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.42</span>
+    <span class="sub">v2.43</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -4983,10 +4983,10 @@ function ensureInsertIndicator() {
   const el = document.createElement('div');
   el.id = 'insertIndicator';
   el.contentEditable = 'false';
-  el.style.cssText = 'position:absolute;height:0;border-top:2px dashed #2f80e5;pointer-events:none;user-select:none;display:none;z-index:10;';
+  el.style.cssText = 'position:absolute;height:0;border-top:3px solid #ff460a;pointer-events:none;user-select:none;display:none;z-index:10;box-shadow:0 0 0 1px rgba(255,70,10,0.15);';
   const label = document.createElement('span');
-  label.textContent = '▼ 부분 템플릿이 여기에 추가됩니다';
-  label.style.cssText = 'position:absolute;left:8px;top:-9px;background:#2f80e5;color:#fff;font-size:11px;padding:2px 7px;border-radius:4px;font-family:Malgun Gothic, sans-serif;line-height:14px;';
+  label.textContent = '▼ 여기에 추가됨';
+  label.style.cssText = 'position:absolute;left:50%;transform:translateX(-50%);top:-11px;background:#ff460a;color:#fff;font-size:12px;font-weight:bold;padding:3px 10px;border-radius:10px;font-family:Malgun Gothic, sans-serif;line-height:14px;box-shadow:0 2px 6px rgba(0,0,0,0.15);white-space:nowrap;';
   el.appendChild(label);
   parent.appendChild(el);
   _insertIndicator = el;
@@ -4998,20 +4998,30 @@ function updateCaretY() {
   if (!sel || sel.rangeCount === 0) return;
   const r = sel.getRangeAt(0);
   if (!wy.contains(r.commonAncestorContainer)) return;
-  let rect = r.getBoundingClientRect();
-  if (rect.height === 0 && rect.top === 0) {
-    // collapsed selection이 정확한 좌표 못 줄 때 임시 마커로 측정
-    try {
-      const marker = document.createElement('span');
-      marker.style.cssText = 'display:inline-block;width:0;height:1em;';
-      const tempRange = r.cloneRange();
-      tempRange.insertNode(marker);
-      rect = marker.getBoundingClientRect();
-      marker.parentNode && marker.parentNode.removeChild(marker);
-    } catch (e) {}
+  let y = null;
+  // 1) getBoundingClientRect — 보통 가장 정확
+  const rect = r.getBoundingClientRect();
+  if (rect && rect.height > 0 && rect.top > 0) {
+    y = rect.top + (rect.height / 2);
   }
-  if (rect && rect.bottom > 0) {
-    lastCaretY = rect.top + (rect.height / 2);
+  // 2) getClientRects 첫 줄
+  if (y === null) {
+    const rects = r.getClientRects();
+    if (rects.length > 0 && rects[0].height > 0) {
+      y = rects[0].top + (rects[0].height / 2);
+    }
+  }
+  // 3) startContainer 텍스트면 부모 element 위치
+  if (y === null) {
+    let el = r.startContainer;
+    if (el.nodeType === Node.TEXT_NODE) el = el.parentElement;
+    if (el && el.nodeType === Node.ELEMENT_NODE && el !== wy) {
+      const elRect = el.getBoundingClientRect();
+      if (elRect.height > 0) y = elRect.top + (elRect.height / 2);
+    }
+  }
+  if (y !== null) {
+    lastCaretY = y;
     updateInsertIndicator();
   }
 }
@@ -6144,7 +6154,13 @@ $('#linkModalRemove').addEventListener('click', () => {
 ['mouseup','keyup','focus','blur','input'].forEach(ev => wy.addEventListener(ev, saveSelection));
 
 /* caret Y 좌표 + 시각 인디케이터 갱신 — 부분 템플릿이 정확한 시각적 위치에 들어가도록 */
-['mouseup','keyup','input','focus'].forEach(ev => wy.addEventListener(ev, updateCaretY));
+/* 마우스 클릭은 e.clientY 직접 사용 (가장 신뢰도 높음 - selection 검사 실패해도 OK) */
+wy.addEventListener('mousedown', e => {
+  lastCaretY = e.clientY;
+  updateInsertIndicator();
+});
+/* 키보드/포커스는 selection 기반 caret 추적 */
+['keyup','input','focus'].forEach(ev => wy.addEventListener(ev, updateCaretY));
 document.addEventListener('selectionchange', () => {
   if (document.activeElement === wy) updateCaretY();
 });
