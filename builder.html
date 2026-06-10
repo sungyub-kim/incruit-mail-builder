@@ -1119,7 +1119,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.41</span>
+    <span class="sub">v2.42</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -4787,6 +4787,10 @@ function applyPartialImmediate(s) {
   const resolvedHTML = resolveSnippetHTML(s);
   const isOuterCta = s.id === 'outer_cta_section';
 
+  // ⚠ lastCaretY snapshot — wy.focus() 호출이 selection을 자동 이동시켜
+  // lastCaretY를 덮어쓰는 부작용 방지 (인디케이터 위치 ↔ 실제 삽입 위치 불일치 원인)
+  const snapshotCaretY = lastCaretY;
+
   if (state.mode === 'html') {
     const ta = $('#htmlsrc');
     if (isOuterCta) {
@@ -4823,11 +4827,11 @@ function applyPartialImmediate(s) {
 
       let inserted = false;
       let insertedAfter = null;
-      if (lastCaretY !== null && wy.children.length > 0) {
+      if (snapshotCaretY !== null && wy.children.length > 0) {
         for (let i = 0; i < wy.children.length; i++) {
           const child = wy.children[i];
           const rect = child.getBoundingClientRect();
-          if (lastCaretY <= rect.bottom) {
+          if (snapshotCaretY <= rect.bottom) {
             wy.insertBefore(fragment, child.nextSibling);
             insertedAfter = child;
             inserted = true;
