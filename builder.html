@@ -863,6 +863,15 @@
   #wysiwyg table.editable-table { outline: 1px dashed transparent; outline-offset: -1px; }
   #wysiwyg table.editable-table:hover { outline-color: rgba(255,70,10,0.3); }
   #wysiwyg table.editable-table td.ctx-active { outline: 2px solid #2772d0; outline-offset: -2px; }
+  /* hover/focus 시각 표시 — 사용자가 어느 요소를 선택했는지 명확하게 */
+  #wysiwyg .hover-focus { outline: 1px dashed var(--accent) !important; outline-offset: 2px; }
+  #wysiwyg .caret-focus { outline: 1px dashed rgba(255,70,10,0.55) !important; outline-offset: 2px; }
+  body.corporate #wysiwyg .hover-focus,
+  body.corporate #wysiwyg .caret-focus { outline-color: #2f80e5 !important; }
+  /* 이미지·링크는 hover 시 cursor 변경하여 클릭 가능 표시 */
+  #wysiwyg img, #wysiwyg a { cursor: pointer; }
+  #wysiwyg img:hover { box-shadow: 0 0 0 2px var(--accent); }
+  body.corporate #wysiwyg img:hover { box-shadow: 0 0 0 2px #2f80e5; }
   #wysiwyg table.editable-table td.dragsel { background: rgba(47, 128, 229, 0.18); }
   #wysiwyg table.editable-table.drag-mode { user-select: none; }
 
@@ -1158,7 +1167,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.50</span>
+    <span class="sub">v2.51</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -1395,6 +1404,44 @@
     </div>
   </section>
 </main>
+
+<!-- ========== 이미지 편집 모달 ========== -->
+<div class="modal-bg" id="imgModalBg">
+  <div class="modal" style="min-width: 460px;">
+    <h3>이미지 편집</h3>
+    <p style="margin-bottom: 14px;">본문의 <code>&lt;img&gt;</code>를 클릭하면 이 창이 열립니다. URL·대체 텍스트·링크·새 창 여부를 수정하세요.</p>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <div>
+        <label style="display:block; font-size:11px; color:var(--muted); font-weight:600; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.3px;">이미지 URL (src)</label>
+        <input type="text" id="imgModalSrc" placeholder="https://..." style="width:100%; padding:8px 10px; border:1px solid var(--line2); border-radius:4px; font-family:inherit; font-size:13px;" />
+      </div>
+      <div>
+        <label style="display:block; font-size:11px; color:var(--muted); font-weight:600; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.3px;">직접 업로드 (data URL로 변환)</label>
+        <input type="file" id="imgModalFile" accept="image/*" style="width:100%; padding:4px; border:1px solid var(--line2); border-radius:4px; font-family:inherit; font-size:12px;" />
+      </div>
+      <div>
+        <label style="display:block; font-size:11px; color:var(--muted); font-weight:600; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.3px;">대체 텍스트 (alt)</label>
+        <input type="text" id="imgModalAlt" placeholder="이미지 설명" style="width:100%; padding:8px 10px; border:1px solid var(--line2); border-radius:4px; font-family:inherit; font-size:13px;" />
+      </div>
+      <div style="padding-top:6px; border-top:1px dashed #d8dce3;">
+        <label style="display:block; font-size:11px; color:var(--muted); font-weight:600; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.3px;">링크 URL (선택 — 이미지를 a 태그로 wrap)</label>
+        <input type="text" id="imgModalHref" placeholder="https://... (비우면 링크 제거)" style="width:100%; padding:8px 10px; border:1px solid var(--line2); border-radius:4px; font-family:inherit; font-size:13px;" />
+      </div>
+      <div>
+        <label style="display:block; font-size:11px; color:var(--muted); font-weight:600; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.3px;">target</label>
+        <select id="imgModalTarget" style="width:100%; padding:8px 10px; border:1px solid var(--line2); border-radius:4px; font-family:inherit; font-size:13px; background:#fff;">
+          <option value="_blank">새 창 (_blank) — 권장</option>
+          <option value="_self">같은 창 (_self)</option>
+        </select>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="imgModalRemove" style="margin-right:auto; color:#d9534f;">이미지 삭제</button>
+      <button class="btn" id="imgModalCancel">취소</button>
+      <button class="btn primary" id="imgModalSave"><svg class="icon"><use href="#i-check"/></svg><span>저장</span></button>
+    </div>
+  </div>
+</div>
 
 <!-- ========== 링크/버튼 편집 모달 ========== -->
 <div class="modal-bg" id="linkModalBg">
@@ -6400,12 +6447,124 @@ $('#htmlsrc').addEventListener('input', debouncedRefresh);
 let _editingAnchor = null;
 $('#wysiwyg').addEventListener('dblclick', e => {
   if (state.mode !== 'editor') return;
+  // 이미지 우선 (img가 a 안에 wrap돼 있어도 이미지 편집 모달이 a 처리도 함)
+  const img = e.target.closest('img');
+  if (img && $('#wysiwyg').contains(img)) {
+    e.preventDefault();
+    window.getSelection().removeAllRanges();
+    openImgEditModal(img);
+    return;
+  }
   const a = e.target.closest('a');
   if (!a || !$('#wysiwyg').contains(a)) return;
   e.preventDefault();
-  // 더블클릭으로 단어 선택된 거 해제
   window.getSelection().removeAllRanges();
   openLinkEditModal(a);
+});
+
+/* hover-focus: 마우스 위에 있는 element에 dashed outline */
+let _hoverFocused = null;
+$('#wysiwyg').addEventListener('mouseover', e => {
+  if (state.mode !== 'editor') return;
+  if (_hoverFocused && _hoverFocused !== e.target) {
+    _hoverFocused.classList.remove('hover-focus');
+  }
+  if (e.target && e.target !== $('#wysiwyg') && e.target.classList) {
+    e.target.classList.add('hover-focus');
+    _hoverFocused = e.target;
+  }
+});
+$('#wysiwyg').addEventListener('mouseleave', () => {
+  if (_hoverFocused) {
+    _hoverFocused.classList.remove('hover-focus');
+    _hoverFocused = null;
+  }
+});
+
+/* caret-focus: 텍스트 입력/클릭 시 caret이 있는 element에 dashed outline */
+let _caretFocused = null;
+function updateCaretFocus() {
+  if (_caretFocused) _caretFocused.classList.remove('caret-focus');
+  _caretFocused = null;
+  const sel = window.getSelection();
+  const wyEl = $('#wysiwyg');
+  if (!sel || sel.rangeCount === 0) return;
+  const r = sel.getRangeAt(0);
+  if (!wyEl.contains(r.commonAncestorContainer)) return;
+  let target = r.commonAncestorContainer;
+  if (target.nodeType === Node.TEXT_NODE) target = target.parentElement;
+  if (target && target !== wyEl && target.classList) {
+    target.classList.add('caret-focus');
+    _caretFocused = target;
+  }
+}
+['mouseup','keyup','input','focus'].forEach(ev => $('#wysiwyg').addEventListener(ev, updateCaretFocus));
+
+/* ============ 이미지 편집 모달 ============ */
+let _editingImg = null;
+function openImgEditModal(img) {
+  _editingImg = img;
+  $('#imgModalSrc').value = img.getAttribute('src') || '';
+  $('#imgModalAlt').value = img.getAttribute('alt') || '';
+  $('#imgModalFile').value = '';
+  // 부모가 a면 href/target 사용
+  const parentA = img.parentElement && img.parentElement.tagName === 'A' ? img.parentElement : null;
+  $('#imgModalHref').value = parentA ? (parentA.getAttribute('href') || '') : '';
+  $('#imgModalTarget').value = parentA ? (parentA.getAttribute('target') || '_blank') : '_blank';
+  $('#imgModalBg').classList.add('show');
+  setTimeout(() => $('#imgModalSrc').focus(), 50);
+}
+$('#imgModalFile').addEventListener('change', e => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => { $('#imgModalSrc').value = reader.result; };
+  reader.readAsDataURL(file);
+});
+$('#imgModalCancel').addEventListener('click', () => {
+  $('#imgModalBg').classList.remove('show');
+  _editingImg = null;
+});
+$('#imgModalSave').addEventListener('click', () => {
+  if (!_editingImg) return;
+  const src = $('#imgModalSrc').value.trim();
+  const alt = $('#imgModalAlt').value.trim();
+  const href = $('#imgModalHref').value.trim();
+  const targetAttr = $('#imgModalTarget').value;
+  if (src) _editingImg.setAttribute('src', src);
+  _editingImg.setAttribute('alt', alt);
+  if (!_editingImg.hasAttribute('border')) _editingImg.setAttribute('border', '0');
+  // a wrap 처리
+  const parentA = _editingImg.parentElement && _editingImg.parentElement.tagName === 'A' ? _editingImg.parentElement : null;
+  if (href) {
+    if (parentA) {
+      parentA.setAttribute('href', href);
+      parentA.setAttribute('target', targetAttr);
+    } else {
+      const a = document.createElement('a');
+      a.setAttribute('href', href);
+      a.setAttribute('target', targetAttr);
+      _editingImg.parentNode.insertBefore(a, _editingImg);
+      a.appendChild(_editingImg);
+    }
+  } else if (parentA) {
+    // href 비웠으면 a unwrap
+    while (parentA.firstChild) parentA.parentNode.insertBefore(parentA.firstChild, parentA);
+    parentA.parentNode.removeChild(parentA);
+  }
+  $('#imgModalBg').classList.remove('show');
+  _editingImg = null;
+  refresh();
+});
+$('#imgModalRemove').addEventListener('click', () => {
+  if (!_editingImg) return;
+  // a로 wrap돼 있으면 a 통째 제거
+  const parentA = _editingImg.parentElement && _editingImg.parentElement.tagName === 'A' ? _editingImg.parentElement : null;
+  if (parentA) parentA.parentNode.removeChild(parentA);
+  else _editingImg.parentNode.removeChild(_editingImg);
+  $('#imgModalBg').classList.remove('show');
+  _editingImg = null;
+  refresh();
 });
 
 function openLinkEditModal(a) {
