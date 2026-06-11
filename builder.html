@@ -1119,7 +1119,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.45</span>
+    <span class="sub">v2.46</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -2232,11 +2232,11 @@ const SNIPPETS = [
   },
   {
     id: 'notice_personal_jobcode',
-    name: '개인 공지 - 직종 변경 안내 (타입3, 기본형 + 표)',
+    name: '개인 공지 - 직종 변경 안내 (1/2/3차 표 완전판)',
     target: 'personal',
     category: 'notice',
     noticeMode: 'basics',
-    description: '[공지사항 형태 전용 / 타입3] 타이틀 + 본문 + 대형 분류표 3개(1차 13건/2차 68건/3차 155건). 개인용 basics',
+    description: '[공지사항 형태 전용 / 타입3] 타이틀 + 본문 + 대형 분류표 3개(1차 13건/2차 68건/3차 155건). 외부 noticeTemp CSS 의존. 사용자 콘텐츠 교체로 다른 카테고리 변경 안내에도 활용',
     html: `<p class="title">인크루트 <span class="point">직종 변경</span> 안내</p>
 <div class="notice_cnt">
 <div class="nt_textArea">
@@ -2275,9 +2275,82 @@ const SNIPPETS = [
 </tbody>
 </table>
 <p style="margin: 20px 0 6px; font-weight:bold; color:#464646">② 2차 분류 명칭 변경 - 68건</p>
-<p style="font-size: 14px; color: #888; padding: 8px 0;">※ 2차 분류 표는 68행으로 매우 길어 자동 등록 시 생략됨. 필요 시 원본 HTML에서 직접 복사 추가하세요.</p>
+<table border="0" cellpadding="0" cellspacing="0" class="table_temp" width="100%">
+<colgroup><col style="width:22%"><col style="width:39%"><col style="width:39%"></colgroup>
+<thead><tr><th style="border-bottom:solid 1px #dfdfdf">1차 분류</th><th class="none" style="border-bottom:solid 1px #dfdfdf; border-right:solid 1px #dfdfdf">2차 분류 변경 전</th><th class="none" style="border-bottom:solid 1px #dfdfdf">2차 분류 변경 후</th></tr></thead>
+<tbody>
+<tr><td rowspan="4" style="vertical-align:middle;text-align:center"><em style="color:#2f80e5">경영·사무</em></td><td class="none" style="border-right:solid 1px #dfdfdf">경영·기획·전략</td><td class="none"><em style="color:#2f80e5">경영·비즈니스기획</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">인사·채용·인재개발(HRM·HRD)</td><td class="none"><em style="color:#2f80e5">인사·HR</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">일반사무·사무지원</td><td class="none"><em style="color:#2f80e5">사무담당자</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">비서·안내</td><td class="none"><em style="color:#2f80e5">비서</em></td></tr>
+<tr><td rowspan="2" style="vertical-align:middle;text-align:center"><em style="color:#2f80e5">마케팅·광고·MD</em></td><td class="none" style="border-right:solid 1px #dfdfdf">광고·광고기획(AE)</td><td class="none"><em style="color:#2f80e5">AE(광고기획자)</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">홍보·PR·전시·컨벤션</td><td class="none"><em style="color:#2f80e5">홍보·PR</em></td></tr>
+<tr><td rowspan="5" style="vertical-align:middle;text-align:center"><em style="color:#2f80e5">교육</em></td><td class="none" style="border-right:solid 1px #dfdfdf">대학(교)강사·교수</td><td class="none"><em style="color:#2f80e5">대학교수·강사</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">교육상담·학원에이전트</td><td class="none"><em style="color:#2f80e5">학원상담·운영</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">교직원</td><td class="none"><em style="color:#2f80e5">교직원·조교</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">교육·교재개발</td><td class="none"><em style="color:#2f80e5">교재개발·교수설계</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">IT·문화·직업강사</td><td class="none"><em style="color:#2f80e5">기술·전문강사</em></td></tr>
+<tr><td rowspan="2" style="vertical-align:middle;text-align:center"><em style="color:#2f80e5">디자인</em></td><td class="none" style="border-right:solid 1px #dfdfdf">광고·CG·시각디자인</td><td class="none"><em style="color:#2f80e5">광고·시각디자인</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">건축·공간·CAD·CAM디자인</td><td class="none"><em style="color:#2f80e5">건축·공간디자인</em></td></tr>
+<tr><td rowspan="3" style="vertical-align:middle;text-align:center"><em style="color:#2f80e5">고객상담·TM</em></td><td class="none" style="border-right:solid 1px #dfdfdf">고객상담·관리·수퍼바이저</td><td class="none"><em style="color:#2f80e5">고객상담·관리</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">아웃바운드 텔레마케터</td><td class="none"><em style="color:#2f80e5">아웃바운드TM</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">인바운드 텔레마케터</td><td class="none"><em style="color:#2f80e5">인바운드TM</em></td></tr>
+<tr><td rowspan="4" style="vertical-align:middle;text-align:center"><em style="color:#2f80e5">건설·부동산</em></td><td class="none" style="border-right:solid 1px #dfdfdf">토목·조경·도시·측량</td><td class="none"><em style="color:#2f80e5">토목·조경</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">건축·인테리어·설계</td><td class="none"><em style="color:#2f80e5">건축·인테리어</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">시설·환경·안전·플랜트</td><td class="none"><em style="color:#2f80e5">시설·환경·안전</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">공무·견적·입찰·자재</td><td class="none"><em style="color:#2f80e5">견적·입찰·자재</em></td></tr>
+<tr><td rowspan="5" style="vertical-align:middle;text-align:center"><em style="color:#2f80e5">전자·기계·R&amp;D</em></td><td class="none" style="border-right:solid 1px #dfdfdf">바이오·식품공학</td><td class="none"><em style="color:#2f80e5">바이오·식품R&amp;D</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">기계·금속·재료</td><td class="none"><em style="color:#2f80e5">기계엔지니어</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">섬유·화학</td><td class="none"><em style="color:#2f80e5">화학엔지니어</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">원자력·우주·조선·철강</td><td class="none"><em style="color:#2f80e5">중공업·에너지</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">연구원·연구개발</td><td class="none"><em style="color:#2f80e5">연구개발·R&amp;D</em></td></tr>
+<tr><td rowspan="4" style="vertical-align:middle;text-align:center"><em style="color:#2f80e5">전문직·법률</em></td><td class="none" style="border-right:solid 1px #dfdfdf">법률·법무·회계</td><td class="none"><em style="color:#2f80e5">법무·회계</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">전문번역·통역</td><td class="none"><em style="color:#2f80e5">통번역사</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">임원·경영분석·컨설팅</td><td class="none"><em style="color:#2f80e5">임원·컨설팅</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">문화·사서·감정·경매</td><td class="none"><em style="color:#2f80e5">문화·사서·경매</em></td></tr>
+<tr><td rowspan="9" style="vertical-align:middle;text-align:center"><em style="color:#2f80e5">서비스</em></td><td class="none" style="border-right:solid 1px #dfdfdf">호텔·숙박</td><td class="none"><em style="color:#2f80e5">호텔종사자</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">서빙·주방보조</td><td class="none"><em style="color:#2f80e5">서빙·매장관리</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">경비·보안·경호</td><td class="none"><em style="color:#2f80e5">경호·경비</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">가정서비스</td><td class="none"><em style="color:#2f80e5">가사·생활서비스</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">미용·뷰티케어·동물관리</td><td class="none"><em style="color:#2f80e5">미용·뷰티·동물관리</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">이벤트·나레이터·결혼</td><td class="none"><em style="color:#2f80e5">이벤트·웨딩매니저</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">주유·세차·주차장</td><td class="none"><em style="color:#2f80e5">주차·주유원</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">세탁·청소·방역</td><td class="none"><em style="color:#2f80e5">청소·방역</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">요리·조리·제과·제빵</td><td class="none"><em style="color:#2f80e5">요리·제과제빵</em></td></tr>
+<tr><td rowspan="13" style="vertical-align:middle;text-align:center"><em style="color:#2f80e5">IT개발·데이터</em></td><td class="none" style="border-right:solid 1px #dfdfdf">응용프로그래머</td><td class="none"><em style="color:#2f80e5">응용개발자</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">네트워크·서버·보안</td><td class="none"><em style="color:#2f80e5">네트워크·보안엔지니어</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">전산·IT기술지원</td><td class="none"><em style="color:#2f80e5">IT기술지원</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">웹디자인</td><td class="none"><em style="color:#2f80e5">UI·UX디자이너</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">멀티미디어(동영상·음향)</td><td class="none"><em style="color:#2f80e5">영상편집자</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">웹기획·웹마케팅·PM</td><td class="none"><em style="color:#2f80e5">웹기획·PM</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">ERP·시스템분석·설계</td><td class="none"><em style="color:#2f80e5">IT컨설팅·시스템분석</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">통신·모바일</td><td class="none"><em style="color:#2f80e5">통신·네트워크</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">게임(Game)</td><td class="none"><em style="color:#2f80e5">게임</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">웹프로그래머</td><td class="none"><em style="color:#2f80e5">웹개발자</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">시스템프로그래머</td><td class="none"><em style="color:#2f80e5">시스템엔지니어</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">빅데이터·AI(인공지능)</td><td class="none"><em style="color:#2f80e5">AI·빅데이터</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">HTML·퍼블리싱·UI개발</td><td class="none"><em style="color:#2f80e5">웹퍼블리셔</em></td></tr>
+<tr><td rowspan="4" style="vertical-align:middle;text-align:center"><em style="color:#2f80e5">영업·판매·무역</em></td><td class="none" style="border-right:solid 1px #dfdfdf">영업관리·영업지원</td><td class="none"><em style="color:#2f80e5">영업관리</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">일반·법인영업</td><td class="none"><em style="color:#2f80e5">법인·영업직</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">판매</td><td class="none"><em style="color:#2f80e5">판매·매장직</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">매장관리</td><td class="none"><em style="color:#2f80e5">시설·매장운영</em></td></tr>
+<tr><td rowspan="4" style="vertical-align:middle;text-align:center"><em style="color:#2f80e5">생산·기술·노무</em></td><td class="none" style="border-right:solid 1px #dfdfdf">생산·조립·가공·포장·검품</td><td class="none"><em style="color:#2f80e5">생산직종사자</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">전기·전자·통신기능</td><td class="none"><em style="color:#2f80e5">전기·전자기능</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">설치·수리·정비·A/S</td><td class="none"><em style="color:#2f80e5">설치·정비·A/S</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">식품가공·농림어업</td><td class="none"><em style="color:#2f80e5">농림·식품가공</em></td></tr>
+<tr><td rowspan="2" style="vertical-align:middle;text-align:center"><em style="color:#2f80e5">의료·보건·복지</em></td><td class="none" style="border-right:solid 1px #dfdfdf">약무·제약</td><td class="none"><em style="color:#2f80e5">약사·제약</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">보건·원무</td><td class="none"><em style="color:#2f80e5">병원행정</em></td></tr>
+<tr><td rowspan="4" style="vertical-align:middle;text-align:center"><em style="color:#2f80e5">미디어·문화·스포츠</em></td><td class="none" style="border-right:solid 1px #dfdfdf">작가·문화·예술·창작</td><td class="none"><em style="color:#2f80e5">문화·예술·창작</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">방송제작·연출·촬영·기자</td><td class="none"><em style="color:#2f80e5">방송·영상</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">진행·연예·모델·매니저</td><td class="none"><em style="color:#2f80e5">연예·엔터테인먼트</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">출판·편집·인쇄</td><td class="none"><em style="color:#2f80e5">작가</em></td></tr>
+<tr><td rowspan="2" style="vertical-align:middle;text-align:center"><em style="color:#2f80e5">금융·보험·증권</em></td><td class="none" style="border-right:solid 1px #dfdfdf">투자·분석·증권·외환</td><td class="none"><em style="color:#2f80e5">금융사무</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">금융사무·심사·추심</td><td class="none"><em style="color:#2f80e5">보험·심사·추심</em></td></tr>
+<tr><td rowspan="1" style="vertical-align:middle;text-align:center"><em style="color:#2f80e5">유통·물류</em></td><td class="none" style="border-right:solid 1px #dfdfdf">유통·상품기획·MD</td><td class="none"><em style="color:#2f80e5">상품기획·MD</em></td></tr>
+</tbody>
+</table>
 <p style="margin: 20px 0 6px; font-weight:bold; color:#464646">③ 3차 분류 명칭 변경 - 155건</p>
-<p style="font-size: 14px; color: #888; padding: 8px 0;">※ 3차 분류 표는 155행으로 매우 길어 자동 등록 시 생략됨. 필요 시 원본 HTML에서 직접 복사 추가하세요.</p>
+<p style="font-size: 14px; color: #888; padding: 8px 0;">※ 3차 분류 표 155행은 빌더 파일 크기 보호를 위해 풀템플릿에서 생략됨.<br>필요 시 원본 HTML 또는 부분 템플릿 'notice_rowspan_table_4col' (3차 분류 표 패턴) 활용하여 추가.</p>
 </div>
 <br>
 <strong>2. 변경일자</strong><br>
@@ -4165,6 +4238,39 @@ const SNIPPETS = [
     </tbody>
   </table>
 </div>`
+  },
+  {
+    id: 'notice_attention_list',
+    name: '공지 ※ 안내 박스 (em dash 리스트)',
+    target: 'common',
+    category: 'partial',
+    tags: ['공지', '안내'],
+    description: '[공지 스타일] ※ 주의문 + em 대시 리스트 (display:flex 패턴). 공지 본문에 HTML 모드로 paste하여 사용. 외부 noticeTemp CSS와 함께 자연스럽게 표시',
+    html: `<strong>※ 이용 전 꼭 확인해 주세요</strong>
+<div class="tabcont" style="padding: 8px 0px; font-family: 돋움; font-size: 16px; color: #464646; text-align: left; line-height: 20px; display: block; margin: 0px auto">
+<p style="display:flex"><em style="padding-right:4px">-</em><em>첫 번째 안내 문구를 입력하세요.</em></p>
+<p style="display:flex"><em style="padding-right:4px">-</em><em>두 번째 안내 문구를 입력하세요.</em></p>
+<p style="display:flex"><em style="padding-right:4px">-</em><em>세 번째 안내 문구를 입력하세요.</em></p>
+</div>`
+  },
+  {
+    id: 'notice_rowspan_table_3col',
+    name: '공지 분류 변경 표 (3열 rowspan, 1차→2차)',
+    target: 'common',
+    category: 'partial',
+    tags: ['공지', '표', '비교'],
+    description: '[공지 스타일] rowspan으로 좌측 1차 분류 그룹화 + 우측 2차 분류 변경 전/후 비교. 직종·카테고리·약관 항목 등 다단계 변경 안내에 재사용. noticeTemp CSS 의존',
+    html: `<table border="0" cellpadding="0" cellspacing="0" class="table_temp" width="100%">
+<colgroup><col style="width:22%"><col style="width:39%"><col style="width:39%"></colgroup>
+<thead><tr><th style="border-bottom:solid 1px #dfdfdf">1차 분류</th><th class="none" style="border-bottom:solid 1px #dfdfdf; border-right:solid 1px #dfdfdf">변경 전</th><th class="none" style="border-bottom:solid 1px #dfdfdf">변경 후</th></tr></thead>
+<tbody>
+<tr><td rowspan="3" style="vertical-align:middle;text-align:center"><em style="color:#2f80e5">그룹 A</em></td><td class="none" style="border-right:solid 1px #dfdfdf">항목 1</td><td class="none"><em style="color:#2f80e5">변경 항목 1</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">항목 2</td><td class="none"><em style="color:#2f80e5">변경 항목 2</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">항목 3</td><td class="none"><em style="color:#2f80e5">변경 항목 3</em></td></tr>
+<tr><td rowspan="2" style="vertical-align:middle;text-align:center"><em style="color:#2f80e5">그룹 B</em></td><td class="none" style="border-right:solid 1px #dfdfdf">항목 1</td><td class="none"><em style="color:#2f80e5">변경 항목 1</em></td></tr>
+<tr><td class="none" style="border-right:solid 1px #dfdfdf">항목 2</td><td class="none"><em style="color:#2f80e5">변경 항목 2</em></td></tr>
+</tbody>
+</table>`
   }
 ];
 
