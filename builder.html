@@ -1007,6 +1007,30 @@
     gap: 2px;
     margin-bottom: 10px;
   }
+  .notice-sub-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 4px 2px 8px;
+    margin-bottom: 4px;
+  }
+  .notice-sub-tab {
+    padding: 5px 12px;
+    font-size: 11px;
+    background: #fff;
+    border: 1px solid #d8dce3;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .notice-sub-tab:hover { border-color: var(--accent); color: var(--accent); }
+  .notice-sub-tab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 700;
+  }
   .lib-tab {
     flex: 1;
     padding: 6px 8px;
@@ -1119,7 +1143,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.47</span>
+    <span class="sub">v2.48</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -1243,6 +1267,7 @@
           <button class="lib-tab" data-tab="notice">공지사항용 <span class="count" id="cntNotice">0</span></button>
           <button class="lib-tab" data-tab="partial">부분 <span class="count" id="cntPartial">0</span></button>
         </div>
+        <div class="notice-sub-tabs" id="noticeSubTabs" style="display:none"></div>
         <div class="tag-filter" id="tagFilter"></div>
         <div id="snippetList" class="snippet-list"></div>
       </div>
@@ -2094,50 +2119,40 @@ const SNIPPETS = [
     target: 'personal',
     category: 'notice',
     noticeMode: 'basics',
-    description: '[공지사항 형태 전용] 개인용 noticeTemp.basics 안에 들어가는 본문. 형태=공지사항 선택 후 적용',
-    html: `<p class="title">인크루트 <span class="point">개인정보 처리방침 개정</span> 안내</p>
+    description: '[공지사항 형태 전용] 개정 항목 표(2열) + 시행일/이의제기 dash 리스트 + 고객센터 링크. 개인용 noticeTemp.basics',
+    html: `<p class="title">인크루트 <span class="point" style="font-weight: inherit">개인정보 처리방침 개정</span> 안내</p>
+<div class="notice_cnt">
 <div class="nt_textArea">
-  안녕하세요, 인크루트입니다.<br>
-  <br>
-  항상 인크루트를 이용해 주시는 회원 여러분들께 진심으로 감사드립니다.<br>
-  개인정보 처리방침이 아래와 같이 개정될 예정임을 사전 안내드립니다.<br>
-  <br>
-  자세한 정보는 하단에 기재해드린 내용을 참고해주시기 바랍니다.<br>
-  <br>
-  <strong>1. 개정 항목</strong>
-  <div class="tabcont" id="privacy" style="padding: 8px 0px; font-family: 돋움; font-size: 16px; color: #464646; text-align: left; line-height: 16px; display: block; margin: 0px auto">
-    <table border="0" cellpadding="0" cellspacing="0" class="table_temp" width="100%">
-      <colgroup>
-        <col style="width: 46%">
-        <col style="width: 54%">
-      </colgroup>
-      <thead>
-        <tr>
-          <th style="border-bottom: solid 1px #dfdfdf" class="none">목차</th>
-          <th style="border-bottom: solid 1px #dfdfdf" class="none">개정내역</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td style="vertical-align: middle; text-align: left" class="none"><p>01. 개인정보 수집 및 이용 현황</p></td>
-          <td class="none">유료서비스 이용의 수집방법 추가 : 공기업 모의고사</td>
-        </tr>
-        <tr>
-          <td style="vertical-align: middle; text-align: left" class="none"><p>03. 개인정보 제 3자 제공에 관한 사항</p></td>
-          <td class="none">개인정보 제 3자 제공받는자 추가</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-  <br>
-  <p style="display: flex"><em style="padding-right: 4px">-</em> <em>개정 시행일 : 2026년 03월 23일</em></p>
-  <br>
-  <strong>3. 이의 제기 및 관련 문의</strong><br>
-  <p style="display: flex"><em style="padding-right: 4px">-</em> <em>개정된 개인정보 처리방침에 동의하지 않는 경우 회원탈퇴를 요청하실 수 있습니다.</em></p>
-  <p style="display: flex"><em style="padding-right: 4px">-</em> <em>시행일까지 별도의 거부 의사를 표시하지 않는 경우, 개정에 동의한 것으로 간주합니다.</em></p>
-  <p style="display: flex"><em style="padding-right: 4px">-</em> <em>개정과 관련된 문의가 있으신 경우 <a href="https://help.incruit.com/qna/qnawrite.asp?bno=c&amp;mno=11&amp;rno=00" target="_blank" class="links">고객만족센터(1588-6577)</a>를 통해 답변드리겠습니다.</em></p>
-  <br>앞으로도 더 나은 서비스 제공을 위해 항상 최선을 다하겠습니다.<br>
-  감사합니다.<br>
+안녕하세요, 인크루트입니다.<br>
+<br>
+항상 인크루트를 이용해 주시는 회원 여러분들께 진심으로 감사드립니다.<br>
+개인정보 처리방침이 아래와 같이 개정될 예정임을 사전 안내드립니다.<br>
+<br>
+자세한 정보는 하단에 기재해드린 내용을 참고해주시기 바랍니다.
+<br><br>
+<strong>1. 개정 항목</strong>
+<div class="tabcont" id="privacy" style="padding: 8px 0px; font-family: 돋움; font-size: 16px; color: #464646; text-align: left; line-height: 16px; display: block; margin: 0px auto">
+<table border="0" cellpadding="0" cellspacing="0" class="table_temp" width="100%">
+<colgroup><col style="width: 46%"><col style="width: 54%"></colgroup>
+<thead><tr><th style="border-bottom: solid 1px #dfdfdf" class="none">목차</th><th style="border-bottom: solid 1px #dfdfdf" class="none">개정내역</th></tr></thead>
+<tbody>
+<tr><td style="vertical-align: middle; text-align: left" class="none"><p>01. 개인정보 수집 및 이용 현황</p></td><td class="none">개인정보 수집 및 이용내역 현행화(회원가입, 이력서)</td></tr>
+<tr><td style="vertical-align: middle; text-align: left" class="none"><p>04. 개인정보 처리업무의 위탁에 관한 사항</p></td><td class="none">수탁업체 및 개인정보 위탁 내역 현행화</td></tr>
+</tbody>
+</table>
+</div>
+<br>
+<strong>2. 시행일</strong><br>
+<p style="display: flex"><span style="padding-right: 4px">-</span> <span>사전 공지일 : 2026년 4월 23일</span></p>
+<p style="display: flex"><span style="padding-right: 4px">-</span> <span>개정 시행일 : 2026년 4월 30일</span></p>
+<br>
+<strong>3. 이의 제기 및 관련 문의</strong><br>
+<p style="display: flex"><span style="padding-right: 4px">-</span> <span>개정된 개인정보 처리방침에 동의하지 않는 경우 회원탈퇴를 요청하실 수 있습니다.</span></p>
+<p style="display: flex"><span style="padding-right: 4px">-</span> <span>시행일까지 별도의 거부 의사를 표시하지 않는 경우, 개정에 동의한 것으로 간주합니다.</span></p>
+<p style="display: flex"><span style="padding-right: 4px">-</span> <span>개정과 관련된 문의가 있으신 경우 <a href="https://help.incruit.com/qna/qnawrite.asp?bno=" target="_blank" class="links">고객만족센터(1588-6577)</a>를 통해 답변드리겠습니다.</span></p>
+<br>앞으로도 더 나은 서비스 제공을 위해 항상 최선을 다하겠습니다.<br>
+감사합니다.<br>
+</div>
 </div>`
   },
   {
@@ -4240,12 +4255,37 @@ const SNIPPETS = [
 </div>`
   },
   {
-    id: 'notice_attention_list',
-    name: '공지 ※ 안내 박스 (em dash 리스트)',
+    id: 'notice_table_2col',
+    name: '개정 항목 표 (2열, 목차/내용)',
     target: 'common',
-    category: 'partial',
-    tags: ['공지', '안내'],
-    description: '[공지 스타일] ※ 주의문 + em 대시 리스트 (display:flex 패턴). 공지 본문에 HTML 모드로 paste하여 사용. 외부 noticeTemp CSS와 함께 자연스럽게 표시',
+    category: 'notice_partial',
+    tags: ['표'],
+    description: '단순 2열 비교 표 (좌측 항목명/우측 내용 설명). 개인정보 처리방침·약관 개정 항목 정리에 사용',
+    html: `<table border="0" cellpadding="0" cellspacing="0" class="table_temp" width="100%">
+<colgroup><col style="width: 46%"><col style="width: 54%"></colgroup>
+<thead><tr><th style="border-bottom: solid 1px #dfdfdf" class="none">목차</th><th style="border-bottom: solid 1px #dfdfdf" class="none">개정내역</th></tr></thead>
+<tbody>
+<tr><td style="vertical-align: middle; text-align: left" class="none"><p>01. 항목명을 입력하세요</p></td><td class="none">개정 또는 변경 내역을 입력하세요</td></tr>
+<tr><td style="vertical-align: middle; text-align: left" class="none"><p>02. 항목명을 입력하세요</p></td><td class="none">개정 또는 변경 내역을 입력하세요</td></tr>
+</tbody>
+</table>`
+  },
+  {
+    id: 'notice_section_heading',
+    name: '번호 섹션 헤딩 (1. 2. 3.)',
+    target: 'common',
+    category: 'notice_partial',
+    tags: ['헤딩', '본문'],
+    description: '굵은 번호 섹션 제목 (1. 2. 3. 등). 개정 항목/시행일/문의 등 공지 본문 단락 구분',
+    html: `<br><strong>1. 섹션 제목을 입력하세요</strong><br>`
+  },
+  {
+    id: 'notice_attention_list',
+    name: '※ 안내 박스 + dash 리스트',
+    target: 'common',
+    category: 'notice_partial',
+    tags: ['안내'],
+    description: '※ 주의문 + dash 리스트 (display:flex 패턴). 시행일·이의제기·유의사항 등 공지 안내 박스',
     html: `<strong>※ 이용 전 꼭 확인해 주세요</strong>
 <div class="tabcont" style="padding: 8px 0px; font-family: 돋움; font-size: 16px; color: #464646; text-align: left; line-height: 20px; display: block; margin: 0px auto">
 <p style="display:flex"><em style="padding-right:4px">-</em><em>첫 번째 안내 문구를 입력하세요.</em></p>
@@ -4255,11 +4295,11 @@ const SNIPPETS = [
   },
   {
     id: 'notice_rowspan_table_3col',
-    name: '공지 분류 변경 표 (3열 rowspan, 1차→2차)',
+    name: '분류 변경 표 (3열 rowspan)',
     target: 'common',
-    category: 'partial',
-    tags: ['공지', '표', '비교'],
-    description: '[공지 스타일] rowspan으로 좌측 1차 분류 그룹화 + 우측 2차 분류 변경 전/후 비교. 직종·카테고리·약관 항목 등 다단계 변경 안내에 재사용. noticeTemp CSS 의존',
+    category: 'notice_partial',
+    tags: ['표', '비교'],
+    description: 'rowspan으로 좌측 1차 분류 그룹화 + 우측 2차 변경 전/후 비교. 직종·카테고리·약관 다단계 변경 안내',
     html: `<table border="0" cellpadding="0" cellspacing="0" class="table_temp" width="100%">
 <colgroup><col style="width:22%"><col style="width:39%"><col style="width:39%"></colgroup>
 <thead><tr><th style="border-bottom:solid 1px #dfdfdf">1차 분류</th><th class="none" style="border-bottom:solid 1px #dfdfdf; border-right:solid 1px #dfdfdf">변경 전</th><th class="none" style="border-bottom:solid 1px #dfdfdf">변경 후</th></tr></thead>
@@ -4543,7 +4583,8 @@ const state = {
   footer: 'receivable',
   datemode: 'token',
   mode: 'editor',
-  libTab: 'full',  // 'full' | 'partial'
+  libTab: 'full',  // 'full' | 'notice' | 'partial'
+  noticeSubTab: 'full',  // 'full' | 'partial' (공지 탭 안의 서브탭)
   cta: { enable: false, text: '자세히 보기', url: 'https://www.incruit.com/' }
 };
 
@@ -4696,12 +4737,33 @@ function renderSnippets() {
   const allForTarget = SNIPPETS.filter(s => s.target === state.target || s.target === 'common');
   const full = allForTarget.filter(s => (s.category || 'full') === 'full');
   let partial = allForTarget.filter(s => (s.category || 'full') === 'partial');
-  const notice = allForTarget.filter(s => (s.category || 'full') === 'notice');
+  const noticeFull = allForTarget.filter(s => (s.category || 'full') === 'notice');
+  let noticePartial = allForTarget.filter(s => s.category === 'notice_partial');
+  const noticeCount = noticeFull.length + noticePartial.length;
 
   // 탭 카운트 + 활성/비활성
   $('#cntFull').textContent = full.length;
   $('#cntPartial').textContent = partial.length;
-  $('#cntNotice').textContent = notice.length;
+  $('#cntNotice').textContent = noticeCount;
+
+  // 공지 탭 활성 시 서브탭 UI 표시
+  const noticeSubTabsEl = $('#noticeSubTabs');
+  if (state.libTab === 'notice') {
+    noticeSubTabsEl.style.display = 'flex';
+    noticeSubTabsEl.innerHTML = `
+      <button class="notice-sub-tab ${state.noticeSubTab === 'full' ? 'active' : ''}" data-sub="full">전체 ${noticeFull.length}</button>
+      <button class="notice-sub-tab ${state.noticeSubTab === 'partial' ? 'active' : ''}" data-sub="partial">부분 ${noticePartial.length}</button>
+    `;
+    noticeSubTabsEl.querySelectorAll('.notice-sub-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.noticeSubTab = btn.dataset.sub;
+        activeTagFilter = 'all';
+        renderSnippets();
+      });
+    });
+  } else {
+    noticeSubTabsEl.style.display = 'none';
+  }
 
   document.querySelectorAll('#libTabs .lib-tab').forEach(tab => {
     const tabName = tab.dataset.tab;
@@ -4725,10 +4787,12 @@ function renderSnippets() {
     document.querySelectorAll('#libTabs .lib-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'full'));
   }
 
-  // 부분 탭: 태그 필터 칩 + 적용
+  // 부분 탭 또는 공지 부분 서브탭: 태그 필터 칩 + 적용
   const tagFilterEl = $('#tagFilter');
-  if (state.libTab === 'partial') {
-    const allTags = [...new Set(partial.flatMap(s => s.tags || []))].sort();
+  const showTagFilter = state.libTab === 'partial' || (state.libTab === 'notice' && state.noticeSubTab === 'partial');
+  if (showTagFilter) {
+    const source = state.libTab === 'partial' ? partial : noticePartial;
+    const allTags = [...new Set(source.flatMap(s => s.tags || []))].sort();
     const chips = ['all', ...allTags];
     tagFilterEl.innerHTML = chips.map(t => {
       const isActive = activeTagFilter === t;
@@ -4743,14 +4807,18 @@ function renderSnippets() {
       });
     });
     if (activeTagFilter !== 'all') {
-      partial = partial.filter(s => (s.tags || []).includes(activeTagFilter));
+      if (state.libTab === 'partial') partial = partial.filter(s => (s.tags || []).includes(activeTagFilter));
+      else noticePartial = noticePartial.filter(s => (s.tags || []).includes(activeTagFilter));
     }
   } else {
     tagFilterEl.classList.remove('show');
     tagFilterEl.innerHTML = '';
   }
 
-  const items = state.libTab === 'full' ? full : (state.libTab === 'notice' ? notice : partial);
+  let items;
+  if (state.libTab === 'full') items = full;
+  else if (state.libTab === 'notice') items = state.noticeSubTab === 'partial' ? noticePartial : noticeFull;
+  else items = partial;
 
   if (items.length === 0) {
     if (state.libTab === 'partial') {
