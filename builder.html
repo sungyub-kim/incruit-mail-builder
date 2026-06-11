@@ -1119,7 +1119,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.44</span>
+    <span class="sub">v2.45</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -4548,10 +4548,11 @@ function resolveSnippetHTML(s) {
   const cat = s.category || 'full';
   const isCommon = (s.target || 'common') === 'common' || cat === 'partial';
   if (!isCommon) return s.html;
-  if (state.target !== 'corporate') return s.html;
-  // 기업 모드 — hex + RGB 양형식 변환
+  // common 카드는 현재 target에 맞춰 양방향 컬러 자동 매핑
+  // (snippet HTML이 어느 컬러로 작성됐든 일관된 표시 보장)
+  const map = state.target === 'corporate' ? _COLOR_MAP_TO_CORP : _COLOR_MAP_TO_PERSONAL;
   let out = s.html;
-  for (const [from, to] of Object.entries(_COLOR_MAP_TO_CORP)) {
+  for (const [from, to] of Object.entries(map)) {
     out = _replaceColor(out, from, to);
   }
   return out;
