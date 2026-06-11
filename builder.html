@@ -1143,7 +1143,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.48</span>
+    <span class="sub">v2.49</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -4639,12 +4639,20 @@ function refresh() {
   $('#emailCanvas').classList.toggle('no-builder-round', hasOwnRound);
 
   // 공지 텍스트형이면 본문에 noticeTemp 클래스 적용 (외부 CSS 스타일링용)
+  // + 본문 작성 영역에서도 시각 일관성을 위해 공지 CSS를 빌더 head에 동적 로드
   // 이미지형은 클래스 없음
   const bodyWrap = $('#bodyEditorWrap');
   bodyWrap.classList.remove('noticeTemp','basics','beforehand');
   if (state.shape === 'notice') {
     bodyWrap.classList.add('noticeTemp');
     bodyWrap.classList.add(state.target === 'corporate' ? 'beforehand' : 'basics');
+    if (!document.getElementById('notice-css-link')) {
+      const link = document.createElement('link');
+      link.id = 'notice-css-link';
+      link.rel = 'stylesheet';
+      link.href = 'https://i.incru.it/ui/static/css/notice/common.css?20220812';
+      document.head.appendChild(link);
+    }
   }
 
   // CTA 미리보기 — 라운드 + CTA on 일 때만 본문 캔버스에 표시
@@ -5124,16 +5132,17 @@ function askApplySnippet(id) {
   // (현재 전체/공지는 본문 통째 교체라 마커 불필요)
 
   // 제목 / 메타
-  $('#modalTitle').textContent = (category === 'full' ? '전체 템플릿 적용 — ' : '부분 템플릿 삽입 — ') + s.name;
+  const isFullKind = (category === 'full' || category === 'notice');
+  const kindLabel = category === 'notice' ? '공지 전체 본문' : (isFullKind ? '전체 본문' : '부분 컴포넌트');
+  $('#modalTitle').textContent = (isFullKind ? '전체 템플릿 적용 — ' : '부분 템플릿 삽입 — ') + s.name;
   const targetBadge = s.target === 'corporate' ? '기업' : (s.target === 'personal' ? '개인' : '공통');
-  const categoryBadge = category === 'full' ? '전체 본문' : '부분 컴포넌트';
   const detect = detectSnippetBadges(s.html);
   $('#modalMeta').innerHTML =
     `<span class="badge accent">${targetBadge}</span>` +
-    `<span class="badge" style="background:#fff3cd;color:#856404;">${categoryBadge}</span>` +
+    `<span class="badge" style="background:#fff3cd;color:#856404;">${kindLabel}</span>` +
     detect.map(b => `<span class="badge">${b}</span>`).join('');
 
-  if (category === 'full') {
+  if (isFullKind) {
     $('#modalBody').innerHTML = (s.description ? s.description + '<br />' : '') +
       '⚠ 이 템플릿은 <strong>메일 1건의 전체 본문</strong>입니다. 적용 시 <strong style="color:#d9534f">기존 본문이 모두 교체</strong>됩니다.';
   } else {
@@ -5175,21 +5184,19 @@ $('#modalCancel').addEventListener('click', () => {
 $('#modalOk').addEventListener('click', () => {
   if (pendingSnippet) {
     const category = pendingSnippet.category || 'full';
-    if (category === 'full') {
-      // 전체 본문 교체
+    // 'full' 메일 풀템플릿과 'notice' 공지 풀템플릿 모두 본문 전체 교체
+    if (category === 'full' || category === 'notice') {
       removeInsertMarker();
       const resolved = resolveSnippetHTML(pendingSnippet);
       $('#wysiwyg').innerHTML = resolved;
       if (state.mode === 'html') $('#htmlsrc').value = resolved;
     } else {
-      // 부분 — 마커 위치에 삽입 (selection 흔들림 무관)
+      // 부분 (partial, notice_partial) — 마커 위치에 삽입
       if (state.mode === 'html') {
-        // HTML 모드는 textarea 커서 위치
         insertHTMLAtCursor(pendingSnippet.html);
       } else {
         const ok = insertAtMarker(pendingSnippet.html);
         if (!ok) {
-          // 마커가 없으면 (혹시 모를 fallback) 커서/끝 위치에
           insertHTMLAtCursor(pendingSnippet.html);
         }
       }
