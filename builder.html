@@ -1119,7 +1119,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.46</span>
+    <span class="sub">v2.47</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -4725,18 +4725,6 @@ function renderSnippets() {
     document.querySelectorAll('#libTabs .lib-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'full'));
   }
 
-  // 공지 탭은 항상 "준비중" 표시 (등록된 항목 있어도 일단 가림 — 추후 진짜 공지 본문 받으면 해제)
-  if (state.libTab === 'notice') {
-    list.innerHTML = `<div class="snippet-empty">
-      <svg class="icon icon-lg" style="margin-bottom:6px;color:var(--muted)"><use href="#i-construction"/></svg><br />
-      <strong>준비중</strong><br />
-      공지사항용 본문 템플릿은<br />
-      별도 전달 예정입니다.<br /><br />
-      <span style="font-size: 10px; color: #999;">공지 텍스트형(noticeTemp) /<br />공지 이미지형(940px) 양쪽<br />본문 샘플 받으면 등록</span>
-    </div>`;
-    return;
-  }
-
   // 부분 탭: 태그 필터 칩 + 적용
   const tagFilterEl = $('#tagFilter');
   if (state.libTab === 'partial') {
@@ -4762,7 +4750,7 @@ function renderSnippets() {
     tagFilterEl.innerHTML = '';
   }
 
-  const items = state.libTab === 'full' ? full : partial;
+  const items = state.libTab === 'full' ? full : (state.libTab === 'notice' ? notice : partial);
 
   if (items.length === 0) {
     if (state.libTab === 'partial') {
