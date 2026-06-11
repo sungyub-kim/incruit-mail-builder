@@ -124,11 +124,27 @@
   main {
     flex: 1;
     display: grid;
-    grid-template-columns: 280px 1fr 1fr;
+    grid-template-columns: 280px 1fr;
     overflow: hidden;
     transition: grid-template-columns 0.25s ease;
   }
-  body.lib-expanded main { grid-template-columns: 480px 1fr 1fr; }
+  body.lib-expanded main { grid-template-columns: 480px 1fr; }
+  /* 미리보기 영역은 항상 숨김 (v2.52 — 새창/레이어 팝업으로 대체).
+     데이터는 그대로 보존, 복구 필요 시 .right { display: block; } + main grid-template-columns 복구 */
+  .right { display: none !important; }
+  /* 본문 작성 헤더의 새 미리보기 버튼 */
+  .btn-preview-popup { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; background: #fff; border: 1px solid #d8dce3; border-radius: 6px; font-size: 11px; color: #4b5563; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .btn-preview-popup:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  .btn-preview-popup .icon { width: 12px; height: 12px; }
+  /* 미리보기 팝업 모달 */
+  .preview-popup-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 9999; align-items: center; justify-content: center; padding: 24px; }
+  .preview-popup-bg.show { display: flex; }
+  .preview-popup { width: 100%; max-width: 800px; height: 100%; max-height: 92vh; background: #e8eaed; border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 30px 80px rgba(0,0,0,0.35); overflow: hidden; }
+  .preview-popup-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #fff; border-bottom: 1px solid #e5e7eb; }
+  .preview-popup-head h3 { margin: 0; font-size: 15px; font-weight: 700; color: #1f2937; }
+  .preview-popup-actions { display: flex; gap: 8px; align-items: center; }
+  .preview-popup-actions .btn { padding: 6px 12px; font-size: 12px; }
+  .preview-popup iframe { flex: 1; width: 100%; border: 0; background: #fff; }
 
   /* ============ 좌측 ============ */
   aside.left {
@@ -978,6 +994,48 @@
   }
   body.lib-expanded .left-section[data-keep="target"] .card-desc { display: none; }
 
+  /* ============ 이미지 편집 모달 — 가이드 기반 디자인 ============ */
+  .img-edit-modal { min-width: 540px; max-width: 640px; padding: 28px 30px; position: relative; border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,0.18); }
+  .img-modal-close { position: absolute; top: 16px; right: 18px; background: none; border: 0; font-size: 22px; line-height: 1; color: #6b7280; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: all 0.15s; }
+  .img-modal-close:hover { background: #f3f4f6; color: #1f2937; }
+  .img-modal-title { font-size: 20px; font-weight: 700; color: #1f2937; margin: 0 0 6px; letter-spacing: -0.3px; }
+  .img-modal-subtitle { font-size: 13px; color: #6b7280; margin: 0 0 22px; line-height: 1.5; }
+  .img-modal-body { display: flex; flex-direction: column; gap: 18px; }
+  .img-field { display: flex; flex-direction: column; gap: 6px; }
+  .img-field-label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #1f2937; }
+  .img-field-label .num { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: #ede9fe; color: #6d3eff; font-size: 11px; font-weight: 700; }
+  .img-field-label .req { color: #ef4444; font-weight: 700; }
+  .img-field-label .opt { font-size: 11px; color: #6b7280; font-weight: 400; margin-left: 4px; }
+  .img-input { width: 100%; padding: 11px 14px; border: 1px solid #e5e7eb; border-radius: 8px; font-family: inherit; font-size: 13px; color: #1f2937; background: #fff; transition: border-color 0.15s, box-shadow 0.15s; box-sizing: border-box; }
+  .img-input:focus { outline: 0; border-color: #ff460a; box-shadow: 0 0 0 3px rgba(255,70,10,0.12); }
+  .img-input-wrap { position: relative; display: flex; align-items: center; }
+  .img-input-wrap .img-input { padding-right: 44px; }
+  .img-input-action { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: transparent; border: 0; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: #6b7280; transition: all 0.15s; }
+  .img-input-action:hover { background: #f3f4f6; color: #ff460a; }
+  .img-input-action .icon { width: 16px; height: 16px; }
+  .img-field-help { font-size: 11px; color: #9ca3af; }
+  .img-field-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .img-field-count { font-size: 11px; color: #9ca3af; font-variant-numeric: tabular-nums; }
+  .img-dropzone { position: relative; padding: 26px 20px; border: 1.5px dashed #e5e7eb; border-radius: 10px; background: #fafbfc; transition: all 0.15s; cursor: pointer; }
+  .img-dropzone:hover, .img-dropzone.is-drag { border-color: #ff460a; background: #fff7f3; }
+  .img-dropzone-inner { display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
+  .img-dropzone-main { font-size: 13px; color: #4b5563; font-weight: 500; }
+  .img-dropzone-sub { font-size: 11px; color: #9ca3af; }
+  .img-file-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+  .img-modal-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 18px; border-top: 1px solid #f3f4f6; gap: 10px; }
+  .img-modal-actions-right { display: flex; gap: 8px; }
+  .img-btn-danger { color: #ef4444; background: #fff; border: 1px solid #fecaca; padding: 9px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; }
+  .img-btn-danger:hover { background: #fef2f2; border-color: #ef4444; }
+  .img-btn-cancel { color: #4b5563; background: #fff; border: 1px solid #e5e7eb; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .img-btn-cancel:hover { background: #f9fafb; border-color: #d1d5db; }
+  .img-btn-apply { color: #fff; background: #ff460a; border: 0; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(255,70,10,0.25); transition: all 0.15s; }
+  .img-btn-apply:hover { background: #e53e08; box-shadow: 0 4px 12px rgba(255,70,10,0.35); }
+  body.corporate .img-input:focus { border-color: #2f80e5; box-shadow: 0 0 0 3px rgba(47,128,229,0.12); }
+  body.corporate .img-input-action:hover { color: #2f80e5; }
+  body.corporate .img-dropzone:hover, body.corporate .img-dropzone.is-drag { border-color: #2f80e5; background: #f0f6ff; }
+  body.corporate .img-btn-apply { background: #2f80e5; box-shadow: 0 2px 8px rgba(47,128,229,0.25); }
+  body.corporate .img-btn-apply:hover { background: #2670d4; }
+
   /* 부분 태그 필터 칩 */
   .tag-filter {
     display: none;
@@ -1147,6 +1205,8 @@
   <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol>
   <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
   <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
+  <symbol id="i-external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></symbol>
   <symbol id="i-construction" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="8" rx="1"/><path d="M17 14v7"/><path d="M7 14v7"/><path d="M17 3v3"/><path d="M7 3v3"/><path d="M10 14 2.3 6.3"/><path d="m14 6 7.7 7.7"/><path d="m8 6 8 8"/></symbol>
   <symbol id="i-chevron-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></symbol>
   <symbol id="i-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
@@ -1167,7 +1227,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.51</span>
+    <span class="sub">v2.52</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -1313,7 +1373,10 @@
     <div class="pane-head">
       <span class="title">본문 작성</span>
       <div style="display:flex; gap:8px; align-items:center;">
-        <button class="btn-refresh" id="btnRefreshPreview" title="미리보기 즉시 갱신"><svg class="icon"><use href="#i-refresh"/></svg><span>미리보기 갱신</span></button>
+        <button class="btn-preview-popup" id="btnPreviewPopup" title="원본 미리보기 팝업 (큰 화면)">
+          <svg class="icon"><use href="#i-eye"/></svg><span>미리보기</span>
+        </button>
+        <button class="btn-refresh" id="btnRefreshPreview" title="미리보기 즉시 갱신" style="display:none;"><svg class="icon"><use href="#i-refresh"/></svg><span>미리보기 갱신</span></button>
         <div class="mode-toggle">
           <button id="modeEditor" class="active">에디터</button>
           <button id="modeHtml">HTML</button>
@@ -1405,40 +1468,81 @@
   </section>
 </main>
 
+<!-- ========== 미리보기 팝업 모달 ========== -->
+<div class="preview-popup-bg" id="previewPopupBg">
+  <div class="preview-popup">
+    <div class="preview-popup-head">
+      <h3>원본 미리보기 <span id="previewPopupLabel" style="color:#6b7280; font-weight:400; font-size:11px; margin-left:6px"></span></h3>
+      <div class="preview-popup-actions">
+        <button class="btn" id="previewPopupRefresh" title="갱신"><svg class="icon"><use href="#i-refresh"/></svg><span>갱신</span></button>
+        <button class="btn" id="previewPopupNewWin" title="새 창에서 열기"><svg class="icon"><use href="#i-external"/></svg><span>새 창</span></button>
+        <button class="btn primary" id="previewPopupClose"><span>닫기</span></button>
+      </div>
+    </div>
+    <iframe id="previewPopupFrame"></iframe>
+  </div>
+</div>
+
 <!-- ========== 이미지 편집 모달 ========== -->
 <div class="modal-bg" id="imgModalBg">
-  <div class="modal" style="min-width: 460px;">
-    <h3>이미지 편집</h3>
-    <p style="margin-bottom: 14px;">본문의 <code>&lt;img&gt;</code>를 클릭하면 이 창이 열립니다. URL·대체 텍스트·링크·새 창 여부를 수정하세요.</p>
-    <div style="display:flex; flex-direction:column; gap:10px;">
-      <div>
-        <label style="display:block; font-size:11px; color:var(--muted); font-weight:600; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.3px;">이미지 URL (src)</label>
-        <input type="text" id="imgModalSrc" placeholder="https://..." style="width:100%; padding:8px 10px; border:1px solid var(--line2); border-radius:4px; font-family:inherit; font-size:13px;" />
+  <div class="modal img-edit-modal">
+    <button class="img-modal-close" id="imgModalCloseX" aria-label="닫기">×</button>
+    <h3 class="img-modal-title">이미지 편집</h3>
+    <p class="img-modal-subtitle">본문의 &lt;img&gt;를 클릭하면 이 창이 열립니다. URL·대체 텍스트·링크·새 창 여부를 설정하세요.</p>
+
+    <div class="img-modal-body">
+      <div class="img-field">
+        <label class="img-field-label"><span class="num">1</span>이미지 URL (SRC) <span class="req">*</span></label>
+        <div class="img-input-wrap">
+          <input type="text" id="imgModalSrc" placeholder="https://..." class="img-input" />
+          <button type="button" class="img-input-action" id="imgModalSrcOpen" title="현재 URL 새 창에서 열기">
+            <svg class="icon"><use href="#i-image"/></svg>
+          </button>
+        </div>
+        <span class="img-field-help">이미지의 주소를 입력하세요.</span>
       </div>
-      <div>
-        <label style="display:block; font-size:11px; color:var(--muted); font-weight:600; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.3px;">직접 업로드 (data URL로 변환)</label>
-        <input type="file" id="imgModalFile" accept="image/*" style="width:100%; padding:4px; border:1px solid var(--line2); border-radius:4px; font-family:inherit; font-size:12px;" />
+
+      <div class="img-field">
+        <label class="img-field-label"><span class="num">2</span>직접 업로드 (DATA URL로 변환)</label>
+        <div class="img-dropzone" id="imgModalDropzone">
+          <input type="file" id="imgModalFile" accept="image/*" class="img-file-input" />
+          <div class="img-dropzone-inner">
+            <svg class="icon" style="width:22px;height:22px;color:var(--muted)"><use href="#i-upload"/></svg>
+            <div class="img-dropzone-main">파일을 선택하거나 드래그하여 업로드하세요</div>
+            <div class="img-dropzone-sub">PNG, JPG, WEBP (최대 10MB)</div>
+          </div>
+        </div>
       </div>
-      <div>
-        <label style="display:block; font-size:11px; color:var(--muted); font-weight:600; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.3px;">대체 텍스트 (alt)</label>
-        <input type="text" id="imgModalAlt" placeholder="이미지 설명" style="width:100%; padding:8px 10px; border:1px solid var(--line2); border-radius:4px; font-family:inherit; font-size:13px;" />
+
+      <div class="img-field">
+        <label class="img-field-label"><span class="num">3</span>대체 텍스트 (ALT)</label>
+        <input type="text" id="imgModalAlt" placeholder="이미지 설명" class="img-input" maxlength="150" />
+        <div class="img-field-foot">
+          <span class="img-field-help">이미지를 설명하는 대체 텍스트를 입력하세요. (스크린 리더용)</span>
+          <span class="img-field-count"><span id="imgModalAltCount">0</span> / 150</span>
+        </div>
       </div>
-      <div style="padding-top:6px; border-top:1px dashed #d8dce3;">
-        <label style="display:block; font-size:11px; color:var(--muted); font-weight:600; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.3px;">링크 URL (선택 — 이미지를 a 태그로 wrap)</label>
-        <input type="text" id="imgModalHref" placeholder="https://... (비우면 링크 제거)" style="width:100%; padding:8px 10px; border:1px solid var(--line2); border-radius:4px; font-family:inherit; font-size:13px;" />
+
+      <div class="img-field">
+        <label class="img-field-label"><span class="num">4</span>링크 URL <span class="opt">(선택 — 이미지를 클릭했을 때 이동할 주소)</span></label>
+        <input type="text" id="imgModalHref" placeholder="https://..." class="img-input" />
       </div>
-      <div>
-        <label style="display:block; font-size:11px; color:var(--muted); font-weight:600; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.3px;">target</label>
-        <select id="imgModalTarget" style="width:100%; padding:8px 10px; border:1px solid var(--line2); border-radius:4px; font-family:inherit; font-size:13px; background:#fff;">
+
+      <div class="img-field">
+        <label class="img-field-label"><span class="num">5</span>TARGET</label>
+        <select id="imgModalTarget" class="img-input">
           <option value="_blank">새 창 (_blank) — 권장</option>
           <option value="_self">같은 창 (_self)</option>
         </select>
       </div>
     </div>
-    <div class="actions">
-      <button class="btn" id="imgModalRemove" style="margin-right:auto; color:#d9534f;">이미지 삭제</button>
-      <button class="btn" id="imgModalCancel">취소</button>
-      <button class="btn primary" id="imgModalSave"><svg class="icon"><use href="#i-check"/></svg><span>저장</span></button>
+
+    <div class="img-modal-actions">
+      <button class="btn img-btn-danger" id="imgModalRemove"><svg class="icon"><use href="#i-trash"/></svg><span>이미지 삭제</span></button>
+      <div class="img-modal-actions-right">
+        <button class="btn img-btn-cancel" id="imgModalCancel">취소</button>
+        <button class="btn img-btn-apply" id="imgModalSave"><svg class="icon"><use href="#i-check"/></svg><span>적용</span></button>
+      </div>
     </div>
   </div>
 </div>
@@ -4768,12 +4872,19 @@ function refresh() {
     bodyHTML: getBodyHTML()
   });
   $('#preview').srcdoc = html;
+  // 팝업 미리보기 iframe도 열려있으면 같이 갱신
+  if ($('#previewPopupBg').classList.contains('show')) {
+    $('#previewPopupFrame').srcdoc = html;
+  }
+  // 마지막 srcdoc 캐시 (팝업 처음 열 때 사용)
+  window._lastPreviewHTML = html;
 
   // 라벨
-  const shapeLabel = { common: '공용', round: '라운드', bare: '헤더·푸터 없음' }[state.shape];
+  const shapeLabel = { common: '공용', round: '라운드', bare: '헤더·푸터 없음', notice: '공지 텍스트형', notice_image: '공지 이미지형' }[state.shape] || state.shape;
   const targetLabel = state.target === 'corporate' ? '기업' : '개인';
   const footerLabel = state.shape === 'bare' ? '' : ` · ${state.footer === 'sendonly' ? '발신전용' : '수신거부'}`;
   $('#previewLabel').textContent = `${shapeLabel} · ${targetLabel}${footerLabel}`;
+  $('#previewPopupLabel').textContent = `${shapeLabel} · ${targetLabel}${footerLabel}`;
   $('#filenameHint').textContent = '저장: ' + buildFilename();
 
   // 라이브러리 필터
@@ -6445,19 +6556,25 @@ $('#htmlsrc').addEventListener('input', debouncedRefresh);
 /* 본문 안 <a> 더블클릭 → 편집 모달 (텍스트/URL/target 일괄 수정)
    - 부분 템플릿 CTA 버튼 등 a 태그 편집을 위한 UX */
 let _editingAnchor = null;
-$('#wysiwyg').addEventListener('dblclick', e => {
+/* 본문에서 이미지/링크는 단일 클릭으로 편집 모달 열림 (사용자 요청 v2.52) */
+$('#wysiwyg').addEventListener('click', e => {
   if (state.mode !== 'editor') return;
-  // 이미지 우선 (img가 a 안에 wrap돼 있어도 이미지 편집 모달이 a 처리도 함)
+  // 이미지 우선 (a 안에 img가 wrap돼 있어도 이미지 모달이 a 처리도 함께)
   const img = e.target.closest('img');
   if (img && $('#wysiwyg').contains(img)) {
     e.preventDefault();
+    e.stopPropagation();
     window.getSelection().removeAllRanges();
     openImgEditModal(img);
     return;
   }
+  // a 태그 (이미지 외)
   const a = e.target.closest('a');
   if (!a || !$('#wysiwyg').contains(a)) return;
+  // 텍스트 편집 중 caret 이동 의도 = a 안 텍스트 클릭. Shift/Ctrl 없는 단순 클릭만 모달
+  if (e.shiftKey || e.ctrlKey || e.altKey) return;
   e.preventDefault();
+  e.stopPropagation();
   window.getSelection().removeAllRanges();
   openLinkEditModal(a);
 });
@@ -6505,7 +6622,9 @@ let _editingImg = null;
 function openImgEditModal(img) {
   _editingImg = img;
   $('#imgModalSrc').value = img.getAttribute('src') || '';
-  $('#imgModalAlt').value = img.getAttribute('alt') || '';
+  const altVal = img.getAttribute('alt') || '';
+  $('#imgModalAlt').value = altVal;
+  $('#imgModalAltCount').textContent = altVal.length;
   $('#imgModalFile').value = '';
   // 부모가 a면 href/target 사용
   const parentA = img.parentElement && img.parentElement.tagName === 'A' ? img.parentElement : null;
@@ -6514,12 +6633,45 @@ function openImgEditModal(img) {
   $('#imgModalBg').classList.add('show');
   setTimeout(() => $('#imgModalSrc').focus(), 50);
 }
+// alt 글자 카운트 실시간 갱신
+$('#imgModalAlt').addEventListener('input', () => {
+  $('#imgModalAltCount').textContent = $('#imgModalAlt').value.length;
+});
+// src URL 열기 버튼
+$('#imgModalSrcOpen').addEventListener('click', () => {
+  const url = $('#imgModalSrc').value.trim();
+  if (url && /^(https?:|data:)/.test(url)) window.open(url, '_blank');
+});
+// 파일 선택 → data URL 변환
 $('#imgModalFile').addEventListener('change', e => {
   const file = e.target.files && e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = () => { $('#imgModalSrc').value = reader.result; };
   reader.readAsDataURL(file);
+});
+// dropzone 드래그&드롭
+(function bindImgDropzone(){
+  const dz = $('#imgModalDropzone');
+  if (!dz) return;
+  ['dragenter','dragover'].forEach(ev => dz.addEventListener(ev, e => {
+    e.preventDefault(); e.stopPropagation(); dz.classList.add('is-drag');
+  }));
+  ['dragleave','drop'].forEach(ev => dz.addEventListener(ev, e => {
+    e.preventDefault(); e.stopPropagation(); dz.classList.remove('is-drag');
+  }));
+  dz.addEventListener('drop', e => {
+    const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = () => { $('#imgModalSrc').value = reader.result; };
+    reader.readAsDataURL(file);
+  });
+})();
+// X 버튼 = 취소
+$('#imgModalCloseX').addEventListener('click', () => {
+  $('#imgModalBg').classList.remove('show');
+  _editingImg = null;
 });
 $('#imgModalCancel').addEventListener('click', () => {
   $('#imgModalBg').classList.remove('show');
@@ -6640,6 +6792,33 @@ wy.addEventListener('blur', () => {
     if ($('#modalBg').classList.contains('show')) return;
     cleanupBody();
   }, 150);
+});
+
+/* 미리보기 팝업 (큰 화면 레이어) */
+$('#btnPreviewPopup').addEventListener('click', () => {
+  refresh();
+  $('#previewPopupFrame').srcdoc = window._lastPreviewHTML || $('#preview').srcdoc;
+  $('#previewPopupBg').classList.add('show');
+});
+$('#previewPopupClose').addEventListener('click', () => {
+  $('#previewPopupBg').classList.remove('show');
+});
+$('#previewPopupBg').addEventListener('click', e => {
+  if (e.target === $('#previewPopupBg')) $('#previewPopupBg').classList.remove('show');
+});
+$('#previewPopupRefresh').addEventListener('click', () => {
+  refresh();
+  $('#previewPopupFrame').srcdoc = window._lastPreviewHTML || $('#preview').srcdoc;
+});
+$('#previewPopupNewWin').addEventListener('click', () => {
+  const html = window._lastPreviewHTML || $('#preview').srcdoc;
+  const w = window.open('', '_blank');
+  if (w) { w.document.open(); w.document.write(html); w.document.close(); }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && $('#previewPopupBg').classList.contains('show')) {
+    $('#previewPopupBg').classList.remove('show');
+  }
 });
 
 /* 수동 미리보기 갱신 버튼 */
