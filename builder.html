@@ -1119,7 +1119,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.43</span>
+    <span class="sub">v2.44</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -4089,6 +4089,74 @@ const SNIPPETS = [
             <tbody>
               <tr>
                 <td align="center"><a href="#" target="_blank" style="display: block; text-decoration: none; width: 100%; border-radius: 25px; background-color: #ff460a; color: #fff; font-size: 18px; font-weight: bold; border: 0; padding: 13px 0; text-align: center; letter-spacing: -1px;">메인 CTA</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>`
+  },
+  {
+    id: 'resume_completion_check_card',
+    name: '이력서 완성도 체크 카드 (학력·경력·조건)',
+    target: 'common',
+    category: 'partial',
+    tags: ['이력서', '체크', '상태'],
+    description: '아이콘 + 라벨(학력/경력/희망근무조건 등) + 우측 라운드 상태 배지(입력완료/미입력). 장기미이용 회원 wakeup, 이력서 작성 유도 메일 등 완성도 체크 패턴 재사용',
+    html: `<div style="margin: 10px 0;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr>
+        <td align="left" style="padding-bottom: 10px;">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border: 1px solid #c5c5c5; border-radius: 8px; background: #fff; border-collapse: separate;">
+            <colgroup>
+              <col width="*" />
+              <col width="80" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <td height="60" valign="middle" style="vertical-align: middle; text-align: left; font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; line-height: 24px; font-weight: bold; font-size: 14px; color: #333; padding: 0 18px;">📋 학력</td>
+                <td align="right" style="text-align: right; padding: 0 18px 0 0;">
+                  <span style="display: inline-block; padding: 4px 12px; border-radius: 25px; border: 1px solid #999; color: #666; font-size: 13px; font-weight: bold; letter-spacing: -1px; line-height: 18px;">미입력</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td align="left" style="padding-bottom: 10px;">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border: 1px solid #c5c5c5; border-radius: 8px; background: #fff; border-collapse: separate;">
+            <colgroup>
+              <col width="*" />
+              <col width="80" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <td height="60" valign="middle" style="vertical-align: middle; text-align: left; font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; line-height: 24px; font-weight: bold; font-size: 14px; color: #333; padding: 0 18px;">💼 경력</td>
+                <td align="right" style="text-align: right; padding: 0 18px 0 0;">
+                  <span style="display: inline-block; padding: 4px 12px; border-radius: 25px; border: 1px solid #999; color: #666; font-size: 13px; font-weight: bold; letter-spacing: -1px; line-height: 18px;">입력완료</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td align="left" style="padding-bottom: 10px;">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border: 1px solid #c5c5c5; border-radius: 8px; background: #fff; border-collapse: separate;">
+            <colgroup>
+              <col width="*" />
+              <col width="80" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <td height="60" valign="middle" style="vertical-align: middle; text-align: left; font-family: Malgun Gothic, sans-serif; letter-spacing: -1px; line-height: 24px; font-weight: bold; font-size: 14px; color: #333; padding: 0 18px;">🎯 희망근무조건</td>
+                <td align="right" style="text-align: right; padding: 0 18px 0 0;">
+                  <span style="display: inline-block; padding: 4px 12px; border-radius: 25px; border: 1px solid #999; color: #666; font-size: 13px; font-weight: bold; letter-spacing: -1px; line-height: 18px;">미입력</span>
+                </td>
               </tr>
             </tbody>
           </table>
