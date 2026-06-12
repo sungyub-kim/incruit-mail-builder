@@ -1036,8 +1036,11 @@
   .img-btn-cancel:hover { background: #f9fafb; border-color: #d1d5db; }
   .img-btn-apply { color: #fff; background: #ff460a; border: 0; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(255,70,10,0.25); transition: all 0.15s; }
   .img-btn-apply:hover { background: #e53e08; box-shadow: 0 4px 12px rgba(255,70,10,0.35); }
-  .img-btn-imagemap { color: #6d3eff; background: #f5f3ff; border: 1px solid #ddd6fe; padding: 9px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; }
-  .img-btn-imagemap:hover { background: #ede9fe; border-color: #c4b5fd; }
+  /* 본문 툴바의 이미지맵 버튼 — 텍스트 라벨 동반 강조 */
+  .btn-imagemap-toolbar { display: inline-flex !important; align-items: center; gap: 4px; padding: 4px 9px !important; background: #f5f3ff !important; color: #6d3eff !important; border: 1px solid #ddd6fe !important; border-radius: 5px !important; font-size: 11px !important; font-weight: 600 !important; }
+  .btn-imagemap-toolbar:hover { background: #ede9fe !important; border-color: #c4b5fd !important; }
+  .btn-imagemap-toolbar .icon { width: 13px; height: 13px; }
+  .btn-imagemap-toolbar span { font-family: inherit; }
   body.corporate .img-input:focus { border-color: #2f80e5; box-shadow: 0 0 0 3px rgba(47,128,229,0.12); }
   body.corporate .img-input-action:hover { color: #2f80e5; }
   body.corporate .img-dropzone:hover, body.corporate .img-dropzone.is-drag { border-color: #2f80e5; background: #f0f6ff; }
@@ -1045,8 +1048,10 @@
   body.corporate .img-btn-apply:hover { background: #2670d4; }
 
   /* 이미지맵 영역 편집 모달 */
-  .img-map-preview-wrap { position: relative; max-width: 100%; max-height: 360px; background: #f3f4f6; border-radius: 8px; overflow: hidden; user-select: none; display: inline-block; }
-  .img-map-preview-wrap img { display: block; max-width: 100%; max-height: 360px; pointer-events: none; }
+  .img-map-preview-wrap { position: relative; width: 100%; max-height: 65vh; background: #f3f4f6; border-radius: 8px; overflow: auto; user-select: none; display: block; text-align: center; }
+  .img-map-preview-wrap img { display: inline-block; max-width: 100%; height: auto; pointer-events: none; vertical-align: top; }
+  .img-map-stage { position: relative; display: inline-block; max-width: 100%; }
+  .img-map-stage img { display: block; max-width: 100%; height: auto; pointer-events: none; }
   .img-map-overlay { position: absolute; inset: 0; cursor: crosshair; }
   .img-map-area { position: absolute; border: 2px solid #ff460a; background: rgba(255,70,10,0.15); cursor: move; }
   .img-map-area .num-tag { position: absolute; top: -22px; left: 0; padding: 1px 6px; background: #ff460a; color: #fff; font-size: 11px; font-weight: 700; border-radius: 4px; }
@@ -1260,7 +1265,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.56</span>
+    <span class="sub">v2.57</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -1455,7 +1460,9 @@
       <span class="sep"></span>
       <button id="insertLink" title="링크"><svg class="icon"><use href="#i-link"/></svg></button>
       <button id="insertImage" title="이미지 (Outlook border 자동 제거)"><svg class="icon"><use href="#i-image"/></svg></button>
-      <button id="btnImageMap" title="이미지맵 영역 (현재 이미지에 a 오버레이 추가)"><svg class="icon"><use href="#i-imagemap"/></svg></button>
+      <button id="btnImageMap" class="btn-imagemap-toolbar" title="이미지맵 — 본문 이미지 위에 a 오버레이 영역 추가 (PC/M 동일 % 대응)">
+        <svg class="icon"><use href="#i-imagemap"/></svg><span>이미지맵</span>
+      </button>
       <button id="insertHr" title="구분선 (메일 호환 table HR)"><svg class="icon"><use href="#i-hr"/></svg></button>
       <div class="table-wrap">
         <button id="tableInsertBtn" title="표 삽입 (행/열 선택)"><svg class="icon"><use href="#i-table"/></svg></button>
@@ -1519,7 +1526,7 @@
 
 <!-- ========== 이미지맵 영역 편집 모달 ========== -->
 <div class="modal-bg" id="imgMapModalBg">
-  <div class="modal img-edit-modal" style="min-width: 720px; max-width: 880px;">
+  <div class="modal img-edit-modal" style="min-width: 900px; max-width: 1180px; width: 92vw;">
     <button class="img-modal-close" id="imgMapModalCloseX" aria-label="닫기">×</button>
     <h3 class="img-modal-title">이미지맵 영역 편집</h3>
     <p class="img-modal-subtitle">이미지 위에 <code>&lt;a&gt;</code> 오버레이를 좌표(%)로 추가합니다. PC/모바일 동일 대응. 미리보기에서 드래그로 직접 영역 그리기 가능.</p>
@@ -1528,8 +1535,10 @@
       <div class="img-field">
         <label class="img-field-label"><span class="num">1</span>이미지 미리보기 (드래그로 영역 추가)</label>
         <div id="imgMapPreviewWrap" class="img-map-preview-wrap">
-          <img id="imgMapPreviewImg" alt="" />
-          <div id="imgMapOverlay" class="img-map-overlay"></div>
+          <div class="img-map-stage" id="imgMapStage">
+            <img id="imgMapPreviewImg" alt="" />
+            <div id="imgMapOverlay" class="img-map-overlay"></div>
+          </div>
         </div>
         <span class="img-field-help">이미지 위에서 드래그하여 새 영역을 만들거나, 아래 좌표 입력으로 추가하세요.</span>
       </div>
@@ -1608,7 +1617,6 @@
     <div class="img-modal-actions">
       <button class="btn img-btn-danger" id="imgModalRemove"><svg class="icon"><use href="#i-trash"/></svg><span>이미지 삭제</span></button>
       <div class="img-modal-actions-right">
-        <button class="btn img-btn-imagemap" id="imgModalOpenMap" title="이미지 위에 클릭 가능한 영역(a 오버레이) 추가"><svg class="icon"><use href="#i-imagemap"/></svg><span>이미지맵 편집</span></button>
         <button class="btn img-btn-cancel" id="imgModalCancel">취소</button>
         <button class="btn img-btn-apply" id="imgModalSave"><svg class="icon"><use href="#i-check"/></svg><span>적용</span></button>
       </div>
@@ -6811,19 +6819,6 @@ $('#imgModalRemove').addEventListener('click', () => {
   $('#imgModalBg').classList.remove('show');
   _editingImg = null;
   refresh();
-});
-// 이미지 편집 모달 → 이미지맵 편집 모달로 전환
-$('#imgModalOpenMap').addEventListener('click', () => {
-  if (!_editingImg) return;
-  // 현재 입력된 src/alt/href/target 먼저 이미지에 적용 (작성 중인 값 보존)
-  const src = $('#imgModalSrc').value.trim();
-  const alt = $('#imgModalAlt').value.trim();
-  if (src) _editingImg.setAttribute('src', src);
-  _editingImg.setAttribute('alt', alt);
-  // 이미지 모달 닫기 → 이미지맵 모달 열기
-  $('#imgModalBg').classList.remove('show');
-  openImgMapModal(_editingImg);
-  _editingImg = null;
 });
 
 /* ============ 이미지맵 영역 편집 모달 ============ */
