@@ -1328,7 +1328,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.61</span>
+    <span class="sub">v2.62</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -1705,11 +1705,15 @@
 <div class="modal-bg" id="linkModalBg">
   <div class="modal" style="min-width: 420px;">
     <h3 id="linkModalTitle">버튼 / 링크 편집</h3>
-    <p style="margin-bottom: 14px;">본문 안의 <code>&lt;a&gt;</code> 태그를 클릭하면 이 창이 열립니다. 텍스트·링크 URL·새 창 여부를 한 번에 수정하세요.</p>
+    <p style="margin-bottom: 14px;">본문 안의 <code>&lt;a&gt;</code> 태그를 클릭하면 이 창이 열립니다. 텍스트·대체 텍스트(title)·링크·새 창 여부를 한 번에 수정하세요.</p>
     <div style="display:flex; flex-direction:column; gap:10px;">
       <div>
-        <label style="display:block; font-size:11px; color:var(--muted); font-weight:600; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.3px;">텍스트</label>
+        <label style="display:block; font-size:11px; color:var(--muted); font-weight:600; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.3px;">텍스트 <span style="font-weight:400; text-transform:none; color:#9ca3af;">— 화면에 보이는 글자</span></label>
         <input type="text" id="linkModalText" style="width:100%; padding:8px 10px; border:1px solid var(--line2); border-radius:4px; font-family:inherit; font-size:13px;" />
+      </div>
+      <div>
+        <label style="display:block; font-size:11px; color:var(--muted); font-weight:600; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.3px;">대체 텍스트 (TITLE) <span style="font-weight:400; text-transform:none; color:#9ca3af;">— hover 시 tooltip / 접근성 / 링크맵 영역과 데이터 연결</span></label>
+        <input type="text" id="linkModalTitle" placeholder="(선택)" style="width:100%; padding:8px 10px; border:1px solid var(--line2); border-radius:4px; font-family:inherit; font-size:13px;" />
       </div>
       <div>
         <label style="display:block; font-size:11px; color:var(--muted); font-weight:600; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.3px;">URL</label>
@@ -5898,11 +5902,24 @@ function cleanupBody() {
     }
   });
 
-  // 3) 이미지 보정: border="0" + 인라인 border:0
+  // 2.5) a 태그의 alt → title 변환 (HTML 표준화. a에는 title이 맞음)
+  wy.querySelectorAll('a[alt]').forEach(a => {
+    const altVal = a.getAttribute('alt');
+    if (altVal && !a.hasAttribute('title')) a.setAttribute('title', altVal);
+    a.removeAttribute('alt');
+  });
+
+  // 3) 이미지 보정: border="0" + 인라인 border:0 + max-width:100% (반응형)
+  // 단 기존에 max-width 또는 width(px/%)가 명시되어 있으면 건드리지 않음 (사용자/풀템플릿 의도 보존)
   wy.querySelectorAll('img').forEach(img => {
     if (!img.hasAttribute('border')) img.setAttribute('border','0');
     if (!img.style.border) img.style.border = '0';
     if (!img.hasAttribute('alt')) img.setAttribute('alt','');
+    // max-width 자동 보강 (이미 명시된 max-width 또는 width style이 있으면 skip)
+    const hasMaxWidth = img.style.maxWidth || /max-width\s*:/i.test(img.getAttribute('style') || '');
+    if (!hasMaxWidth) {
+      img.style.maxWidth = '100%';
+    }
   });
 
   // 4) ul/ol에 메일 호환 padding 보정
@@ -6941,7 +6958,8 @@ function readExistingAreas(img) {
       height: parseFloat(s.height) || 10,
       url: isMailto ? '' : (href === '#' ? '' : href),
       email: isMailto ? href.slice(7) : '',
-      label: a.getAttribute('alt') || ''
+      // a 태그의 표준 속성은 title (alt는 비표준). legacy alt도 fallback.
+      label: a.getAttribute('title') || a.getAttribute('alt') || ''
     });
   });
   return areas;
@@ -7063,7 +7081,7 @@ function renderImgMapAreas() {
       </div>
       <input type="text" placeholder="https://" value="${(area.url || '').replace(/"/g, '&quot;')}" data-key="url" class="row-input" />
       <input type="text" placeholder="email@도메인 (입력 시 mailto: 자동)" value="${(area.email || '').replace(/"/g, '&quot;')}" data-key="email" class="row-input" />
-      <input type="text" placeholder="alt 텍스트 (선택)" value="${(area.label || '').replace(/"/g, '&quot;')}" data-key="label" class="row-input" />
+      <input type="text" placeholder="대체 텍스트 (선택, hover 시 tooltip)" value="${(area.label || '').replace(/"/g, '&quot;')}" data-key="label" class="row-input" />
     `;
     row.querySelectorAll('input').forEach(inp => {
       inp.addEventListener('input', () => {
@@ -7185,7 +7203,7 @@ function applyImageMap(img, areas) {
     if (!href) href = '#';
     a.setAttribute('href', href);
     a.setAttribute('target', '_blank');
-    if (area.label) a.setAttribute('alt', area.label);
+    if (area.label) a.setAttribute('title', area.label);
     a.setAttribute('data-imap-idx', idx);
     a.style.cssText = `position:absolute; left:${area.left.toFixed(2)}%; top:${area.top.toFixed(2)}%; width:${area.width.toFixed(2)}%; height:${area.height.toFixed(2)}%; display:block;`;
     imapWrap.appendChild(a);
@@ -7253,6 +7271,8 @@ function openLinkEditModal(a) {
   const inner = a.querySelector('span, b, strong, i, em');
   const text = inner ? inner.textContent.trim() : a.textContent.trim();
   $('#linkModalText').value = text;
+  // 대체 텍스트 (title): a 표준 속성, legacy alt도 fallback (링크맵 데이터 연결)
+  $('#linkModalTitle').value = a.getAttribute('title') || a.getAttribute('alt') || '';
   $('#linkModalUrl').value = a.getAttribute('href') || '';
   $('#linkModalTarget').value = a.getAttribute('target') || '_blank';
   $('#linkModalBg').classList.add('show');
@@ -7267,14 +7287,20 @@ $('#linkModalCancel').addEventListener('click', () => {
 $('#linkModalSave').addEventListener('click', () => {
   if (_editingAnchor) {
     const newText = $('#linkModalText').value;
+    const newTitle = $('#linkModalTitle').value;
     const newUrl = $('#linkModalUrl').value;
     const newTarget = $('#linkModalTarget').value;
     _editingAnchor.setAttribute('href', newUrl);
     _editingAnchor.setAttribute('target', newTarget);
+    // 대체 텍스트(title) 반영 + legacy alt 정리
+    if (newTitle) _editingAnchor.setAttribute('title', newTitle);
+    else _editingAnchor.removeAttribute('title');
+    _editingAnchor.removeAttribute('alt');
     // text 변경: 안에 span 등 wrapper 있으면 그 안만, 없으면 a 자체
     const inner = _editingAnchor.querySelector('span, b, strong, i, em');
     if (inner) inner.textContent = newText;
-    else _editingAnchor.textContent = newText;
+    else if (!_editingAnchor.classList.contains('imap-area')) _editingAnchor.textContent = newText;
+    // ↑ imap-area는 빈 오버레이라 textContent 건드리지 않음
   }
   $('#linkModalBg').classList.remove('show');
   _editingAnchor = null;
