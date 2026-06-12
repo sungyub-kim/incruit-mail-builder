@@ -1233,7 +1233,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.53</span>
+    <span class="sub">v2.54</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -4925,11 +4925,16 @@ function resolveSnippetHTML(s) {
 
 /* 라이브러리 카드 썸네일용 srcdoc 빌더 */
 function buildThumbSrcdoc(s) {
-  const noticeCSS = s.noticeMode ? '<link rel="stylesheet" href="https://i.incru.it/ui/static/css/notice/common.css?20220812">' : '';
-  const wrapOpen = s.noticeMode ? `<div class="noticeTemp ${s.noticeMode}">` : '<div>';
+  const isNoticeText = !!s.noticeMode;
+  const isNoticeImage = !isNoticeText && s.category === 'notice';
+  const noticeCSS = isNoticeText ? '<link rel="stylesheet" href="https://i.incru.it/ui/static/css/notice/common.css?20220812">' : '';
+  const wrapOpen = isNoticeText ? `<div class="noticeTemp ${s.noticeMode}">`
+                  : (isNoticeImage ? '<div class="notice-image-thumb">' : '<div>');
   const wrapClose = '</div>';
   const html = resolveSnippetHTML(s);
-  return `<!DOCTYPE html><html><head><meta charset="utf-8">${noticeCSS}<style>html,body{margin:0;padding:0;background:#fff;}body{font-family:'Malgun Gothic',sans-serif;padding:8px;font-size:13px;line-height:1.5;color:#222;}</style></head><body>${wrapOpen}${html}${wrapClose}</body></html>`;
+  // 공지 이미지형은 940 raw — 썸네일에서 img max-width:100% 보장만
+  const imgThumbCss = isNoticeImage ? '.notice-image-thumb img{display:block;max-width:100%;border:0;vertical-align:top;}.notice-image-thumb table{width:100%;}' : '';
+  return `<!DOCTYPE html><html><head><meta charset="utf-8">${noticeCSS}<style>html,body{margin:0;padding:0;background:#fff;}body{font-family:'Malgun Gothic',sans-serif;padding:8px;font-size:13px;line-height:1.5;color:#222;}${imgThumbCss}</style></head><body>${wrapOpen}${html}${wrapClose}</body></html>`;
 }
 function escapeAttrFull(s) {
   return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -5360,15 +5365,19 @@ function askApplySnippet(id) {
       '부분 컴포넌트입니다. <strong>현재 커서 위치에 삽입</strong>되며 기존 본문은 유지됩니다.';
   }
 
-  // 공지 본문인 경우 noticeTemp wrap + 외부 CSS link 자동 inject
-  const isNotice = !!s.noticeMode;
-  const noticeCSS = isNotice
+  // 공지 분리 처리:
+  // - 공지 텍스트형 (noticeMode = basics/beforehand): noticeTemp wrap + 외부 CSS link
+  // - 공지 이미지형 (category=notice, noticeMode 없음): 940px 폭 raw 표시 (noticeTemp 안 들어감)
+  // - 일반 메일 (full/partial): 기존 wrap 700px
+  const isNoticeText = !!s.noticeMode;
+  const isNoticeImage = !isNoticeText && s.category === 'notice';
+  const noticeCSS = isNoticeText
     ? '<link type="text/css" rel="stylesheet" href="https://i.incru.it/ui/static/css/notice/common.css?20220812">'
     : '';
-  const innerWrapOpen = isNotice
-    ? `<div class="noticeTemp ${s.noticeMode}">`
-    : '<div class="wrap">';
-  const innerWrapClose = '</div>';
+  let innerWrapOpen, innerWrapClose = '</div>';
+  if (isNoticeText) innerWrapOpen = `<div class="noticeTemp ${s.noticeMode}">`;
+  else if (isNoticeImage) innerWrapOpen = '<div class="notice-image-wrap">';
+  else innerWrapOpen = '<div class="wrap">';
 
   const resolvedHTML = resolveSnippetHTML(s);
   const previewHTML = `<!DOCTYPE html>
@@ -5376,6 +5385,10 @@ function askApplySnippet(id) {
 body { margin:0; padding: 8px 12px; font-family: 'Malgun Gothic','맑은고딕',sans-serif; background: #e8eaed; }
 .wrap { max-width: 700px; margin: 0 auto; background: #fff; padding: 10px 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); border-radius: 4px; }
 .noticeTemp { max-width: 700px; margin: 0 auto; background: #fff; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+/* 공지 이미지형: 940px raw 테이블 그대로 (noticeTemp 안 들어감) */
+.notice-image-wrap { max-width: 940px; margin: 0 auto; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+.notice-image-wrap img { display: block; max-width: 100%; border: 0; vertical-align: top; }
+.notice-image-wrap table { width: 100%; }
 </style></head>
 <body>
 ${innerWrapOpen}${resolvedHTML}${innerWrapClose}
