@@ -1060,8 +1060,15 @@
   .img-map-overlay { position: absolute; inset: 0; cursor: crosshair; }
   .img-map-area { position: absolute; border: 2px solid #ff460a; background: rgba(255,70,10,0.15); cursor: move; pointer-events: auto; }
   .img-map-area .num-tag { position: absolute; top: -22px; left: 0; padding: 1px 6px; background: #ff460a; color: #fff; font-size: 11px; font-weight: 700; border-radius: 4px; }
-  .img-map-area .area-del-btn { position: absolute; top: -10px; right: -10px; width: 20px; height: 20px; padding: 0; border: 2px solid #fff; background: #ef4444; color: #fff; font-size: 14px; font-weight: 700; border-radius: 50%; cursor: pointer; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+  .img-map-area .area-del-btn { position: absolute; top: -10px; right: -10px; width: 20px; height: 20px; padding: 0; border: 2px solid #fff; background: #ef4444; color: #fff; font-size: 14px; font-weight: 700; border-radius: 50%; cursor: pointer; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 3; }
   .img-map-area .area-del-btn:hover { background: #dc2626; transform: scale(1.1); }
+  /* 영역 모서리 리사이즈 핸들 */
+  .img-map-area .area-handle { position: absolute; width: 11px; height: 11px; background: #fff; border: 2px solid #ff460a; border-radius: 50%; z-index: 2; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  .img-map-area .area-handle-nw { top: -6px; left: -6px; cursor: nw-resize; }
+  .img-map-area .area-handle-ne { top: -6px; right: -6px; cursor: ne-resize; }
+  .img-map-area .area-handle-sw { bottom: -6px; left: -6px; cursor: sw-resize; }
+  .img-map-area .area-handle-se { bottom: -6px; right: -6px; cursor: se-resize; }
+  body.corporate .img-map-area .area-handle { border-color: #2f80e5; }
   .img-map-area.is-active { border-color: #2f80e5; background: rgba(47,128,229,0.15); }
   .img-map-area.is-active .num-tag { background: #2f80e5; }
   body.corporate .img-map-area { border-color: #2f80e5; background: rgba(47,128,229,0.15); }
@@ -1285,7 +1292,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.59</span>
+    <span class="sub">v2.60</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -6897,6 +6904,67 @@ function readExistingAreas(img) {
   return areas;
 }
 
+/* 이미지맵 영역 박스 — 드래그 이동 + 모서리 리사이즈 */
+function attachAreaInteraction(div, idx, overlay) {
+  div.addEventListener('mousedown', e => {
+    // 삭제 버튼 클릭은 자기 핸들러로
+    if (e.target.classList.contains('area-del-btn')) return;
+    e.preventDefault();
+    e.stopPropagation();  // overlay의 새 영역 그리기 방지
+    const isHandle = e.target.classList.contains('area-handle');
+    const dir = isHandle ? e.target.dataset.dir : null;
+    const rect = overlay.getBoundingClientRect();
+    const startMouseX = e.clientX;
+    const startMouseY = e.clientY;
+    const start = { ...(_imgMapAreas[idx]) };
+
+    function onMove(ev) {
+      const dx = ((ev.clientX - startMouseX) / rect.width) * 100;
+      const dy = ((ev.clientY - startMouseY) / rect.height) * 100;
+      let a = _imgMapAreas[idx];
+      if (!isHandle) {
+        // 이동 (영역 폭/높이 유지, 경계 안에 가두기)
+        a.left = Math.max(0, Math.min(100 - start.width, start.left + dx));
+        a.top = Math.max(0, Math.min(100 - start.height, start.top + dy));
+      } else {
+        // 리사이즈 (방향별)
+        if (dir.includes('w')) {
+          const newLeft = Math.max(0, Math.min(start.left + start.width - 1, start.left + dx));
+          a.width = start.width + (start.left - newLeft);
+          a.left = newLeft;
+        } else if (dir.includes('e')) {
+          a.width = Math.max(1, Math.min(100 - start.left, start.width + dx));
+        }
+        if (dir.includes('n')) {
+          const newTop = Math.max(0, Math.min(start.top + start.height - 1, start.top + dy));
+          a.height = start.height + (start.top - newTop);
+          a.top = newTop;
+        } else if (dir.includes('s')) {
+          a.height = Math.max(1, Math.min(100 - start.top, start.height + dy));
+        }
+      }
+      // 박스 즉시 갱신 (renderImgMapAreas 안 부르고 직접 — 입력 흐름/포커스 보존)
+      div.style.left = a.left + '%';
+      div.style.top = a.top + '%';
+      div.style.width = a.width + '%';
+      div.style.height = a.height + '%';
+    }
+    function onUp() {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      // mouseup 후 좌표 표기 갱신 (행 헤더의 X1,Y1→X2,Y2)
+      const list = $('#imgMapAreasList');
+      const row = list.children[idx];
+      if (row) {
+        const cEl = row.querySelector('.row-coords');
+        if (cEl) cEl.textContent = fmtCoords(_imgMapAreas[idx]);
+      }
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+}
+
 function fmtCoords(area) {
   // % 데이터 → 이미지 자연 크기 기준 px 좌표 (참고용 표시만)
   const img = $('#imgMapPreviewImg');
@@ -6922,12 +6990,20 @@ function renderImgMapAreas() {
     div.style.top = area.top + '%';
     div.style.width = area.width + '%';
     div.style.height = area.height + '%';
-    div.innerHTML = `<span class="num-tag">${idx + 1}</span><button type="button" class="area-del-btn" title="이 영역 삭제">×</button>`;
+    div.innerHTML = `
+      <span class="num-tag">${idx + 1}</span>
+      <button type="button" class="area-del-btn" title="이 영역 삭제">×</button>
+      <span class="area-handle area-handle-nw" data-dir="nw"></span>
+      <span class="area-handle area-handle-ne" data-dir="ne"></span>
+      <span class="area-handle area-handle-sw" data-dir="sw"></span>
+      <span class="area-handle area-handle-se" data-dir="se"></span>
+    `;
     div.querySelector('.area-del-btn').addEventListener('click', e => {
       e.stopPropagation();
       _imgMapAreas.splice(idx, 1);
       renderImgMapAreas();
     });
+    attachAreaInteraction(div, idx, overlay);
     overlay.appendChild(div);
   });
   // 영역 입력 리스트 — 간소화 디자인 (좌표는 표기만, url/email/alt 입력)
