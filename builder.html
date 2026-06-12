@@ -1036,6 +1036,8 @@
   .img-btn-cancel:hover { background: #f9fafb; border-color: #d1d5db; }
   .img-btn-apply { color: #fff; background: #ff460a; border: 0; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(255,70,10,0.25); transition: all 0.15s; }
   .img-btn-apply:hover { background: #e53e08; box-shadow: 0 4px 12px rgba(255,70,10,0.35); }
+  .img-btn-imagemap { color: #6d3eff; background: #f5f3ff; border: 1px solid #ddd6fe; padding: 9px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; }
+  .img-btn-imagemap:hover { background: #ede9fe; border-color: #c4b5fd; }
   body.corporate .img-input:focus { border-color: #2f80e5; box-shadow: 0 0 0 3px rgba(47,128,229,0.12); }
   body.corporate .img-input-action:hover { color: #2f80e5; }
   body.corporate .img-dropzone:hover, body.corporate .img-dropzone.is-drag { border-color: #2f80e5; background: #f0f6ff; }
@@ -1258,7 +1260,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.55</span>
+    <span class="sub">v2.56</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -1606,6 +1608,7 @@
     <div class="img-modal-actions">
       <button class="btn img-btn-danger" id="imgModalRemove"><svg class="icon"><use href="#i-trash"/></svg><span>이미지 삭제</span></button>
       <div class="img-modal-actions-right">
+        <button class="btn img-btn-imagemap" id="imgModalOpenMap" title="이미지 위에 클릭 가능한 영역(a 오버레이) 추가"><svg class="icon"><use href="#i-imagemap"/></svg><span>이미지맵 편집</span></button>
         <button class="btn img-btn-cancel" id="imgModalCancel">취소</button>
         <button class="btn img-btn-apply" id="imgModalSave"><svg class="icon"><use href="#i-check"/></svg><span>적용</span></button>
       </div>
@@ -6808,6 +6811,19 @@ $('#imgModalRemove').addEventListener('click', () => {
   $('#imgModalBg').classList.remove('show');
   _editingImg = null;
   refresh();
+});
+// 이미지 편집 모달 → 이미지맵 편집 모달로 전환
+$('#imgModalOpenMap').addEventListener('click', () => {
+  if (!_editingImg) return;
+  // 현재 입력된 src/alt/href/target 먼저 이미지에 적용 (작성 중인 값 보존)
+  const src = $('#imgModalSrc').value.trim();
+  const alt = $('#imgModalAlt').value.trim();
+  if (src) _editingImg.setAttribute('src', src);
+  _editingImg.setAttribute('alt', alt);
+  // 이미지 모달 닫기 → 이미지맵 모달 열기
+  $('#imgModalBg').classList.remove('show');
+  openImgMapModal(_editingImg);
+  _editingImg = null;
 });
 
 /* ============ 이미지맵 영역 편집 모달 ============ */
