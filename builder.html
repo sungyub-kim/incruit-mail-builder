@@ -1042,6 +1042,30 @@
   body.corporate .img-btn-apply { background: #2f80e5; box-shadow: 0 2px 8px rgba(47,128,229,0.25); }
   body.corporate .img-btn-apply:hover { background: #2670d4; }
 
+  /* 이미지맵 영역 편집 모달 */
+  .img-map-preview-wrap { position: relative; max-width: 100%; max-height: 360px; background: #f3f4f6; border-radius: 8px; overflow: hidden; user-select: none; display: inline-block; }
+  .img-map-preview-wrap img { display: block; max-width: 100%; max-height: 360px; pointer-events: none; }
+  .img-map-overlay { position: absolute; inset: 0; cursor: crosshair; }
+  .img-map-area { position: absolute; border: 2px solid #ff460a; background: rgba(255,70,10,0.15); cursor: move; }
+  .img-map-area .num-tag { position: absolute; top: -22px; left: 0; padding: 1px 6px; background: #ff460a; color: #fff; font-size: 11px; font-weight: 700; border-radius: 4px; }
+  .img-map-area.is-active { border-color: #2f80e5; background: rgba(47,128,229,0.15); }
+  .img-map-area.is-active .num-tag { background: #2f80e5; }
+  body.corporate .img-map-area { border-color: #2f80e5; background: rgba(47,128,229,0.15); }
+  body.corporate .img-map-area .num-tag { background: #2f80e5; }
+  body.corporate .img-map-area.is-active { border-color: #ff460a; background: rgba(255,70,10,0.15); }
+  body.corporate .img-map-area.is-active .num-tag { background: #ff460a; }
+  .img-map-areas-list { display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; padding: 4px; background: #fafbfc; border: 1px solid #e5e7eb; border-radius: 8px; }
+  .img-map-areas-list:empty::before { content: '영역이 없습니다. 이미지 드래그 또는 [+ 영역 추가] 버튼으로 생성하세요.'; display: block; padding: 12px; text-align: center; font-size: 12px; color: #9ca3af; }
+  .img-map-area-row { display: grid; grid-template-columns: 28px repeat(4, 1fr) 2fr 30px; gap: 6px; align-items: center; padding: 6px 8px; background: #fff; border-radius: 6px; border: 1px solid #e5e7eb; }
+  .img-map-area-row .row-num { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: #ede9fe; color: #6d3eff; font-size: 11px; font-weight: 700; }
+  .img-map-area-row input[type="number"], .img-map-area-row input[type="text"] { width: 100%; padding: 5px 7px; font-size: 12px; border: 1px solid #e5e7eb; border-radius: 4px; font-family: inherit; box-sizing: border-box; }
+  .img-map-area-row input:focus { outline: 0; border-color: #ff460a; }
+  .img-map-area-row .row-del { background: transparent; border: 0; color: #ef4444; cursor: pointer; font-size: 18px; padding: 0; line-height: 1; }
+  .img-map-area-row .row-del:hover { color: #dc2626; }
+  .img-btn-add-area { margin-top: 8px; padding: 8px 14px; background: #fff; border: 1px dashed #d1d5db; border-radius: 6px; font-size: 12px; color: #4b5563; cursor: pointer; font-family: inherit; width: 100%; transition: all 0.15s; }
+  .img-btn-add-area:hover { border-color: #ff460a; color: #ff460a; background: #fff7f3; }
+  body.corporate .img-btn-add-area:hover { border-color: #2f80e5; color: #2f80e5; background: #f0f6ff; }
+
   /* 부분 태그 필터 칩 */
   .tag-filter {
     display: none;
@@ -1213,6 +1237,7 @@
   <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></symbol>
   <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
   <symbol id="i-external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></symbol>
+  <symbol id="i-imagemap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><rect width="8" height="6" x="7" y="6" rx="1" stroke-dasharray="2 2"/><rect width="6" height="5" x="10" y="14" rx="1" stroke-dasharray="2 2"/></symbol>
   <symbol id="i-construction" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="8" rx="1"/><path d="M17 14v7"/><path d="M7 14v7"/><path d="M17 3v3"/><path d="M7 3v3"/><path d="M10 14 2.3 6.3"/><path d="m14 6 7.7 7.7"/><path d="m8 6 8 8"/></symbol>
   <symbol id="i-chevron-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></symbol>
   <symbol id="i-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
@@ -1233,7 +1258,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.54</span>
+    <span class="sub">v2.55</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -1428,6 +1453,7 @@
       <span class="sep"></span>
       <button id="insertLink" title="링크"><svg class="icon"><use href="#i-link"/></svg></button>
       <button id="insertImage" title="이미지 (Outlook border 자동 제거)"><svg class="icon"><use href="#i-image"/></svg></button>
+      <button id="btnImageMap" title="이미지맵 영역 (현재 이미지에 a 오버레이 추가)"><svg class="icon"><use href="#i-imagemap"/></svg></button>
       <button id="insertHr" title="구분선 (메일 호환 table HR)"><svg class="icon"><use href="#i-hr"/></svg></button>
       <div class="table-wrap">
         <button id="tableInsertBtn" title="표 삽입 (행/열 선택)"><svg class="icon"><use href="#i-table"/></svg></button>
@@ -1486,6 +1512,40 @@
       </div>
     </div>
     <iframe id="previewPopupFrame"></iframe>
+  </div>
+</div>
+
+<!-- ========== 이미지맵 영역 편집 모달 ========== -->
+<div class="modal-bg" id="imgMapModalBg">
+  <div class="modal img-edit-modal" style="min-width: 720px; max-width: 880px;">
+    <button class="img-modal-close" id="imgMapModalCloseX" aria-label="닫기">×</button>
+    <h3 class="img-modal-title">이미지맵 영역 편집</h3>
+    <p class="img-modal-subtitle">이미지 위에 <code>&lt;a&gt;</code> 오버레이를 좌표(%)로 추가합니다. PC/모바일 동일 대응. 미리보기에서 드래그로 직접 영역 그리기 가능.</p>
+
+    <div class="img-modal-body">
+      <div class="img-field">
+        <label class="img-field-label"><span class="num">1</span>이미지 미리보기 (드래그로 영역 추가)</label>
+        <div id="imgMapPreviewWrap" class="img-map-preview-wrap">
+          <img id="imgMapPreviewImg" alt="" />
+          <div id="imgMapOverlay" class="img-map-overlay"></div>
+        </div>
+        <span class="img-field-help">이미지 위에서 드래그하여 새 영역을 만들거나, 아래 좌표 입력으로 추가하세요.</span>
+      </div>
+
+      <div class="img-field">
+        <label class="img-field-label"><span class="num">2</span>영역 목록 (<span id="imgMapAreaCount">0</span>개)</label>
+        <div id="imgMapAreasList" class="img-map-areas-list"></div>
+        <button type="button" id="imgMapAddBtn" class="img-btn-add-area">+ 영역 추가</button>
+      </div>
+    </div>
+
+    <div class="img-modal-actions">
+      <button class="btn img-btn-danger" id="imgMapClearAll"><svg class="icon"><use href="#i-trash"/></svg><span>전체 삭제</span></button>
+      <div class="img-modal-actions-right">
+        <button class="btn img-btn-cancel" id="imgMapCancel">취소</button>
+        <button class="btn img-btn-apply" id="imgMapApply"><svg class="icon"><use href="#i-check"/></svg><span>적용</span></button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -5407,6 +5467,18 @@ $('#modalCancel').addEventListener('click', () => {
 $('#modalOk').addEventListener('click', () => {
   if (pendingSnippet) {
     const category = pendingSnippet.category || 'full';
+    // 공지 풀템플릿 적용 시 form도 자동 매핑 (사용자가 다른 form에서 공지 적용해도
+    // 빌더 라운드 wrap 등 잘못된 외곽 표시 안 되게):
+    // - noticeMode 있음(basics/beforehand) → 'notice' (텍스트형)
+    // - noticeMode 없음 + category=notice → 'notice_image' (이미지형)
+    if (category === 'notice') {
+      const targetShape = pendingSnippet.noticeMode ? 'notice' : 'notice_image';
+      const radio = document.querySelector(`input[name="shape"][value="${targetShape}"]`);
+      if (radio && !radio.checked) {
+        radio.checked = true;
+        radio.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
     // 'full' 메일 풀템플릿과 'notice' 공지 풀템플릿 모두 본문 전체 교체
     if (category === 'full' || category === 'notice') {
       removeInsertMarker();
@@ -6736,6 +6808,211 @@ $('#imgModalRemove').addEventListener('click', () => {
   $('#imgModalBg').classList.remove('show');
   _editingImg = null;
   refresh();
+});
+
+/* ============ 이미지맵 영역 편집 모달 ============ */
+let _imgMapTargetImg = null;
+let _imgMapAreas = [];  // [{ left, top, width, height, url, label }]
+let _imgMapDraft = null;  // 드래그 중인 영역
+
+function openImgMapModal(img) {
+  if (!img) {
+    alert('본문 안의 이미지를 먼저 클릭한 후 이 버튼을 눌러주세요.');
+    return;
+  }
+  _imgMapTargetImg = img;
+  $('#imgMapPreviewImg').src = img.getAttribute('src') || '';
+  // 기존 이미지 부모 figure/div에 있던 a 오버레이 읽어와서 영역 복원
+  _imgMapAreas = readExistingAreas(img);
+  renderImgMapAreas();
+  $('#imgMapModalBg').classList.add('show');
+}
+
+function readExistingAreas(img) {
+  const wrap = img.parentElement;
+  if (!wrap) return [];
+  const areas = [];
+  wrap.querySelectorAll('a.imap-area').forEach(a => {
+    const s = a.style;
+    areas.push({
+      left: parseFloat(s.left) || 0,
+      top: parseFloat(s.top) || 0,
+      width: parseFloat(s.width) || 10,
+      height: parseFloat(s.height) || 10,
+      url: a.getAttribute('href') || '',
+      label: a.getAttribute('alt') || ''
+    });
+  });
+  return areas;
+}
+
+function renderImgMapAreas() {
+  $('#imgMapAreaCount').textContent = _imgMapAreas.length;
+  // 미리보기 영역 오버레이
+  const overlay = $('#imgMapOverlay');
+  overlay.innerHTML = '';
+  _imgMapAreas.forEach((area, idx) => {
+    const div = document.createElement('div');
+    div.className = 'img-map-area';
+    div.dataset.idx = idx;
+    div.style.left = area.left + '%';
+    div.style.top = area.top + '%';
+    div.style.width = area.width + '%';
+    div.style.height = area.height + '%';
+    div.innerHTML = `<span class="num-tag">${idx + 1}</span>`;
+    overlay.appendChild(div);
+  });
+  // 영역 입력 리스트
+  const list = $('#imgMapAreasList');
+  list.innerHTML = '';
+  _imgMapAreas.forEach((area, idx) => {
+    const row = document.createElement('div');
+    row.className = 'img-map-area-row';
+    row.innerHTML = `
+      <span class="row-num">${idx + 1}</span>
+      <input type="number" step="0.1" min="0" max="100" value="${area.left.toFixed(2)}" data-key="left" title="left %" />
+      <input type="number" step="0.1" min="0" max="100" value="${area.top.toFixed(2)}" data-key="top" title="top %" />
+      <input type="number" step="0.1" min="0" max="100" value="${area.width.toFixed(2)}" data-key="width" title="width %" />
+      <input type="number" step="0.1" min="0" max="100" value="${area.height.toFixed(2)}" data-key="height" title="height %" />
+      <input type="text" placeholder="https://..." value="${(area.url || '').replace(/"/g, '&quot;')}" data-key="url" title="링크 URL" />
+      <button type="button" class="row-del" data-idx="${idx}" title="삭제">×</button>
+    `;
+    row.querySelectorAll('input').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const k = inp.dataset.key;
+        if (k === 'url' || k === 'label') _imgMapAreas[idx][k] = inp.value;
+        else _imgMapAreas[idx][k] = parseFloat(inp.value) || 0;
+        // 미리보기 박스만 갱신 (전체 rerender 안 함 — 입력 흐름 안 끊김)
+        const box = overlay.children[idx];
+        if (box) {
+          box.style.left = _imgMapAreas[idx].left + '%';
+          box.style.top = _imgMapAreas[idx].top + '%';
+          box.style.width = _imgMapAreas[idx].width + '%';
+          box.style.height = _imgMapAreas[idx].height + '%';
+        }
+      });
+    });
+    row.querySelector('.row-del').addEventListener('click', () => {
+      _imgMapAreas.splice(idx, 1);
+      renderImgMapAreas();
+    });
+    list.appendChild(row);
+  });
+}
+
+// 미리보기 위 드래그로 새 영역 그리기
+(function bindImgMapDrag() {
+  const overlay = $('#imgMapOverlay');
+  if (!overlay) return;
+  let startX = 0, startY = 0, draftEl = null;
+  overlay.addEventListener('mousedown', e => {
+    if (e.target !== overlay) return;  // 기존 영역 위 클릭은 무시
+    const rect = overlay.getBoundingClientRect();
+    startX = ((e.clientX - rect.left) / rect.width) * 100;
+    startY = ((e.clientY - rect.top) / rect.height) * 100;
+    draftEl = document.createElement('div');
+    draftEl.className = 'img-map-area is-active';
+    draftEl.style.left = startX + '%';
+    draftEl.style.top = startY + '%';
+    draftEl.style.width = '0%';
+    draftEl.style.height = '0%';
+    overlay.appendChild(draftEl);
+  });
+  overlay.addEventListener('mousemove', e => {
+    if (!draftEl) return;
+    const rect = overlay.getBoundingClientRect();
+    const curX = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+    const curY = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
+    const left = Math.min(startX, curX);
+    const top = Math.min(startY, curY);
+    const w = Math.abs(curX - startX);
+    const h = Math.abs(curY - startY);
+    draftEl.style.left = left + '%';
+    draftEl.style.top = top + '%';
+    draftEl.style.width = w + '%';
+    draftEl.style.height = h + '%';
+  });
+  overlay.addEventListener('mouseup', () => {
+    if (!draftEl) return;
+    const w = parseFloat(draftEl.style.width);
+    const h = parseFloat(draftEl.style.height);
+    if (w >= 1 && h >= 1) {
+      _imgMapAreas.push({
+        left: parseFloat(draftEl.style.left),
+        top: parseFloat(draftEl.style.top),
+        width: w, height: h, url: '', label: ''
+      });
+      renderImgMapAreas();
+    } else {
+      draftEl.remove();
+    }
+    draftEl = null;
+  });
+  overlay.addEventListener('mouseleave', () => {
+    if (draftEl) { draftEl.remove(); draftEl = null; }
+  });
+})();
+
+$('#imgMapAddBtn').addEventListener('click', () => {
+  _imgMapAreas.push({ left: 10, top: 10, width: 30, height: 15, url: '', label: '' });
+  renderImgMapAreas();
+});
+$('#imgMapClearAll').addEventListener('click', () => {
+  if (_imgMapAreas.length === 0) return;
+  if (!confirm('모든 영역을 삭제할까요?')) return;
+  _imgMapAreas = [];
+  renderImgMapAreas();
+});
+$('#imgMapCancel').addEventListener('click', () => $('#imgMapModalBg').classList.remove('show'));
+$('#imgMapModalCloseX').addEventListener('click', () => $('#imgMapModalBg').classList.remove('show'));
+$('#imgMapApply').addEventListener('click', () => {
+  if (!_imgMapTargetImg) return;
+  applyImageMap(_imgMapTargetImg, _imgMapAreas);
+  $('#imgMapModalBg').classList.remove('show');
+  refresh();
+});
+
+/* 이미지 부모를 position:relative wrapper로 만들고 a 오버레이 N개 삽입 */
+function applyImageMap(img, areas) {
+  // 1) 기존 imap-area 모두 제거
+  let wrap = img.parentElement;
+  // 부모가 a면 그 위 div/td/span에서 처리해야 함. img 직접 부모가 a면 그 부모로
+  if (wrap && wrap.tagName === 'A') wrap = wrap.parentElement;
+  if (wrap) wrap.querySelectorAll('a.imap-area').forEach(a => a.remove());
+
+  // 2) areas 없으면 wrap 정리 후 종료
+  if (areas.length === 0) {
+    // position 정리 (다른 게 의존하지 않으면 그대로 두기 — 부작용 회피)
+    return;
+  }
+
+  // 3) wrap을 position:relative + inline-block (이미지 폭 고정)
+  if (wrap) {
+    if (!wrap.style.position) wrap.style.position = 'relative';
+  }
+
+  // 4) areas마다 a 태그 absolute 삽입 (이미지 다음 위치에)
+  const anchorAfter = (img.parentElement && img.parentElement.tagName === 'A') ? img.parentElement : img;
+  areas.forEach((area, idx) => {
+    const a = document.createElement('a');
+    a.className = 'imap-area';
+    a.setAttribute('href', area.url || '#');
+    a.setAttribute('target', '_blank');
+    if (area.label) a.setAttribute('alt', area.label);
+    a.style.cssText = `position:absolute; left:${area.left.toFixed(2)}%; top:${area.top.toFixed(2)}%; width:${area.width.toFixed(2)}%; height:${area.height.toFixed(2)}%; display:block;`;
+    anchorAfter.insertAdjacentElement('afterend', a);
+  });
+}
+
+/* 에디터 툴바 이미지맵 버튼 → 모달 열기
+   대상: 사용자가 마지막으로 클릭/hover한 이미지 (없으면 본문 첫 이미지) */
+let _lastFocusedImg = null;
+$('#wysiwyg').addEventListener('mouseover', e => {
+  if (e.target.tagName === 'IMG') _lastFocusedImg = e.target;
+});
+$('#btnImageMap').addEventListener('click', () => {
+  const img = _lastFocusedImg || $('#wysiwyg').querySelector('img');
+  openImgMapModal(img);
 });
 
 function openLinkEditModal(a) {
