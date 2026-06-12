@@ -124,11 +124,96 @@
   main {
     flex: 1;
     display: grid;
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: 280px 1fr 360px;
     overflow: hidden;
     transition: grid-template-columns 0.25s ease;
   }
-  body.lib-expanded main { grid-template-columns: 480px 1fr; }
+  body.lib-expanded main { grid-template-columns: 480px 1fr 360px; }
+  body.ai-panel-hidden main { grid-template-columns: 280px 1fr 0; }
+  body.lib-expanded.ai-panel-hidden main { grid-template-columns: 480px 1fr 0; }
+
+  /* ============ AI 어시스턴트 패널 (우측) ============ */
+  .ai-panel { display: flex; flex-direction: column; background: #1e293b; color: #e2e8f0; border-left: 1px solid #334155; overflow: hidden; transition: opacity 0.2s; }
+  body.ai-panel-hidden .ai-panel { opacity: 0; pointer-events: none; }
+  .ai-toggle-btn { position: fixed; right: 12px; top: 50%; transform: translateY(-50%); z-index: 100; width: 32px; height: 60px; border-radius: 8px 0 0 8px; background: #1e293b; color: #fff; border: 0; cursor: pointer; box-shadow: -2px 0 8px rgba(0,0,0,0.15); font-size: 14px; transition: right 0.25s; }
+  .ai-toggle-btn:hover { background: #334155; }
+  body.ai-panel-hidden .ai-toggle-btn { right: 0; }
+  .ai-toggle-btn .ai-toggle-icon { display: inline-block; transition: transform 0.25s; }
+  body.ai-panel-hidden .ai-toggle-btn .ai-toggle-icon { transform: rotate(180deg); }
+
+  .ai-panel-head { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; background: #0f172a; border-bottom: 1px solid #334155; gap: 8px; }
+  .ai-panel-head .title { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #fff; }
+  .ai-panel-head .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #64748b; box-shadow: 0 0 4px currentColor; }
+  .ai-panel-head .status-dot.ready { background: #10b981; }
+  .ai-panel-head .status-dot.error { background: #ef4444; }
+  .ai-panel-actions { display: flex; gap: 4px; }
+  .ai-panel-actions button { background: transparent; border: 0; color: #94a3b8; cursor: pointer; padding: 5px 8px; border-radius: 4px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px; font-family: inherit; transition: all 0.15s; }
+  .ai-panel-actions button:hover { background: #334155; color: #fff; }
+  .ai-panel-actions .icon { width: 13px; height: 13px; }
+
+  .ai-task-dropdown { position: relative; }
+  .ai-task-menu { position: absolute; top: 100%; right: 0; margin-top: 4px; min-width: 140px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 4px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); display: none; z-index: 10; }
+  .ai-task-menu.show { display: block; }
+  .ai-task-menu button { width: 100%; padding: 7px 10px; background: transparent; border: 0; color: #cbd5e1; text-align: left; font-size: 12px; cursor: pointer; border-radius: 4px; font-family: inherit; }
+  .ai-task-menu button:hover { background: #1e293b; color: #fff; }
+  .ai-task-menu button.active { background: #2563eb; color: #fff; }
+  .ai-task-menu .divider { height: 1px; background: #334155; margin: 4px 0; }
+
+  .ai-messages { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .ai-messages:empty::before { content: '안녕하세요! 메일/공지 변환을 도와드릴게요.\A아래에서 파일을 첨부하거나 원문을 입력하세요.'; white-space: pre; color: #64748b; font-size: 12px; text-align: center; padding: 30px 10px; }
+  .ai-msg { display: flex; gap: 8px; }
+  .ai-msg-avatar { width: 24px; height: 24px; border-radius: 50%; background: #ff460a; color: #fff; font-size: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 700; }
+  .ai-msg.user .ai-msg-avatar { background: #2563eb; }
+  .ai-msg-body { flex: 1; padding: 8px 11px; background: #334155; border-radius: 8px; font-size: 12px; line-height: 1.5; color: #e2e8f0; max-width: 280px; word-break: break-word; }
+  .ai-msg.user .ai-msg-body { background: #1e40af; color: #fff; }
+  .ai-msg.tip .ai-msg-body { background: #422006; color: #fde68a; border: 1px solid #78350f; }
+  .ai-msg.success .ai-msg-body { background: #064e3b; color: #6ee7b7; border: 1px solid #047857; }
+
+  .ai-input-area { padding: 10px; background: #0f172a; border-top: 1px solid #334155; display: flex; flex-direction: column; gap: 8px; }
+  .ai-input-quick { display: flex; gap: 6px; }
+  .ai-input-quick button { flex: 1; padding: 7px 8px; background: #334155; color: #cbd5e1; border: 1px solid #475569; border-radius: 5px; cursor: pointer; font-size: 11px; font-family: inherit; display: inline-flex; align-items: center; justify-content: center; gap: 4px; transition: all 0.15s; }
+  .ai-input-quick button:hover { background: #475569; color: #fff; }
+  .ai-input-quick .icon { width: 12px; height: 12px; }
+  .ai-attached-file { display: none; padding: 6px 9px; background: #1e3a8a; color: #dbeafe; border-radius: 5px; font-size: 11px; align-items: center; justify-content: space-between; gap: 6px; }
+  .ai-attached-file.show { display: flex; }
+  .ai-attached-file .remove { background: transparent; border: 0; color: #93c5fd; cursor: pointer; font-size: 14px; line-height: 1; padding: 0 2px; }
+  .ai-mode-toggle { display: flex; gap: 4px; padding: 2px; background: #1e293b; border-radius: 5px; }
+  .ai-mode-toggle button { flex: 1; padding: 4px 7px; background: transparent; border: 0; color: #94a3b8; cursor: pointer; font-size: 10px; border-radius: 3px; font-family: inherit; }
+  .ai-mode-toggle button.active { background: #ff460a; color: #fff; font-weight: 700; }
+  .ai-textarea { width: 100%; min-height: 70px; padding: 8px 10px; background: #1e293b; color: #fff; border: 1px solid #475569; border-radius: 5px; font-family: inherit; font-size: 12px; resize: vertical; box-sizing: border-box; }
+  .ai-textarea:focus { outline: 0; border-color: #ff460a; }
+  .ai-textarea::placeholder { color: #64748b; }
+  .ai-submit-btn { padding: 10px 14px; background: linear-gradient(135deg, #ff460a, #ff6b35); color: #fff; border: 0; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .ai-submit-btn:hover { box-shadow: 0 4px 12px rgba(255,70,10,0.4); }
+  .ai-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ============ AI 연결 설정 모달 ============ */
+  .ai-settings-modal { min-width: 460px; max-width: 520px; padding: 24px 26px; background: #fff; border-radius: 12px; }
+  .ai-settings-modal h3 { font-size: 17px; font-weight: 700; color: #1f2937; margin: 0 0 16px; }
+  .ai-settings-section { margin-bottom: 18px; }
+  .ai-settings-section-label { display: block; font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 8px; }
+  .ai-service-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .ai-service-card { padding: 12px 8px; background: #fff; border: 1.5px solid #e5e7eb; border-radius: 8px; cursor: pointer; text-align: center; transition: all 0.15s; font-family: inherit; }
+  .ai-service-card:hover { border-color: #94a3b8; }
+  .ai-service-card.active { border-color: #2563eb; background: #eff6ff; }
+  .ai-service-card .ai-svc-icon { font-size: 24px; margin-bottom: 4px; }
+  .ai-service-card .ai-svc-name { font-size: 12px; font-weight: 700; color: #1f2937; }
+  .ai-service-card .ai-svc-model { font-size: 10px; color: #6b7280; margin-top: 2px; }
+  .ai-input { width: 100%; padding: 9px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px; font-family: inherit; box-sizing: border-box; }
+  .ai-input:focus { outline: 0; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+  .ai-input-row { display: flex; gap: 6px; align-items: center; }
+  .ai-input-row .ai-input { flex: 1; }
+  .ai-test-btn { padding: 9px 14px; background: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: inherit; white-space: nowrap; transition: all 0.15s; }
+  .ai-test-btn:hover { background: #e5e7eb; }
+  .ai-test-btn.success { background: #d1fae5; color: #047857; border-color: #6ee7b7; }
+  .ai-test-btn.error { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+  .ai-link-help { font-size: 11px; color: #2563eb; text-decoration: none; margin-left: 6px; }
+  .ai-link-help:hover { text-decoration: underline; }
+  .ai-settings-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; padding-top: 16px; border-top: 1px solid #f3f4f6; }
+  .ai-settings-actions button { padding: 8px 18px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; border: 1px solid transparent; }
+  .ai-settings-actions .btn-cancel { background: #fff; color: #4b5563; border-color: #e5e7eb; }
+  .ai-settings-actions .btn-save { background: #2563eb; color: #fff; border: 0; }
+  .ai-settings-actions .btn-save:hover { background: #1d4ed8; }
   /* 미리보기 영역은 항상 숨김 (v2.52 — 새창/레이어 팝업으로 대체).
      데이터는 그대로 보존, 복구 필요 시 .right { display: block; } + main grid-template-columns 복구 */
   .right { display: none !important; }
@@ -1309,6 +1394,7 @@
   <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
   <symbol id="i-external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></symbol>
   <symbol id="i-imagemap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><rect width="8" height="6" x="7" y="6" rx="1" stroke-dasharray="2 2"/><rect width="6" height="5" x="10" y="14" rx="1" stroke-dasharray="2 2"/></symbol>
+  <symbol id="i-cog" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
   <symbol id="i-construction" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="8" rx="1"/><path d="M17 14v7"/><path d="M7 14v7"/><path d="M17 3v3"/><path d="M7 3v3"/><path d="M10 14 2.3 6.3"/><path d="m14 6 7.7 7.7"/><path d="m8 6 8 8"/></symbol>
   <symbol id="i-chevron-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></symbol>
   <symbol id="i-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
@@ -1329,7 +1415,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.64</span>
+    <span class="sub">v2.65</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -1571,7 +1657,94 @@
       <iframe id="preview"></iframe>
     </div>
   </section>
+
+  <!-- ============ 우측: AI 어시스턴트 패널 ============ -->
+  <aside class="ai-panel" id="aiPanel">
+    <div class="ai-panel-head">
+      <span class="title"><span class="status-dot" id="aiStatusDot"></span>AI 어시스턴트</span>
+      <div class="ai-panel-actions">
+        <button id="aiReset" title="현재 작업 초기화"><svg class="icon"><use href="#i-refresh"/></svg></button>
+        <div class="ai-task-dropdown">
+          <button id="aiTaskBtn">작업 1 ▼</button>
+          <div class="ai-task-menu" id="aiTaskMenu"></div>
+        </div>
+        <button id="aiSettings" title="AI 연결 설정"><svg class="icon"><use href="#i-cog"/></svg></button>
+      </div>
+    </div>
+    <div class="ai-messages" id="aiMessages"></div>
+    <div class="ai-input-area">
+      <div class="ai-mode-toggle">
+        <button data-aim="mail" class="active">메일 변환</button>
+        <button data-aim="notice">공지 변환</button>
+        <button data-aim="chat">대화형</button>
+      </div>
+      <div class="ai-attached-file" id="aiAttachedFile">
+        <span id="aiAttachedFileName"></span>
+        <button class="remove" id="aiAttachedFileRemove" title="제거">×</button>
+      </div>
+      <div class="ai-input-quick">
+        <button id="aiInputFileBtn"><svg class="icon"><use href="#i-upload"/></svg><span>파일 첨부</span></button>
+        <input type="file" id="aiInputFile" accept=".pdf,.txt,.html,.hwp,.docx,.doc" style="display:none" />
+      </div>
+      <textarea id="aiTextarea" class="ai-textarea" placeholder="원문을 직접 입력하거나 위에서 파일을 첨부하세요. 메일/공지로 변환합니다."></textarea>
+      <button class="ai-submit-btn" id="aiSubmit">▶ 변환 시작</button>
+    </div>
+  </aside>
 </main>
+
+<!-- ============ AI 패널 토글 버튼 (fixed) ============ -->
+<button class="ai-toggle-btn" id="aiToggle" title="AI 어시스턴트 패널 열기/닫기"><span class="ai-toggle-icon">◀</span></button>
+
+<!-- ============ AI 연결 설정 모달 ============ -->
+<div class="modal-bg" id="aiSettingsModalBg">
+  <div class="modal ai-settings-modal">
+    <h3>AI 연결 설정</h3>
+
+    <div class="ai-settings-section">
+      <label class="ai-settings-section-label">AI 서비스 선택</label>
+      <div class="ai-service-cards" id="aiServiceCards">
+        <button class="ai-service-card" data-svc="openai" data-model="gpt-4o">
+          <div class="ai-svc-icon">🤖</div>
+          <div class="ai-svc-name">ChatGPT</div>
+          <div class="ai-svc-model">GPT-4o</div>
+        </button>
+        <button class="ai-service-card" data-svc="claude" data-model="claude-sonnet-4-5-20250929">
+          <div class="ai-svc-icon">🧠</div>
+          <div class="ai-svc-name">Claude</div>
+          <div class="ai-svc-model">Sonnet 4.5</div>
+        </button>
+        <button class="ai-service-card active" data-svc="gemini" data-model="gemini-2.5-flash">
+          <div class="ai-svc-icon">✨</div>
+          <div class="ai-svc-name">Gemini</div>
+          <div class="ai-svc-model">2.5 Flash</div>
+        </button>
+      </div>
+    </div>
+
+    <div class="ai-settings-section">
+      <label class="ai-settings-section-label">
+        <span id="aiApiKeyLabel">Gemini API Key</span>
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" class="ai-link-help" id="aiApiKeyHelp">발급받기 →</a>
+      </label>
+      <div class="ai-input-row">
+        <input type="password" id="aiApiKeyInput" class="ai-input" placeholder="API Key 입력" />
+        <button class="ai-test-btn" id="aiTestBtn">연결 테스트</button>
+      </div>
+    </div>
+
+    <div class="ai-settings-section">
+      <label class="ai-settings-section-label">모델 선택</label>
+      <select id="aiModelSelect" class="ai-input">
+        <option value="">— 기본 —</option>
+      </select>
+    </div>
+
+    <div class="ai-settings-actions">
+      <button class="btn-cancel" id="aiSettingsCancel">취소</button>
+      <button class="btn-save" id="aiSettingsSave">저장</button>
+    </div>
+  </div>
+</div>
 
 <!-- ========== 미리보기 팝업 모달 ========== -->
 <div class="preview-popup-bg" id="previewPopupBg">
@@ -7363,11 +7536,23 @@ $('#linkModalSave').addEventListener('click', () => {
     if (newTitle) _editingAnchor.setAttribute('title', newTitle);
     else _editingAnchor.removeAttribute('title');
     _editingAnchor.removeAttribute('alt');
-    // text 변경: 안에 span 등 wrapper 있으면 그 안만, 없으면 a 자체
-    const inner = _editingAnchor.querySelector('span, b, strong, i, em');
-    if (inner) inner.textContent = newText;
-    else if (!_editingAnchor.classList.contains('imap-area')) _editingAnchor.textContent = newText;
-    // ↑ imap-area는 빈 오버레이라 textContent 건드리지 않음
+    // text 변경: a 안의 mso 주석/스타일 보존을 위해 안전한 방법 사용
+    // 1) inner wrapper (span/b/strong/i/em) 있으면 그것의 textContent만 변경
+    // 2) 없으면 첫 번째 텍스트 노드만 변경 (mso 주석 등 보존)
+    // 3) 그것도 없고 imap-area도 아니면 a.textContent (마지막 fallback)
+    if (!_editingAnchor.classList.contains('imap-area')) {
+      const inner = _editingAnchor.querySelector('span, b, strong, i, em');
+      if (inner) {
+        inner.textContent = newText;
+      } else {
+        let textNode = null;
+        for (const n of _editingAnchor.childNodes) {
+          if (n.nodeType === Node.TEXT_NODE && n.textContent.trim()) { textNode = n; break; }
+        }
+        if (textNode) textNode.textContent = newText;
+        else _editingAnchor.textContent = newText;
+      }
+    }
   }
   $('#linkModalBg').classList.remove('show');
   _editingAnchor = null;
@@ -7463,6 +7648,259 @@ $('#btnRefreshPreview').addEventListener('click', () => {
 
 // 초기
 refresh();
+
+/* ============================================================
+   AI 어시스턴트 (Phase 1: UI 골격 + 설정 + localStorage)
+   Phase 2~5: API 호출, 파일 추출, 결과 적용 후속
+============================================================ */
+(function aiAssistantInit() {
+  const LS_KEY = 'mailBuilder_aiSettings';
+  const LS_TASKS = 'mailBuilder_aiTasks';
+
+  // API Key 발급 URL
+  const API_KEY_URLS = {
+    openai: 'https://platform.openai.com/api-keys',
+    claude: 'https://console.anthropic.com/settings/keys',
+    gemini: 'https://aistudio.google.com/app/apikey'
+  };
+  // 기본 모델 옵션
+  const DEFAULT_MODELS = {
+    openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo'],
+    claude: ['claude-sonnet-4-5-20250929', 'claude-opus-4-5-20250929', 'claude-haiku-4-5-20251001'],
+    gemini: ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-1.5-pro', 'gemini-1.5-flash']
+  };
+  // localStorage 로드/저장
+  function loadSettings() {
+    try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch { return {}; }
+  }
+  function saveSettings(s) { localStorage.setItem(LS_KEY, JSON.stringify(s)); }
+
+  // 상태
+  let settings = Object.assign({ service: 'gemini', apiKey: '', model: 'gemini-2.5-flash' }, loadSettings());
+  let tasks = (function() { try { return JSON.parse(localStorage.getItem(LS_TASKS) || '[]'); } catch { return []; } })();
+  if (tasks.length === 0) tasks = [{ id: 1, name: '작업 1', messages: [] }];
+  let activeTaskId = tasks[0].id;
+  let aiMode = 'mail';  // mail | notice | chat
+  let attachedFile = null;
+
+  function saveTasks() { localStorage.setItem(LS_TASKS, JSON.stringify(tasks)); }
+  function activeTask() { return tasks.find(t => t.id === activeTaskId) || tasks[0]; }
+
+  // 상태 dot 갱신 (API Key 있으면 ready)
+  function updateStatusDot() {
+    const dot = document.getElementById('aiStatusDot');
+    if (!dot) return;
+    dot.classList.remove('ready', 'error');
+    if (settings.apiKey) dot.classList.add('ready');
+  }
+
+  // 메시지 렌더
+  function addMessage(role, text, kind) {
+    activeTask().messages.push({ role, text, kind, ts: Date.now() });
+    saveTasks();
+    renderMessages();
+  }
+  function renderMessages() {
+    const box = document.getElementById('aiMessages');
+    if (!box) return;
+    const t = activeTask();
+    box.innerHTML = '';
+    t.messages.forEach(m => {
+      const row = document.createElement('div');
+      row.className = 'ai-msg ' + (m.role === 'user' ? 'user' : '') + (m.kind ? ' ' + m.kind : '');
+      const avatar = m.role === 'user' ? '나' : 'AI';
+      row.innerHTML = `<div class="ai-msg-avatar">${avatar}</div><div class="ai-msg-body">${m.text.replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>`;
+      box.appendChild(row);
+    });
+    box.scrollTop = box.scrollHeight;
+  }
+
+  // 작업 드롭다운
+  function renderTaskMenu() {
+    const menu = document.getElementById('aiTaskMenu');
+    if (!menu) return;
+    menu.innerHTML = '';
+    tasks.forEach(t => {
+      const btn = document.createElement('button');
+      btn.textContent = t.name;
+      if (t.id === activeTaskId) btn.classList.add('active');
+      btn.addEventListener('click', () => {
+        activeTaskId = t.id;
+        document.getElementById('aiTaskBtn').textContent = t.name + ' ▼';
+        renderMessages();
+        menu.classList.remove('show');
+      });
+      menu.appendChild(btn);
+    });
+    const div = document.createElement('div'); div.className = 'divider'; menu.appendChild(div);
+    const addBtn = document.createElement('button');
+    addBtn.textContent = '+ 새 작업';
+    addBtn.addEventListener('click', () => {
+      const id = Date.now();
+      tasks.push({ id, name: '작업 ' + (tasks.length + 1), messages: [] });
+      activeTaskId = id;
+      saveTasks();
+      document.getElementById('aiTaskBtn').textContent = '작업 ' + tasks.length + ' ▼';
+      renderTaskMenu(); renderMessages();
+      menu.classList.remove('show');
+    });
+    menu.appendChild(addBtn);
+    const clearBtn = document.createElement('button');
+    clearBtn.innerHTML = '🗑 전부 삭제';
+    clearBtn.style.color = '#ef4444';
+    clearBtn.addEventListener('click', () => {
+      if (!confirm('모든 작업과 메시지를 삭제할까요?')) return;
+      tasks = [{ id: 1, name: '작업 1', messages: [] }];
+      activeTaskId = 1;
+      saveTasks();
+      document.getElementById('aiTaskBtn').textContent = '작업 1 ▼';
+      renderTaskMenu(); renderMessages();
+      menu.classList.remove('show');
+    });
+    menu.appendChild(clearBtn);
+  }
+
+  // 설정 모달
+  function openSettings() {
+    // 서비스 카드
+    document.querySelectorAll('.ai-service-card').forEach(c => {
+      c.classList.toggle('active', c.dataset.svc === settings.service);
+    });
+    // API Key
+    document.getElementById('aiApiKeyInput').value = settings.apiKey || '';
+    // API Key 라벨 + 발급 URL
+    updateApiKeyLabel(settings.service);
+    // 모델 옵션
+    populateModels(settings.service);
+    document.getElementById('aiSettingsModalBg').classList.add('show');
+  }
+  function updateApiKeyLabel(svc) {
+    const name = { openai: 'OpenAI', claude: 'Anthropic Claude', gemini: 'Google Gemini' }[svc] || svc;
+    document.getElementById('aiApiKeyLabel').textContent = name + ' API Key';
+    document.getElementById('aiApiKeyHelp').href = API_KEY_URLS[svc] || '#';
+  }
+  function populateModels(svc) {
+    const sel = document.getElementById('aiModelSelect');
+    sel.innerHTML = '';
+    (DEFAULT_MODELS[svc] || []).forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m; opt.textContent = m;
+      if (m === settings.model) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  // 이벤트 바인딩
+  document.getElementById('aiSettings').addEventListener('click', openSettings);
+  document.getElementById('aiSettingsCancel').addEventListener('click', () => document.getElementById('aiSettingsModalBg').classList.remove('show'));
+  document.getElementById('aiSettingsSave').addEventListener('click', () => {
+    const activeCard = document.querySelector('.ai-service-card.active');
+    settings.service = activeCard ? activeCard.dataset.svc : 'gemini';
+    settings.apiKey = document.getElementById('aiApiKeyInput').value.trim();
+    settings.model = document.getElementById('aiModelSelect').value || activeCard?.dataset.model || '';
+    saveSettings(settings);
+    updateStatusDot();
+    document.getElementById('aiSettingsModalBg').classList.remove('show');
+    addMessage('ai', `설정 저장됨 — ${settings.service} / ${settings.model}`, 'success');
+  });
+  document.querySelectorAll('.ai-service-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.ai-service-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      updateApiKeyLabel(card.dataset.svc);
+      populateModels(card.dataset.svc);
+    });
+  });
+  document.getElementById('aiTestBtn').addEventListener('click', () => {
+    // Phase 2에서 실제 연결 테스트 구현. 지금은 API Key 유무만 검증.
+    const btn = document.getElementById('aiTestBtn');
+    const key = document.getElementById('aiApiKeyInput').value.trim();
+    btn.classList.remove('success', 'error');
+    if (!key) {
+      btn.classList.add('error');
+      btn.textContent = '키 없음';
+    } else {
+      btn.classList.add('success');
+      btn.textContent = '✓ 키 확인';
+    }
+    setTimeout(() => { btn.classList.remove('success', 'error'); btn.textContent = '연결 테스트'; }, 2000);
+  });
+
+  // 패널 토글
+  const toggle = document.getElementById('aiToggle');
+  toggle.addEventListener('click', () => document.body.classList.toggle('ai-panel-hidden'));
+
+  // 작업 드롭다운 토글
+  document.getElementById('aiTaskBtn').addEventListener('click', e => {
+    e.stopPropagation();
+    document.getElementById('aiTaskMenu').classList.toggle('show');
+  });
+  document.addEventListener('click', e => {
+    const menu = document.getElementById('aiTaskMenu');
+    if (menu && !menu.contains(e.target) && e.target.id !== 'aiTaskBtn') menu.classList.remove('show');
+  });
+
+  // 초기화 버튼
+  document.getElementById('aiReset').addEventListener('click', () => {
+    if (!confirm('현재 작업의 메시지를 모두 지울까요?')) return;
+    activeTask().messages = [];
+    saveTasks();
+    renderMessages();
+  });
+
+  // 모드 토글
+  document.querySelectorAll('.ai-mode-toggle button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.ai-mode-toggle button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      aiMode = b.dataset.aim;
+      const labelMap = { mail: '▶ 메일 변환 시작', notice: '▶ 공지 변환 시작', chat: '▶ 메시지 전송' };
+      document.getElementById('aiSubmit').textContent = labelMap[aiMode];
+    });
+  });
+
+  // 파일 첨부
+  document.getElementById('aiInputFileBtn').addEventListener('click', () => document.getElementById('aiInputFile').click());
+  document.getElementById('aiInputFile').addEventListener('change', e => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    attachedFile = f;
+    document.getElementById('aiAttachedFileName').textContent = `📎 ${f.name} (${(f.size/1024).toFixed(1)}KB)`;
+    document.getElementById('aiAttachedFile').classList.add('show');
+  });
+  document.getElementById('aiAttachedFileRemove').addEventListener('click', () => {
+    attachedFile = null;
+    document.getElementById('aiInputFile').value = '';
+    document.getElementById('aiAttachedFile').classList.remove('show');
+  });
+
+  // 변환 시작 — Phase 2에서 실제 호출 구현. 지금은 placeholder.
+  document.getElementById('aiSubmit').addEventListener('click', () => {
+    if (!settings.apiKey) {
+      addMessage('ai', 'API Key가 설정되지 않았습니다. 우측 상단 ⚙ 버튼으로 설정해 주세요.', 'tip');
+      return;
+    }
+    const text = document.getElementById('aiTextarea').value.trim();
+    if (!text && !attachedFile) {
+      addMessage('ai', '원문을 입력하거나 파일을 첨부해 주세요.', 'tip');
+      return;
+    }
+    const userMsg = (attachedFile ? `📎 ${attachedFile.name}\n` : '') + text;
+    addMessage('user', userMsg);
+    document.getElementById('aiTextarea').value = '';
+    // Phase 2에서 실제 API 호출 + 응답 처리
+    addMessage('ai', `[Phase 1 — UI만 동작] ${aiMode === 'mail' ? '메일' : aiMode === 'notice' ? '공지' : '대화'} 변환은 Phase 2에서 실제 ${settings.service} API 호출로 구현됩니다. (모델: ${settings.model})`, 'tip');
+  });
+
+  // 초기 렌더
+  updateStatusDot();
+  document.getElementById('aiTaskBtn').textContent = activeTask().name + ' ▼';
+  renderTaskMenu();
+  renderMessages();
+
+  // 공개 API (디버그/외부 접근)
+  window.aiAssistant = { settings: () => settings, tasks: () => tasks, addMessage };
+})();
 </script>
 </body>
 </html>
