@@ -1363,6 +1363,8 @@
   .cta-fields input:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.js"></script>
+<script>if(typeof pdfjsLib!=='undefined'){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js';}</script>
 </head>
 <body>
 
@@ -1415,7 +1417,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.65</span>
+    <span class="sub">v2.66</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -7874,22 +7876,261 @@ refresh();
     document.getElementById('aiAttachedFile').classList.remove('show');
   });
 
-  // 변환 시작 — Phase 2에서 실제 호출 구현. 지금은 placeholder.
-  document.getElementById('aiSubmit').addEventListener('click', () => {
+  /* ====== Phase 2: AI API 호출 (OpenAI / Claude / Gemini) ====== */
+  async function callAI(messages, systemPrompt) {
+    const { service, apiKey, model } = settings;
+    if (!apiKey) throw new Error('API Key가 없습니다');
+    if (service === 'openai') return callOpenAI(messages, systemPrompt, apiKey, model);
+    if (service === 'claude') return callClaude(messages, systemPrompt, apiKey, model);
+    if (service === 'gemini') return callGemini(messages, systemPrompt, apiKey, model);
+    throw new Error('알 수 없는 서비스: ' + service);
+  }
+  async function callOpenAI(messages, system, apiKey, model) {
+    const full = system ? [{ role: 'system', content: system }, ...messages] : messages;
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      body: JSON.stringify({ model: model || 'gpt-4o', messages: full, temperature: 0.5, max_tokens: 8000 })
+    });
+    if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || 'OpenAI API 오류 ' + res.status); }
+    const data = await res.json();
+    return data.choices[0].message.content;
+  }
+  async function callClaude(messages, system, apiKey, model) {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: model || 'claude-sonnet-4-5-20250929',
+        max_tokens: 8192,
+        system: system || undefined,
+        messages: messages
+      })
+    });
+    if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || 'Claude API 오류 ' + res.status); }
+    const data = await res.json();
+    return data.content[0].text;
+  }
+  async function callGemini(messages, system, apiKey, model) {
+    const m = model || 'gemini-2.5-flash';
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`;
+    const contents = messages.map(msg => ({
+      role: msg.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: msg.content }]
+    }));
+    const body = { contents };
+    if (system) body.systemInstruction = { parts: [{ text: system }] };
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || 'Gemini API 오류 ' + res.status); }
+    const data = await res.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  }
+
+  /* ====== Phase 3: 파일 추출 (PDF/TXT/HTML/DOCX 안내) ====== */
+  async function extractFile(file) {
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    if (ext === 'txt') return file.text();
+    if (ext === 'html' || ext === 'htm') return file.text();
+    if (ext === 'pdf') return extractPDF(file);
+    if (ext === 'hwp') throw new Error('HWP 파일은 직접 추출이 어렵습니다. PDF 또는 TXT로 변환 후 다시 첨부해 주세요.');
+    if (ext === 'docx' || ext === 'doc') throw new Error('DOCX 추출은 별도 라이브러리가 필요합니다. PDF 또는 TXT로 변환 후 첨부해 주세요.');
+    try { return await file.text(); } catch { throw new Error('지원하지 않는 파일 형식: ' + ext); }
+  }
+  async function extractPDF(file) {
+    if (typeof pdfjsLib === 'undefined') throw new Error('PDF.js 라이브러리가 로드되지 않았습니다.');
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+    let text = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      text += content.items.map(it => it.str).join(' ') + '\n\n';
+    }
+    return text.trim();
+  }
+
+  /* ====== Phase 5: 시스템 프롬프트 + 본문 적용 ====== */
+  const PROMPT_MAIL = `당신은 인크루트 이메일 마케팅 전문가입니다. 사용자가 제공한 원문 자료를 바탕으로 인크루트 메일 본문 HTML을 생성합니다.
+
+규칙:
+1. Outlook 호환 (table 기반 layout, inline styles, no flexbox)
+2. 한국어 작성, 친근한 톤
+3. 본문은 700px 폭 기준 (max-width: 700px; margin: 0 auto;)
+4. 색상: 개인용 강조 #ff460a, 기업용 강조 #2772d0 (기본은 개인용)
+5. 라운드 카드 외곽(#ffece7 개인/#eef4ff 기업) 사용 가능
+6. <html>/<body>/<head> 태그 없이 본문 콘텐츠만 (헤더/푸터는 빌더가 자동 추가)
+7. 응답은 반드시 \`\`\`html 코드 블록으로 감싸서 반환
+8. 코드 블록 외에 짧은 설명 1~2줄 가능`;
+
+  const PROMPT_NOTICE = `당신은 인크루트 공지사항 메일 작성 전문가입니다. 사용자 자료를 바탕으로 공지 본문 HTML을 생성합니다.
+
+규칙:
+1. noticeTemp 외부 CSS 기반 — 구조:
+   <p class="title">제목 <span class="point">강조</span> 안내</p>
+   <div class="notice_cnt">
+   <div class="nt_textArea">
+   인사말 + 본문 + 1./2./3. 섹션 + 마무리 인사
+   </div>
+   </div>
+2. 표는 <table class="table_temp" border="0" cellpadding="0" cellspacing="0" width="100%">
+3. 강조어는 <span style="color:#ff460a"> 또는 <em style="color:#2f80e5">
+4. 다항목 dash 리스트: <p style="display:flex"><span style="padding-right:4px">-</span><span>내용</span></p>
+5. 응답은 \`\`\`html 코드 블록으로 감싸서 반환`;
+
+  const PROMPT_CHAT = `당신은 인크루트 메일 빌더의 AI 어시스턴트입니다. 사용자의 메일·공지 작성 관련 질문에 친절히 답하거나 조언/예시를 제공합니다.`;
+
+  function extractHTMLFromResponse(text) {
+    const m = text.match(/```html\s*\n?([\s\S]*?)\n?```/i) || text.match(/```\s*\n?([\s\S]*?)\n?```/);
+    return m ? m[1].trim() : null;
+  }
+
+  function applyAIResultToBody(html) {
+    if (!html) return;
+    if (!confirm('AI가 생성한 내용을 본문에 적용합니다. 기존 본문은 교체됩니다.\n계속할까요?')) return;
+    const wy = document.getElementById('wysiwyg');
+    if (wy) wy.innerHTML = html;
+    const ta = document.getElementById('htmlsrc');
+    if (ta && typeof state !== 'undefined' && state.mode === 'html') ta.value = html;
+    if (typeof refresh === 'function') refresh();
+    addMessage('ai', '✓ 본문에 적용 완료!', 'success');
+  }
+
+  // 메시지 렌더 (Phase 5: AI 응답에 '본문 적용' 버튼 표시)
+  function renderMessages() {
+    const box = document.getElementById('aiMessages');
+    if (!box) return;
+    const t = activeTask();
+    box.innerHTML = '';
+    t.messages.forEach((m, idx) => {
+      const row = document.createElement('div');
+      row.className = 'ai-msg ' + (m.role === 'user' ? 'user' : '') + (m.kind ? ' ' + m.kind : '');
+      const avatar = m.role === 'user' ? '나' : 'AI';
+      const txt = String(m.text || '').replace(/</g,'&lt;').replace(/\n/g,'<br>');
+      let actionsHtml = '';
+      if (m.role === 'ai' && m.html) {
+        actionsHtml = `<div style="margin-top:6px;"><button class="ai-msg-apply" data-idx="${idx}" style="padding:5px 12px;background:#ff460a;color:#fff;border:0;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">▶ 본문에 적용</button></div>`;
+      }
+      row.innerHTML = `<div class="ai-msg-avatar">${avatar}</div><div class="ai-msg-body">${txt}${actionsHtml}</div>`;
+      const btn = row.querySelector('.ai-msg-apply');
+      if (btn) btn.addEventListener('click', () => applyAIResultToBody(m.html));
+      box.appendChild(row);
+    });
+    box.scrollTop = box.scrollHeight;
+  }
+  // window 노출 (작업 변경 시 renderMessages 호출 필요)
+  window._aiRenderMessages = renderMessages;
+
+  // 변환 시작 — Phase 2/3/5 실제 동작
+  document.getElementById('aiSubmit').addEventListener('click', async () => {
     if (!settings.apiKey) {
       addMessage('ai', 'API Key가 설정되지 않았습니다. 우측 상단 ⚙ 버튼으로 설정해 주세요.', 'tip');
       return;
     }
-    const text = document.getElementById('aiTextarea').value.trim();
-    if (!text && !attachedFile) {
+    const userText = document.getElementById('aiTextarea').value.trim();
+    if (!userText && !attachedFile) {
       addMessage('ai', '원문을 입력하거나 파일을 첨부해 주세요.', 'tip');
       return;
     }
-    const userMsg = (attachedFile ? `📎 ${attachedFile.name}\n` : '') + text;
-    addMessage('user', userMsg);
+
+    const submitBtn = document.getElementById('aiSubmit');
+    submitBtn.disabled = true;
+    const origLabel = submitBtn.textContent;
+    submitBtn.textContent = '⏳ 처리 중...';
+
+    // 1) 파일 추출
+    let fileText = '';
+    if (attachedFile) {
+      try {
+        addMessage('ai', `📑 ${attachedFile.name} 추출 중...`, 'tip');
+        fileText = await extractFile(attachedFile);
+        // 추출 메시지를 ✓로 갱신 (마지막 tip 메시지 삭제 후 success)
+        activeTask().messages.pop();
+        addMessage('ai', `✓ ${attachedFile.name} 추출 완료 (${fileText.length.toLocaleString()}자)`, 'success');
+      } catch (e) {
+        activeTask().messages.pop();
+        addMessage('ai', '❌ 파일 추출 실패: ' + e.message, 'tip');
+        submitBtn.disabled = false; submitBtn.textContent = origLabel;
+        return;
+      }
+    }
+
+    // 2) 사용자 메시지 추가
+    const combined = [fileText, userText].filter(Boolean).join('\n\n---\n\n');
+    addMessage('user', (attachedFile ? `📎 ${attachedFile.name}\n` : '') + (userText || '(파일만 첨부)'));
     document.getElementById('aiTextarea').value = '';
-    // Phase 2에서 실제 API 호출 + 응답 처리
-    addMessage('ai', `[Phase 1 — UI만 동작] ${aiMode === 'mail' ? '메일' : aiMode === 'notice' ? '공지' : '대화'} 변환은 Phase 2에서 실제 ${settings.service} API 호출로 구현됩니다. (모델: ${settings.model})`, 'tip');
+
+    // 3) 로딩 메시지
+    addMessage('ai', '⏳ AI 생성 중...');
+
+    // 4) 시스템 프롬프트 + 사용자 메시지
+    const systemMap = { mail: PROMPT_MAIL, notice: PROMPT_NOTICE, chat: PROMPT_CHAT };
+    const system = systemMap[aiMode];
+    const userMsg = aiMode === 'chat'
+      ? combined
+      : `다음 원문을 기반으로 ${aiMode === 'mail' ? '메일' : '공지'} 본문 HTML을 생성해 주세요:\n\n${combined}`;
+
+    // 5) 이전 메시지를 컨텍스트로 (간소: 마지막 5턴)
+    const ctx = activeTask().messages.slice(0, -2)
+      .filter(x => !x.kind || x.kind === 'success')
+      .filter(x => x.role === 'user' || x.role === 'ai')
+      .slice(-10)
+      .map(x => ({ role: x.role === 'ai' ? 'assistant' : 'user', content: x.text }));
+    const allMessages = [...ctx, { role: 'user', content: userMsg }];
+
+    // 6) AI 호출
+    try {
+      const response = await callAI(allMessages, system);
+      // 로딩 메시지 제거
+      activeTask().messages.pop();
+      const html = extractHTMLFromResponse(response);
+      const msg = { role: 'ai', text: response, kind: html ? 'success' : null, ts: Date.now() };
+      if (html) msg.html = html;
+      activeTask().messages.push(msg);
+      saveTasks();
+      renderMessages();
+      // 첨부 파일 정리
+      if (attachedFile) {
+        attachedFile = null;
+        document.getElementById('aiInputFile').value = '';
+        document.getElementById('aiAttachedFile').classList.remove('show');
+      }
+    } catch (e) {
+      activeTask().messages.pop();  // 로딩 제거
+      addMessage('ai', '❌ AI 오류: ' + e.message, 'tip');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = origLabel;
+    }
+  });
+
+  // 연결 테스트 — 실제 ping (Phase 2)
+  document.getElementById('aiTestBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('aiTestBtn');
+    const key = document.getElementById('aiApiKeyInput').value.trim();
+    const svc = document.querySelector('.ai-service-card.active')?.dataset.svc || 'gemini';
+    const mdl = document.getElementById('aiModelSelect').value;
+    btn.classList.remove('success', 'error');
+    btn.textContent = '⏳ 테스트 중...';
+    if (!key) { btn.classList.add('error'); btn.textContent = '키 없음'; setTimeout(() => { btn.classList.remove('error'); btn.textContent = '연결 테스트'; }, 2000); return; }
+    // 임시로 settings 적용 + ping
+    const orig = { ...settings };
+    settings.service = svc; settings.apiKey = key; settings.model = mdl;
+    try {
+      const r = await callAI([{ role: 'user', content: 'ping' }], 'Reply with only the word: pong');
+      if (r && r.length) { btn.classList.add('success'); btn.textContent = '✓ 연결 성공'; }
+      else throw new Error('빈 응답');
+    } catch (e) {
+      btn.classList.add('error'); btn.textContent = '✗ ' + (e.message.slice(0, 20));
+    } finally {
+      // settings 원복 (저장 안 한 상태)
+      settings = orig;
+      setTimeout(() => { btn.classList.remove('success', 'error'); btn.textContent = '연결 테스트'; }, 3500);
+    }
   });
 
   // 초기 렌더
