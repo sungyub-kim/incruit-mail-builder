@@ -1277,6 +1277,7 @@
   }
   .cta-fields input:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
 
@@ -1328,12 +1329,12 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.63</span>
+    <span class="sub">v2.64</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
-    <button class="btn primary" id="btnDownload"><svg class="icon"><use href="#i-save"/></svg><span>선택 1개 저장</span></button>
-    <button class="btn secondary" id="btnDownloadAll"><svg class="icon"><use href="#i-package"/></svg><span>4종 일괄 저장</span></button>
+    <button class="btn primary" id="btnDownload"><svg class="icon"><use href="#i-save"/></svg><span>현재 파일 다운로드</span></button>
+    <button class="btn secondary" id="btnDownloadAll"><svg class="icon"><use href="#i-package"/></svg><span id="btnDownloadAllLabel">4종 일괄 다운로드 (zip)</span></button>
   </div>
 </header>
 
@@ -5015,7 +5016,8 @@ function refresh() {
   if (state.shape === 'round' && state.cta.enable) {
     const c = COLOR[state.target].cta;
     const txt = (state.cta.text || '자세히 보기').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    ctaWrap.innerHTML = `<table width="230" border="0" cellspacing="0" cellpadding="0" align="center" style="margin:0 auto;"><tbody><tr><td align="center"><a href="${(state.cta.url||'#').replace(/"/g,'&quot;')}" style="display:block; text-decoration:none; width:100%; border-radius:25px; background-color:${c}; color:#fff; font-size:18px; font-weight:bold; padding:13px 0; text-align:center; letter-spacing:-1px;">${txt}</a></td></tr></tbody></table>`;
+    // 외부 CTA — outer table(100%)로 wrap하여 부모 정렬/배치 영향 차단 + inner table(230px) 가운데 보장
+    ctaWrap.innerHTML = `<table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse;"><tbody><tr><td align="center" style="text-align:center;"><table width="230" border="0" cellspacing="0" cellpadding="0" align="center" style="margin:0 auto;"><tbody><tr><td align="center"><a href="${(state.cta.url||'#').replace(/"/g,'&quot;')}" style="display:block; text-decoration:none; width:100%; border-radius:25px; background-color:${c}; color:#fff; font-size:18px; font-weight:bold; padding:13px 0; text-align:center; letter-spacing:-1px;">${txt}</a></td></tr></tbody></table></td></tr></tbody></table>`;
   } else {
     ctaWrap.innerHTML = '';
   }
@@ -5044,6 +5046,18 @@ function refresh() {
   $('#previewLabel').textContent = `${shapeLabel} · ${targetLabel}${footerLabel}`;
   $('#previewPopupLabel').textContent = `${shapeLabel} · ${targetLabel}${footerLabel}`;
   $('#filenameHint').textContent = '저장: ' + buildFilename();
+
+  // 일괄 다운로드 버튼 라벨 동적 변경 (공지/bare는 단일, 메일은 4종 zip)
+  const allLabel = $('#btnDownloadAllLabel');
+  if (allLabel) {
+    if (state.shape === 'notice' || state.shape === 'notice_image') {
+      allLabel.textContent = '공지 다운로드';
+    } else if (state.shape === 'bare') {
+      allLabel.textContent = '본문만 다운로드';
+    } else {
+      allLabel.textContent = '4종 일괄 다운로드 (zip)';
+    }
+  }
 
   // 라이브러리 필터
   renderSnippets();
@@ -6493,34 +6507,87 @@ $('#btnDownload').addEventListener('click', () => {
   download(buildFilename(), html);
 });
 
-$('#btnDownloadAll').addEventListener('click', () => {
+/* 본문 HTML을 다른 target 컬러로 변환 (4종 일괄 다운로드 시) */
+function convertBodyToTarget(html, fromTarget, toTarget) {
+  if (fromTarget === toTarget) return html;
+  const map = toTarget === 'corporate' ? _COLOR_MAP_TO_CORP : _COLOR_MAP_TO_PERSONAL;
+  let out = html;
+  for (const [from, to] of Object.entries(map)) {
+    out = _replaceColor(out, from, to);
+  }
+  return out;
+}
+
+$('#btnDownloadAll').addEventListener('click', async () => {
   readControls();
   const body = getBodyHTML();
-  const combos = state.shape === 'bare'
-    ? [{ target:'personal', shape:'bare', footer:'receivable' }]
-    : [
-      { target:'personal',  footer:'receivable' },
-      { target:'personal',  footer:'sendonly' },
-      { target:'corporate', footer:'receivable' },
-      { target:'corporate', footer:'sendonly' }
-    ];
-  combos.forEach((c, i) => {
-    setTimeout(() => {
-      const html = buildFullHTML({
-        target: c.target,
-        shape: state.shape,
-        footerType: c.footer,
-        ctaConfig: state.cta,
-        dateMode: state.datemode,
-        bodyHTML: body
+  const isNotice = state.shape === 'notice' || state.shape === 'notice_image';
+  const isBare = state.shape === 'bare';
+
+  // 공지 / bare 형태는 1개만 다운로드 (단일 파일, zip 안 함)
+  if (isNotice || isBare) {
+    const html = buildFullHTML({
+      target: state.target, shape: state.shape, footerType: state.footer,
+      ctaConfig: state.cta, dateMode: state.datemode, bodyHTML: body
+    });
+    download(buildFilename(), html);
+    return;
+  }
+
+  // 메일 형태 — 4종 zip 일괄 다운로드 (개인×수신거부/발신전용 + 기업×수신거부/발신전용)
+  // 각 target에 맞춰 본문 컬러 자동 변환
+  const combos = [
+    { target:'personal',  footer:'receivable' },
+    { target:'personal',  footer:'sendonly' },
+    { target:'corporate', footer:'receivable' },
+    { target:'corporate', footer:'sendonly' }
+  ];
+  const stamp = formatToday().replace(/\./g,'');
+  const btn = $('#btnDownloadAll');
+  const labelEl = $('#btnDownloadAllLabel');
+  const originalLabel = labelEl.textContent;
+  labelEl.textContent = '압축 중...';
+  btn.disabled = true;
+
+  try {
+    if (typeof JSZip === 'undefined') {
+      // JSZip 로드 실패 시 fallback (개별 다운로드)
+      combos.forEach((c, i) => {
+        setTimeout(() => {
+          const convertedBody = convertBodyToTarget(body, state.target, c.target);
+          const html = buildFullHTML({
+            target: c.target, shape: state.shape, footerType: c.footer,
+            ctaConfig: state.cta, dateMode: state.datemode, bodyHTML: convertedBody
+          });
+          const fn = `incruit_${state.shape}_${c.target}_${c.footer}_${stamp}.html`;
+          download(fn, html);
+        }, i * 280);
       });
-      const stamp = formatToday().replace(/\./g,'');
-      const fn = state.shape === 'bare'
-        ? `incruit_bare_${stamp}.html`
-        : `incruit_${state.shape}_${c.target}_${c.footer}_${stamp}.html`;
-      download(fn, html);
-    }, i * 280);
-  });
+    } else {
+      const zip = new JSZip();
+      combos.forEach(c => {
+        const convertedBody = convertBodyToTarget(body, state.target, c.target);
+        const html = buildFullHTML({
+          target: c.target, shape: state.shape, footerType: c.footer,
+          ctaConfig: state.cta, dateMode: state.datemode, bodyHTML: convertedBody
+        });
+        const fn = `incruit_${state.shape}_${c.target}_${c.footer}_${stamp}.html`;
+        zip.file(fn, html);
+      });
+      const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `incruit_${state.shape}_4종_${stamp}.zip`;
+      document.body.appendChild(a); a.click();
+      setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
+    }
+  } catch (e) {
+    alert('다운로드 실패: ' + e.message);
+  } finally {
+    labelEl.textContent = originalLabel;
+    btn.disabled = false;
+  }
 });
 
 $('#btnCopy').addEventListener('click', async () => {
