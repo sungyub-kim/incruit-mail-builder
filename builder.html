@@ -1430,7 +1430,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.69</span>
+    <span class="sub">v2.70</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -8134,6 +8134,41 @@ refresh();
 
   /* ====== Phase 5: 시스템 프롬프트 + 본문 적용 ====== */
 
+  // 현재 빌더 상태 → AI 시스템 프롬프트용 컨텍스트 문자열
+  // (target / shape / footer / cta) — 호출 시점의 state 스냅샷
+  function buildBuilderContext() {
+    if (typeof state === 'undefined') return '';
+    const TARGET_LABEL = {
+      personal: '개인용 (강조 컬러 #ff460a, 라운드 카드 외곽 #ffece7)',
+      corporate: '기업용 (강조 컬러 #2772d0, 라운드 카드 외곽 #eef4ff)'
+    };
+    const SHAPE_LABEL = {
+      round: '라운드형 (640px 폭)',
+      common: '공용 (700px 폭)',
+      bare: '헤더·푸터 제거형',
+      notice: '공지 텍스트형 (noticeTemp 외부 CSS 기반)',
+      notice_image: '공지 이미지형 (940px raw 테이블)'
+    };
+    const FOOTER_LABEL = {
+      receivable: '수신거부 푸터 포함',
+      sendonly: '발신전용 푸터 포함'
+    };
+    const lines = [
+      '[현재 빌더 설정 — 이 설정에 맞춰 출력하세요]',
+      '- 대상: ' + (TARGET_LABEL[state.target] || state.target),
+      '- 형태: ' + (SHAPE_LABEL[state.shape] || state.shape),
+    ];
+    // 푸터는 bare/notice/notice_image면 비활성
+    if (state.shape !== 'bare' && state.shape !== 'notice' && state.shape !== 'notice_image') {
+      lines.push('- 푸터: ' + (FOOTER_LABEL[state.footer] || state.footer));
+    }
+    // CTA는 라운드형만
+    if (state.shape === 'round' && state.cta && state.cta.enable) {
+      lines.push('- CTA: 활성 — 텍스트 "' + (state.cta.text || '자세히 보기') + '" / URL ' + (state.cta.url || ''));
+    }
+    return lines.join('\n');
+  }
+
   // 등록된 SNIPPETS를 카테고리별로 묶어 짧은 인덱스 문자열 생성
   // → AI 시스템 프롬프트에 주입해서 "이 안에서 골라 써라" 강제
   function buildTemplateIndex(filterCategory) {
@@ -8161,15 +8196,18 @@ G. <html>/<body>/<head> 태그 금지 — 본문 콘텐츠만 (헤더/푸터는 
 
   function PROMPT_MAIL_FN() {
     const idx = buildTemplateIndex('mail');
+    const ctx = buildBuilderContext();
     return `당신은 인크루트 이메일 마케팅 전문가입니다. 사용자가 제공한 원문 자료를 인크루트 메일 본문 HTML로 변환합니다. 새 콘텐츠를 창작하는 것이 아니라, 원문을 등록 템플릿 구조에 그대로 옮겨 담는 것이 임무입니다.
 
 ${RULES_STRICT}
 
+${ctx}
+
 스타일 가이드:
 - Outlook 호환 (table 기반 layout, inline styles, no flexbox)
-- 700px 폭 기준, 컨테이너는 max-width:100% / width:100%
-- 색상: 개인용 강조 #ff460a, 기업용 강조 #2772d0 (기본은 개인용)
-- 라운드 카드 외곽(#ffece7 개인 / #eef4ff 기업) 사용 가능
+- 컨테이너는 max-width:100% / width:100% (현재 빌더 설정의 폭은 빌더가 자동 적용)
+- 색상: 위 "현재 빌더 설정"의 대상에 맞춰 강조 컬러 사용
+- 라운드형이면 라운드 카드 외곽(#ffece7 개인 / #eef4ff 기업) 사용 가능
 
 [등록 템플릿 인덱스 — 메일]
 ${idx || '  (현재 등록 템플릿 없음)'}`;
@@ -8177,9 +8215,12 @@ ${idx || '  (현재 등록 템플릿 없음)'}`;
 
   function PROMPT_NOTICE_FN() {
     const idx = buildTemplateIndex('notice');
+    const ctx = buildBuilderContext();
     return `당신은 인크루트 공지사항 메일 작성 전문가입니다. 사용자 자료를 공지 본문 HTML로 변환합니다. 새 콘텐츠를 창작하는 것이 아니라, 원문을 등록 템플릿 구조에 그대로 옮겨 담는 것이 임무입니다.
 
 ${RULES_STRICT}
+
+${ctx}
 
 공지 전용 스타일:
 - noticeTemp 외부 CSS 기반 — 기본 구조:
@@ -8188,6 +8229,7 @@ ${RULES_STRICT}
 - 표: <table class="table_temp" border="0" cellpadding="0" cellspacing="0" width="100%">
 - 강조어: <span style="color:#ff460a"> 또는 <em style="color:#2f80e5">
 - 다항목 dash 리스트: <p style="display:flex"><span style="padding-right:4px">-</span><span>내용</span></p>
+- 공지 이미지형이면 940px raw 테이블 구조 유지 (등록 템플릿 notice_image_pubexam 참고)
 
 [등록 템플릿 인덱스 — 공지]
 ${idx || '  (현재 등록 템플릿 없음)'}`;
