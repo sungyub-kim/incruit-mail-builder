@@ -1430,7 +1430,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.67</span>
+    <span class="sub">v2.68</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -8012,10 +8012,36 @@ refresh();
   }
 
   /* ====== Phase 3: 파일 추출 (PDF/TXT/HTML/DOCX 안내) ====== */
+  // 강제 너비를 100%로 정규화 (HTML 첨부 & AI 응답 공통)
+  // - width:\d+(px|pt) / max-width:\d+(px|pt) → 100%
+  // - width="640" 같은 attribute width 도 제거 (단, table layout 보존을 위해 100%로 대체)
+  // - <img> 의 width 는 보존 (이미지 크기는 디자인 의도)
+  function normalizeForcedWidths(html) {
+    if (!html) return html;
+    let out = html;
+    // style 속성 내 width / max-width (px|pt|em) → 100%
+    out = out.replace(/style\s*=\s*(["'])([^"']*)\1/gi, (m, q, css) => {
+      const fixed = css
+        .replace(/(^|;|\s)max-width\s*:\s*\d+(?:\.\d+)?(px|pt|em|rem)\s*(?=;|$)/gi, '$1max-width:100%')
+        .replace(/(^|;|\s)width\s*:\s*\d+(?:\.\d+)?(px|pt|em|rem)\s*(?=;|$)/gi, '$1width:100%');
+      return 'style=' + q + fixed + q;
+    });
+    // attribute width="숫자" / width=숫자 (img 태그 제외) → width="100%"
+    out = out.replace(/<(?!img\b)([a-z][a-z0-9]*)\b([^>]*?)\swidth\s*=\s*(["']?)(\d+%?)\3([^>]*)>/gi,
+      (m, tag, before, q, val, after) => {
+        const replaced = val.endsWith('%') ? val : '100%';
+        return '<' + tag + before + ' width="' + replaced + '"' + after + '>';
+      });
+    return out;
+  }
+
   async function extractFile(file) {
     const ext = (file.name.split('.').pop() || '').toLowerCase();
     if (ext === 'txt') return file.text();
-    if (ext === 'html' || ext === 'htm') return file.text();
+    if (ext === 'html' || ext === 'htm') {
+      const raw = await file.text();
+      return normalizeForcedWidths(raw);
+    }
     if (ext === 'pdf') return extractPDF(file);
     if (ext === 'hwp') throw new Error('HWP 파일은 직접 추출이 어렵습니다. PDF 또는 TXT로 변환 후 다시 첨부해 주세요.');
     if (ext === 'docx' || ext === 'doc') throw new Error('DOCX 추출은 별도 라이브러리가 필요합니다. PDF 또는 TXT로 변환 후 첨부해 주세요.');
@@ -8035,32 +8061,65 @@ refresh();
   }
 
   /* ====== Phase 5: 시스템 프롬프트 + 본문 적용 ====== */
-  const PROMPT_MAIL = `당신은 인크루트 이메일 마케팅 전문가입니다. 사용자가 제공한 원문 자료를 바탕으로 인크루트 메일 본문 HTML을 생성합니다.
 
-규칙:
-1. Outlook 호환 (table 기반 layout, inline styles, no flexbox)
-2. 한국어 작성, 친근한 톤
-3. 본문은 700px 폭 기준 (max-width: 700px; margin: 0 auto;)
-4. 색상: 개인용 강조 #ff460a, 기업용 강조 #2772d0 (기본은 개인용)
-5. 라운드 카드 외곽(#ffece7 개인/#eef4ff 기업) 사용 가능
-6. <html>/<body>/<head> 태그 없이 본문 콘텐츠만 (헤더/푸터는 빌더가 자동 추가)
-7. 응답은 반드시 \`\`\`html 코드 블록으로 감싸서 반환
-8. 코드 블록 외에 짧은 설명 1~2줄 가능`;
+  // 등록된 SNIPPETS를 카테고리별로 묶어 짧은 인덱스 문자열 생성
+  // → AI 시스템 프롬프트에 주입해서 "이 안에서 골라 써라" 강제
+  function buildTemplateIndex(filterCategory) {
+    if (typeof SNIPPETS === 'undefined' || !Array.isArray(SNIPPETS)) return '';
+    const lines = SNIPPETS
+      .filter(s => {
+        if (!filterCategory) return true;
+        const c = (s.category || 'full');
+        if (filterCategory === 'mail') return c === 'full' || c === 'partial';
+        if (filterCategory === 'notice') return c === 'notice' || c === 'notice_partial';
+        return true;
+      })
+      .map(s => `  - [${s.id}] ${s.name || ''}${s.target ? ' (' + s.target + ')' : ''}${s.description ? ' — ' + s.description : ''}`);
+    return lines.join('\n');
+  }
 
-  const PROMPT_NOTICE = `당신은 인크루트 공지사항 메일 작성 전문가입니다. 사용자 자료를 바탕으로 공지 본문 HTML을 생성합니다.
+  const RULES_STRICT = `[절대 규칙 — 위반 금지]
+A. 원문 보존 — 사용자가 제공한 원문(파일/텍스트) 그대로 사용. 재창작·의역·요약·축약·문장 재배치 금지. 토씨·문장부호·줄바꿈까지 유지.
+B. 구조 보존 — 원문의 문단/순서/표/리스트/제목 구조 그대로. 임의 분할·통합·재구성 금지.
+C. 텍스트 변경 금지 — 표현 다듬기·동의어 치환·문체 수정 금지. 명백한 오타도 임의 수정 금지(원문 그대로).
+D. 강제 너비 금지 — 컨테이너에 width:\\d+px / max-width:\\d+px 같은 절대 너비 사용 금지. 반드시 width:100% / max-width:100%.
+E. 등록 템플릿 우선 — 아래 "등록 템플릿 인덱스"에서 원문에 가장 가까운 항목을 찾아 그 구조를 그대로 사용. 매칭되는 템플릿이 없을 때만 새로 작성하되 본 규칙 A~D는 그대로 적용.
+F. 응답 형식 — \`\`\`html 코드 블록 하나로만 반환. 코드 블록 외 설명은 최소 1~2줄.
+G. <html>/<body>/<head> 태그 금지 — 본문 콘텐츠만 (헤더/푸터는 빌더가 자동 추가).`;
 
-규칙:
-1. noticeTemp 외부 CSS 기반 — 구조:
-   <p class="title">제목 <span class="point">강조</span> 안내</p>
-   <div class="notice_cnt">
-   <div class="nt_textArea">
-   인사말 + 본문 + 1./2./3. 섹션 + 마무리 인사
-   </div>
-   </div>
-2. 표는 <table class="table_temp" border="0" cellpadding="0" cellspacing="0" width="100%">
-3. 강조어는 <span style="color:#ff460a"> 또는 <em style="color:#2f80e5">
-4. 다항목 dash 리스트: <p style="display:flex"><span style="padding-right:4px">-</span><span>내용</span></p>
-5. 응답은 \`\`\`html 코드 블록으로 감싸서 반환`;
+  function PROMPT_MAIL_FN() {
+    const idx = buildTemplateIndex('mail');
+    return `당신은 인크루트 이메일 마케팅 전문가입니다. 사용자가 제공한 원문 자료를 인크루트 메일 본문 HTML로 변환합니다. 새 콘텐츠를 창작하는 것이 아니라, 원문을 등록 템플릿 구조에 그대로 옮겨 담는 것이 임무입니다.
+
+${RULES_STRICT}
+
+스타일 가이드:
+- Outlook 호환 (table 기반 layout, inline styles, no flexbox)
+- 700px 폭 기준, 컨테이너는 max-width:100% / width:100%
+- 색상: 개인용 강조 #ff460a, 기업용 강조 #2772d0 (기본은 개인용)
+- 라운드 카드 외곽(#ffece7 개인 / #eef4ff 기업) 사용 가능
+
+[등록 템플릿 인덱스 — 메일]
+${idx || '  (현재 등록 템플릿 없음)'}`;
+  }
+
+  function PROMPT_NOTICE_FN() {
+    const idx = buildTemplateIndex('notice');
+    return `당신은 인크루트 공지사항 메일 작성 전문가입니다. 사용자 자료를 공지 본문 HTML로 변환합니다. 새 콘텐츠를 창작하는 것이 아니라, 원문을 등록 템플릿 구조에 그대로 옮겨 담는 것이 임무입니다.
+
+${RULES_STRICT}
+
+공지 전용 스타일:
+- noticeTemp 외부 CSS 기반 — 기본 구조:
+  <p class="title">제목 <span class="point">강조</span> 안내</p>
+  <div class="notice_cnt"><div class="nt_textArea">인사말 + 본문 + 섹션 + 마무리 인사</div></div>
+- 표: <table class="table_temp" border="0" cellpadding="0" cellspacing="0" width="100%">
+- 강조어: <span style="color:#ff460a"> 또는 <em style="color:#2f80e5">
+- 다항목 dash 리스트: <p style="display:flex"><span style="padding-right:4px">-</span><span>내용</span></p>
+
+[등록 템플릿 인덱스 — 공지]
+${idx || '  (현재 등록 템플릿 없음)'}`;
+  }
 
   const PROMPT_CHAT = `당신은 인크루트 메일 빌더의 AI 어시스턴트입니다. 사용자의 메일·공지 작성 관련 질문에 친절히 답하거나 조언/예시를 제공합니다.`;
 
@@ -8072,10 +8131,11 @@ refresh();
   function applyAIResultToBody(html) {
     if (!html) return;
     if (!confirm('AI가 생성한 내용을 본문에 적용합니다. 기존 본문은 교체됩니다.\n계속할까요?')) return;
+    const normalized = normalizeForcedWidths(html);
     const wy = document.getElementById('wysiwyg');
-    if (wy) wy.innerHTML = html;
+    if (wy) wy.innerHTML = normalized;
     const ta = document.getElementById('htmlsrc');
-    if (ta && typeof state !== 'undefined' && state.mode === 'html') ta.value = html;
+    if (ta && typeof state !== 'undefined' && state.mode === 'html') ta.value = normalized;
     if (typeof refresh === 'function') refresh();
     addMessage('ai', '✓ 본문에 적용 완료!', 'success');
   }
@@ -8148,7 +8208,7 @@ refresh();
     addMessage('ai', '⏳ AI 생성 중...');
 
     // 4) 시스템 프롬프트 + 사용자 메시지
-    const systemMap = { mail: PROMPT_MAIL, notice: PROMPT_NOTICE, chat: PROMPT_CHAT };
+    const systemMap = { mail: PROMPT_MAIL_FN(), notice: PROMPT_NOTICE_FN(), chat: PROMPT_CHAT };
     const system = systemMap[aiMode];
     const userMsg = aiMode === 'chat'
       ? combined
