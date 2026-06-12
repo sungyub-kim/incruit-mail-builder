@@ -1328,7 +1328,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.62</span>
+    <span class="sub">v2.63</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -1713,7 +1713,7 @@
       </div>
       <div>
         <label style="display:block; font-size:11px; color:var(--muted); font-weight:600; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.3px;">대체 텍스트 (TITLE) <span style="font-weight:400; text-transform:none; color:#9ca3af;">— hover 시 tooltip / 접근성 / 링크맵 영역과 데이터 연결</span></label>
-        <input type="text" id="linkModalTitle" placeholder="(선택)" style="width:100%; padding:8px 10px; border:1px solid var(--line2); border-radius:4px; font-family:inherit; font-size:13px;" />
+        <input type="text" id="linkModalTitleAttr" placeholder="(선택)" style="width:100%; padding:8px 10px; border:1px solid var(--line2); border-radius:4px; font-family:inherit; font-size:13px;" />
       </div>
       <div>
         <label style="display:block; font-size:11px; color:var(--muted); font-weight:600; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.3px;">URL</label>
@@ -7272,7 +7272,7 @@ function openLinkEditModal(a) {
   const text = inner ? inner.textContent.trim() : a.textContent.trim();
   $('#linkModalText').value = text;
   // 대체 텍스트 (title): a 표준 속성, legacy alt도 fallback (링크맵 데이터 연결)
-  $('#linkModalTitle').value = a.getAttribute('title') || a.getAttribute('alt') || '';
+  $('#linkModalTitleAttr').value = a.getAttribute('title') || a.getAttribute('alt') || '';
   $('#linkModalUrl').value = a.getAttribute('href') || '';
   $('#linkModalTarget').value = a.getAttribute('target') || '_blank';
   $('#linkModalBg').classList.add('show');
@@ -7287,7 +7287,7 @@ $('#linkModalCancel').addEventListener('click', () => {
 $('#linkModalSave').addEventListener('click', () => {
   if (_editingAnchor) {
     const newText = $('#linkModalText').value;
-    const newTitle = $('#linkModalTitle').value;
+    const newTitle = $('#linkModalTitleAttr').value;
     const newUrl = $('#linkModalUrl').value;
     const newTarget = $('#linkModalTarget').value;
     _editingAnchor.setAttribute('href', newUrl);
