@@ -757,7 +757,9 @@
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 100;
+    z-index: 9999;
+    overflow-y: auto;
+    padding: 20px 0;
   }
   .modal-bg.show { display: flex; }
   .modal {
@@ -766,7 +768,10 @@
     border-radius: 8px;
     min-width: 380px;
     max-width: 500px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
     box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    margin: auto;
   }
   .modal.large {
     min-width: 780px;
@@ -1053,8 +1058,10 @@
   .img-map-stage { position: relative; display: inline-block; max-width: 100%; }
   .img-map-stage img { display: block; max-width: 100%; height: auto; pointer-events: none; }
   .img-map-overlay { position: absolute; inset: 0; cursor: crosshair; }
-  .img-map-area { position: absolute; border: 2px solid #ff460a; background: rgba(255,70,10,0.15); cursor: move; }
+  .img-map-area { position: absolute; border: 2px solid #ff460a; background: rgba(255,70,10,0.15); cursor: move; pointer-events: auto; }
   .img-map-area .num-tag { position: absolute; top: -22px; left: 0; padding: 1px 6px; background: #ff460a; color: #fff; font-size: 11px; font-weight: 700; border-radius: 4px; }
+  .img-map-area .area-del-btn { position: absolute; top: -10px; right: -10px; width: 20px; height: 20px; padding: 0; border: 2px solid #fff; background: #ef4444; color: #fff; font-size: 14px; font-weight: 700; border-radius: 50%; cursor: pointer; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+  .img-map-area .area-del-btn:hover { background: #dc2626; transform: scale(1.1); }
   .img-map-area.is-active { border-color: #2f80e5; background: rgba(47,128,229,0.15); }
   .img-map-area.is-active .num-tag { background: #2f80e5; }
   body.corporate .img-map-area { border-color: #2f80e5; background: rgba(47,128,229,0.15); }
@@ -1075,6 +1082,16 @@
   .img-btn-add-area { margin-top: 8px; padding: 8px 14px; background: #fff; border: 1px dashed #d1d5db; border-radius: 6px; font-size: 12px; color: #4b5563; cursor: pointer; font-family: inherit; width: 100%; transition: all 0.15s; }
   .img-btn-add-area:hover { border-color: #ff460a; color: #ff460a; background: #fff7f3; }
   body.corporate .img-btn-add-area:hover { border-color: #2f80e5; color: #2f80e5; background: #f0f6ff; }
+  /* 이미지맵 대상 이미지 선택 picker */
+  .imap-picker-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; max-height: 60vh; overflow-y: auto; padding: 4px; }
+  .imap-picker-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px; cursor: pointer; transition: all 0.15s; font-family: inherit; text-align: left; }
+  .imap-picker-card:hover { border-color: #ff460a; box-shadow: 0 4px 12px rgba(255,70,10,0.15); transform: translateY(-1px); }
+  body.corporate .imap-picker-card:hover { border-color: #2f80e5; box-shadow: 0 4px 12px rgba(47,128,229,0.15); }
+  .imap-picker-card img { display: block; width: 100%; height: 110px; object-fit: contain; background: #f3f4f6; border-radius: 4px; margin-bottom: 6px; }
+  .imap-picker-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .imap-picker-num { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: #ede9fe; color: #6d3eff; font-size: 10px; font-weight: 700; }
+  .imap-picker-name { flex: 1; font-size: 11px; color: #4b5563; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .imap-picker-badge { font-size: 10px; padding: 1px 6px; background: #fef3c7; color: #92400e; border-radius: 4px; }
 
   /* 부분 태그 필터 칩 */
   .tag-filter {
@@ -1268,7 +1285,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.58</span>
+    <span class="sub">v2.59</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -1524,6 +1541,20 @@
       </div>
     </div>
     <iframe id="previewPopupFrame"></iframe>
+  </div>
+</div>
+
+<!-- ========== 이미지맵: 대상 이미지 선택 picker ========== -->
+<div class="modal-bg" id="imgMapPickerBg">
+  <div class="modal img-edit-modal" style="min-width: 520px; max-width: 720px;">
+    <h3 class="img-modal-title">이미지맵 — 대상 이미지 선택</h3>
+    <p class="img-modal-subtitle">본문에 이미지가 여러 개입니다. 어떤 이미지에 영역을 추가/편집할지 선택하세요.</p>
+    <div id="imgMapPickerList" class="imap-picker-list"></div>
+    <div class="img-modal-actions">
+      <div class="img-modal-actions-right">
+        <button class="btn img-btn-cancel" id="imgMapPickerCancel">취소</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -6891,7 +6922,12 @@ function renderImgMapAreas() {
     div.style.top = area.top + '%';
     div.style.width = area.width + '%';
     div.style.height = area.height + '%';
-    div.innerHTML = `<span class="num-tag">${idx + 1}</span>`;
+    div.innerHTML = `<span class="num-tag">${idx + 1}</span><button type="button" class="area-del-btn" title="이 영역 삭제">×</button>`;
+    div.querySelector('.area-del-btn').addEventListener('click', e => {
+      e.stopPropagation();
+      _imgMapAreas.splice(idx, 1);
+      renderImgMapAreas();
+    });
     overlay.appendChild(div);
   });
   // 영역 입력 리스트 — 간소화 디자인 (좌표는 표기만, url/email/alt 입력)
@@ -7033,14 +7069,63 @@ function applyImageMap(img, areas) {
 }
 
 /* 에디터 툴바 이미지맵 버튼 → 모달 열기
-   대상: 사용자가 마지막으로 클릭/hover한 이미지 (없으면 본문 첫 이미지) */
+   - 본문 이미지가 1개면 바로 그 이미지에 대해 모달 열림
+   - 2개 이상이면 이미지 선택 picker 모달 먼저 → 사용자가 선택 후 진입
+   - 마지막 클릭/hover한 이미지가 있으면 우선 (사용자 의도 보존) */
 let _lastFocusedImg = null;
 $('#wysiwyg').addEventListener('mouseover', e => {
   if (e.target.tagName === 'IMG') _lastFocusedImg = e.target;
 });
+$('#wysiwyg').addEventListener('click', e => {
+  if (e.target.tagName === 'IMG') _lastFocusedImg = e.target;
+}, true);
 $('#btnImageMap').addEventListener('click', () => {
-  const img = _lastFocusedImg || $('#wysiwyg').querySelector('img');
-  openImgMapModal(img);
+  const imgs = Array.from($('#wysiwyg').querySelectorAll('img'));
+  if (imgs.length === 0) {
+    alert('본문에 이미지가 없습니다. 이미지를 먼저 추가하세요.');
+    return;
+  }
+  if (imgs.length === 1) {
+    openImgMapModal(imgs[0]);
+    return;
+  }
+  // 사용자가 직전 클릭/hover한 이미지가 본문에 있으면 그것 우선
+  if (_lastFocusedImg && $('#wysiwyg').contains(_lastFocusedImg)) {
+    openImgMapModal(_lastFocusedImg);
+    return;
+  }
+  // 그 외: 이미지 선택 picker 모달
+  openImgMapPicker(imgs);
+});
+
+function openImgMapPicker(imgs) {
+  const picker = $('#imgMapPickerBg');
+  const list = $('#imgMapPickerList');
+  list.innerHTML = '';
+  imgs.forEach((img, idx) => {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'imap-picker-card';
+    const hasMap = img.parentElement && img.parentElement.querySelectorAll('a.imap-area').length;
+    card.innerHTML = `
+      <img src="${img.getAttribute('src') || ''}" alt="" />
+      <div class="imap-picker-meta">
+        <span class="imap-picker-num">${idx + 1}</span>
+        <span class="imap-picker-name">${(img.getAttribute('alt') || '이미지').slice(0, 30)}</span>
+        ${hasMap ? `<span class="imap-picker-badge">맵 ${hasMap}개</span>` : ''}
+      </div>
+    `;
+    card.addEventListener('click', () => {
+      picker.classList.remove('show');
+      openImgMapModal(img);
+    });
+    list.appendChild(card);
+  });
+  picker.classList.add('show');
+}
+$('#imgMapPickerCancel').addEventListener('click', () => $('#imgMapPickerBg').classList.remove('show'));
+$('#imgMapPickerBg').addEventListener('click', e => {
+  if (e.target === $('#imgMapPickerBg')) $('#imgMapPickerBg').classList.remove('show');
 });
 
 function openLinkEditModal(a) {
