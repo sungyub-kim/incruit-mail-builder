@@ -1430,7 +1430,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.70</span>
+    <span class="sub">v2.71</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -8037,16 +8037,19 @@ refresh();
     if (service === 'gemini') return callGemini(messages, systemPrompt, apiKey, model);
     throw new Error('알 수 없는 서비스: ' + service);
   }
+  // 응답 객체: { text, finish, truncated }
   async function callOpenAI(messages, system, apiKey, model) {
     const full = system ? [{ role: 'system', content: system }, ...messages] : messages;
     const res = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-      body: JSON.stringify({ model: model || 'gpt-4o', messages: full, temperature: 0.5, max_tokens: 8000 })
+      body: JSON.stringify({ model: model || 'gpt-4o', messages: full, temperature: 0.3, max_tokens: 16000 })
     });
     if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || 'OpenAI API 오류 ' + res.status); }
     const data = await res.json();
-    return data.choices[0].message.content;
+    const choice = data.choices[0];
+    const finish = choice.finish_reason;
+    return { text: choice.message.content, finish, truncated: finish === 'length' };
   }
   async function callClaude(messages, system, apiKey, model) {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -8059,14 +8062,15 @@ refresh();
       },
       body: JSON.stringify({
         model: model || 'claude-sonnet-4-5-20250929',
-        max_tokens: 8192,
+        max_tokens: 16384,
         system: system || undefined,
         messages: messages
       })
     });
     if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || 'Claude API 오류 ' + res.status); }
     const data = await res.json();
-    return data.content[0].text;
+    const finish = data.stop_reason;
+    return { text: data.content[0].text, finish, truncated: finish === 'max_tokens' };
   }
   async function callGemini(messages, system, apiKey, model) {
     const m = model || 'gemini-2.5-flash';
@@ -8075,12 +8079,14 @@ refresh();
       role: msg.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: msg.content }]
     }));
-    const body = { contents };
+    const body = { contents, generationConfig: { maxOutputTokens: 16384, temperature: 0.3 } };
     if (system) body.systemInstruction = { parts: [{ text: system }] };
     const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || 'Gemini API 오류 ' + res.status); }
     const data = await res.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const cand = data.candidates?.[0];
+    const finish = cand?.finishReason;
+    return { text: cand?.content?.parts?.[0]?.text || '', finish, truncated: finish === 'MAX_TOKENS' };
   }
 
   /* ====== Phase 3: 파일 추출 (PDF/TXT/HTML/DOCX 안내) ====== */
@@ -8238,8 +8244,19 @@ ${idx || '  (현재 등록 템플릿 없음)'}`;
   const PROMPT_CHAT = `당신은 인크루트 메일 빌더의 AI 어시스턴트입니다. 사용자의 메일·공지 작성 관련 질문에 친절히 답하거나 조언/예시를 제공합니다.`;
 
   function extractHTMLFromResponse(text) {
-    const m = text.match(/```html\s*\n?([\s\S]*?)\n?```/i) || text.match(/```\s*\n?([\s\S]*?)\n?```/);
-    return m ? m[1].trim() : null;
+    if (!text) return null;
+    // 1) 정상 케이스: ```html ~ ``` 또는 ``` ~ ``` 양쪽 다 있음
+    let m = text.match(/```html\s*\n?([\s\S]*?)\n?```/i) || text.match(/```\s*\n?([\s\S]*?)\n?```/);
+    if (m) return m[1].trim();
+    // 2) 잘림 케이스: ```html 만 있고 닫는 ``` 없음 — 그 이후를 끝까지 살림
+    m = text.match(/```html\s*\n?([\s\S]*)$/i);
+    if (m && m[1].trim()) return m[1].trim();
+    // 3) ``` 만 열린 잘림 케이스
+    m = text.match(/```\s*\n?([\s\S]*)$/);
+    if (m && m[1].trim()) return m[1].trim();
+    // 4) 코드 블록 아예 없는데 HTML 태그가 보이면 응답 전체를 HTML로 간주
+    if (/<[a-z][^>]*>/i.test(text)) return text.trim();
+    return null;
   }
 
   // AI 패널 헤더 "↶ 복원" 버튼 상태 갱신
@@ -8354,10 +8371,14 @@ ${idx || '  (현재 등록 템플릿 없음)'}`;
     // 6) AI 호출
     try {
       const response = await callAI(allMessages, system);
+      const text = (response && typeof response === 'object') ? (response.text || '') : String(response || '');
+      const truncated = !!(response && response.truncated);
       // 로딩 메시지 제거
       activeTask().messages.pop();
-      const html = extractHTMLFromResponse(response);
-      const msg = { role: 'ai', text: response, kind: html ? 'success' : null, ts: Date.now() };
+      const html = extractHTMLFromResponse(text);
+      const noticeBits = [];
+      if (truncated) noticeBits.push('\n\n⚠ 응답이 토큰 한도(16K)에서 잘렸을 수 있습니다. 누락된 부분이 있는지 확인 후 보완 요청해 주세요.');
+      const msg = { role: 'ai', text: text + noticeBits.join(''), kind: html ? 'success' : null, ts: Date.now() };
       if (html) msg.html = html;
       activeTask().messages.push(msg);
       saveTasks();
@@ -8391,7 +8412,8 @@ ${idx || '  (현재 등록 템플릿 없음)'}`;
     settings.service = svc; settings.apiKey = key; settings.model = mdl;
     try {
       const r = await callAI([{ role: 'user', content: 'ping' }], 'Reply with only the word: pong');
-      if (r && r.length) { btn.classList.add('success'); btn.textContent = '✓ 연결 성공'; }
+      const t = (r && typeof r === 'object') ? (r.text || '') : String(r || '');
+      if (t.length) { btn.classList.add('success'); btn.textContent = '✓ 연결 성공'; }
       else throw new Error('빈 응답');
     } catch (e) {
       btn.classList.add('error'); btn.textContent = '✗ ' + (e.message.slice(0, 20));
