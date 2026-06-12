@@ -1430,7 +1430,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.71</span>
+    <span class="sub">v2.72</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -8286,7 +8286,16 @@ ${idx || '  (현재 등록 템플릿 없음)'}`;
     addMessage('ai', '✓ 본문에 적용 완료! (직전 본문은 헤더 "↶ 복원" 버튼으로 되돌릴 수 있습니다)', 'success');
   }
 
-  // 메시지 렌더 (Phase 5: AI 응답에 '본문 적용' 버튼 표시)
+  // 코드블록(```...```) 을 채팅 표시 텍스트에서 제거 — 소스는 토글로 별도 노출
+  function stripCodeBlocks(text) {
+    if (!text) return '';
+    return String(text)
+      .replace(/```[a-z]*\n?[\s\S]*?(?:```|$)/gi, '')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
+
+  // 메시지 렌더 (Phase 5: AI 응답에 '본문 적용' 버튼 표시 + 소스 토글)
   function renderMessages() {
     const box = document.getElementById('aiMessages');
     if (!box) return;
@@ -8296,14 +8305,32 @@ ${idx || '  (현재 등록 템플릿 없음)'}`;
       const row = document.createElement('div');
       row.className = 'ai-msg ' + (m.role === 'user' ? 'user' : '') + (m.kind ? ' ' + m.kind : '');
       const avatar = m.role === 'user' ? '나' : 'AI';
-      const txt = String(m.text || '').replace(/</g,'&lt;').replace(/\n/g,'<br>');
+      const isAiWithHtml = m.role === 'ai' && m.html;
+      // AI + html 있으면 본문은 코드블록 제거한 설명만 표시
+      const displayText = isAiWithHtml ? stripCodeBlocks(m.text) : String(m.text || '');
+      const txt = displayText.replace(/</g,'&lt;').replace(/\n/g,'<br>');
       let actionsHtml = '';
-      if (m.role === 'ai' && m.html) {
-        actionsHtml = `<div style="margin-top:6px;"><button class="ai-msg-apply" data-idx="${idx}" style="padding:5px 12px;background:#ff460a;color:#fff;border:0;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">▶ 본문에 적용</button></div>`;
+      let sourceHtml = '';
+      if (isAiWithHtml) {
+        actionsHtml = `<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="ai-msg-apply" data-idx="${idx}" style="padding:5px 12px;background:#ff460a;color:#fff;border:0;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">▶ 본문에 적용</button>
+          <button class="ai-msg-toggle-src" data-idx="${idx}" style="padding:5px 12px;background:#374151;color:#fff;border:0;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">📄 소스 보기</button>
+        </div>`;
+        sourceHtml = `<pre class="ai-msg-src" data-idx="${idx}" style="display:none;margin-top:6px;padding:8px 10px;background:#0f172a;color:#cbd5e1;border-radius:5px;font-size:11px;line-height:1.5;max-height:280px;overflow:auto;white-space:pre-wrap;word-break:break-all;font-family:ui-monospace,Menlo,Consolas,monospace;"></pre>`;
       }
-      row.innerHTML = `<div class="ai-msg-avatar">${avatar}</div><div class="ai-msg-body">${txt}${actionsHtml}</div>`;
+      row.innerHTML = `<div class="ai-msg-avatar">${avatar}</div><div class="ai-msg-body">${txt}${actionsHtml}${sourceHtml}</div>`;
       const btn = row.querySelector('.ai-msg-apply');
       if (btn) btn.addEventListener('click', () => applyAIResultToBody(m.html));
+      const toggle = row.querySelector('.ai-msg-toggle-src');
+      const pre = row.querySelector('.ai-msg-src');
+      if (pre && m.html) pre.textContent = m.html;
+      if (toggle && pre) {
+        toggle.addEventListener('click', () => {
+          const open = pre.style.display !== 'none';
+          pre.style.display = open ? 'none' : 'block';
+          toggle.textContent = open ? '📄 소스 보기' : '✕ 소스 숨기기';
+        });
+      }
       box.appendChild(row);
     });
     box.scrollTop = box.scrollHeight;
