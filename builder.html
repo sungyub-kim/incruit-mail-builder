@@ -708,6 +708,42 @@
     outline-offset: 2px;
     cursor: pointer;
   }
+  /* 본문 작성 영역에서 링크맵 영역 시각화 (메일 발송 HTML에는 영향 X — 빌더 내부 표시만) */
+  #wysiwyg .imap-wrap { outline: 1px dashed rgba(255,70,10,0.4); outline-offset: -1px; }
+  body.corporate #wysiwyg .imap-wrap { outline-color: rgba(47,128,229,0.4); }
+  #wysiwyg a.imap-area {
+    background: rgba(255,70,10,0.15) !important;
+    outline: 1px dashed #ff460a !important;
+    outline-offset: -1px;
+    cursor: pointer !important;
+    display: block !important;
+  }
+  body.corporate #wysiwyg a.imap-area {
+    background: rgba(47,128,229,0.15) !important;
+    outline-color: #2f80e5 !important;
+  }
+  #wysiwyg a.imap-area:hover {
+    background: rgba(255,70,10,0.3) !important;
+  }
+  body.corporate #wysiwyg a.imap-area:hover {
+    background: rgba(47,128,229,0.3) !important;
+  }
+  /* 본문에서 imap-area hover 시 단서 라벨 */
+  #wysiwyg a.imap-area:hover::after {
+    content: '클릭 → URL/alt 편집';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 3px 8px;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    font-size: 11px;
+    border-radius: 4px;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
   #wysiwyg a:hover::after {
     content: '클릭 → 편집';
     position: absolute;
@@ -1292,7 +1328,7 @@
   <h1>
     <span class="logo-mark"><svg class="icon"><use href="#i-mail"/></svg></span>
     <span>인크루트 메일 빌더</span>
-    <span class="sub">v2.60</span>
+    <span class="sub">v2.61</span>
   </h1>
   <div class="actions">
     <button class="btn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span>HTML 복사</span></button>
@@ -1487,8 +1523,8 @@
       <span class="sep"></span>
       <button id="insertLink" title="링크"><svg class="icon"><use href="#i-link"/></svg></button>
       <button id="insertImage" title="이미지 (Outlook border 자동 제거)"><svg class="icon"><use href="#i-image"/></svg></button>
-      <button id="btnImageMap" class="btn-imagemap-toolbar" title="이미지맵 — 본문 이미지 위에 a 오버레이 영역 추가 (PC/M 동일 % 대응)">
-        <svg class="icon"><use href="#i-imagemap"/></svg><span>이미지맵</span>
+      <button id="btnImageMap" class="btn-imagemap-toolbar" title="링크맵 — 이미지 위에 a 오버레이 영역 추가 (PC/M 동일 % 대응)">
+        <svg class="icon"><use href="#i-imagemap"/></svg><span>링크맵</span>
       </button>
       <button id="insertHr" title="구분선 (메일 호환 table HR)"><svg class="icon"><use href="#i-hr"/></svg></button>
       <div class="table-wrap">
@@ -1551,10 +1587,10 @@
   </div>
 </div>
 
-<!-- ========== 이미지맵: 대상 이미지 선택 picker ========== -->
+<!-- ========== 링크맵: 대상 이미지 선택 picker ========== -->
 <div class="modal-bg" id="imgMapPickerBg">
   <div class="modal img-edit-modal" style="min-width: 520px; max-width: 720px;">
-    <h3 class="img-modal-title">이미지맵 — 대상 이미지 선택</h3>
+    <h3 class="img-modal-title">링크맵 — 대상 이미지 선택</h3>
     <p class="img-modal-subtitle">본문에 이미지가 여러 개입니다. 어떤 이미지에 영역을 추가/편집할지 선택하세요.</p>
     <div id="imgMapPickerList" class="imap-picker-list"></div>
     <div class="img-modal-actions">
@@ -1565,12 +1601,12 @@
   </div>
 </div>
 
-<!-- ========== 이미지맵 영역 편집 모달 ========== -->
+<!-- ========== 링크맵 영역 편집 모달 ========== -->
 <div class="modal-bg" id="imgMapModalBg">
   <div class="modal img-edit-modal" style="min-width: 900px; max-width: 1180px; width: 92vw;">
     <button class="img-modal-close" id="imgMapModalCloseX" aria-label="닫기">×</button>
-    <h3 class="img-modal-title">이미지맵 영역 편집</h3>
-    <p class="img-modal-subtitle">이미지 위에 <code>&lt;a&gt;</code> 오버레이를 좌표(%)로 추가합니다. PC/모바일 동일 대응. 미리보기에서 드래그로 직접 영역 그리기 가능.</p>
+    <h3 class="img-modal-title">링크맵 영역 편집</h3>
+    <p class="img-modal-subtitle">이미지 위에 <code>&lt;a&gt;</code> 오버레이를 좌표(%)로 추가합니다. PC/모바일 동일 대응. 드래그로 영역 만들고 모서리 핸들로 크기 변경 가능.</p>
 
     <div class="img-modal-body">
       <div class="img-field">
@@ -6884,10 +6920,17 @@ function openImgMapModal(img) {
 }
 
 function readExistingAreas(img) {
-  const wrap = img.parentElement;
-  if (!wrap) return [];
+  // imap-wrap > (img | a > img) + a.imap-area* 구조에서 읽기
+  const imgOrA = (img.parentElement && img.parentElement.tagName === 'A') ? img.parentElement : img;
+  let imapWrap = null;
+  if (imgOrA.parentElement && imgOrA.parentElement.classList && imgOrA.parentElement.classList.contains('imap-wrap')) {
+    imapWrap = imgOrA.parentElement;
+  }
+  // imap-wrap 없으면 img 부모에서도 한 번 탐색 (legacy: v2.59 이하 형식 호환)
+  const scope = imapWrap || img.parentElement;
+  if (!scope) return [];
   const areas = [];
-  wrap.querySelectorAll('a.imap-area').forEach(a => {
+  scope.querySelectorAll('a.imap-area').forEach(a => {
     const s = a.style;
     const href = a.getAttribute('href') || '';
     const isMailto = href.startsWith('mailto:');
@@ -6896,7 +6939,7 @@ function readExistingAreas(img) {
       top: parseFloat(s.top) || 0,
       width: parseFloat(s.width) || 10,
       height: parseFloat(s.height) || 10,
-      url: isMailto ? '' : href,
+      url: isMailto ? '' : (href === '#' ? '' : href),
       email: isMailto ? href.slice(7) : '',
       label: a.getAttribute('alt') || ''
     });
@@ -7107,29 +7150,33 @@ $('#imgMapApply').addEventListener('click', () => {
   refresh();
 });
 
-/* 이미지 부모를 position:relative wrapper로 만들고 a 오버레이 N개 삽입 */
+/* 이미지를 .imap-wrap 안에 감싸고 a 오버레이 N개 삽입 (position:relative 보장) */
 function applyImageMap(img, areas) {
-  // 1) 기존 imap-area 모두 제거
-  let wrap = img.parentElement;
-  // 부모가 a면 그 위 div/td/span에서 처리해야 함. img 직접 부모가 a면 그 부모로
-  if (wrap && wrap.tagName === 'A') wrap = wrap.parentElement;
-  if (wrap) wrap.querySelectorAll('a.imap-area').forEach(a => a.remove());
+  // imgOrA: img 또는 img를 감싼 a 태그 (둘 다 imap-wrap 안에 들어감)
+  const imgOrA = (img.parentElement && img.parentElement.tagName === 'A') ? img.parentElement : img;
+  // 이미 imap-wrap 안에 있으면 재사용, 아니면 새로 생성
+  let imapWrap;
+  if (imgOrA.parentElement && imgOrA.parentElement.classList && imgOrA.parentElement.classList.contains('imap-wrap')) {
+    imapWrap = imgOrA.parentElement;
+  } else {
+    imapWrap = document.createElement('span');
+    imapWrap.className = 'imap-wrap';
+    imapWrap.style.cssText = 'display:inline-block; position:relative; line-height:0;';
+    imgOrA.parentNode.insertBefore(imapWrap, imgOrA);
+    imapWrap.appendChild(imgOrA);
+  }
+  // 기존 imap-area 제거
+  imapWrap.querySelectorAll('a.imap-area').forEach(a => a.remove());
 
-  // 2) areas 없으면 wrap 정리 후 종료
+  // areas 없으면 imap-wrap도 unwrap (이미지를 원위치로)
   if (areas.length === 0) {
-    // position 정리 (다른 게 의존하지 않으면 그대로 두기 — 부작용 회피)
+    const parent = imapWrap.parentNode;
+    while (imapWrap.firstChild) parent.insertBefore(imapWrap.firstChild, imapWrap);
+    parent.removeChild(imapWrap);
     return;
   }
 
-  // 3) wrap을 position:relative + inline-block (이미지 폭 고정)
-  if (wrap) {
-    if (!wrap.style.position) wrap.style.position = 'relative';
-  }
-
-  // 4) areas마다 a 태그 absolute 삽입 (이미지 다음 위치에)
-  // - email 입력 시 mailto: 자동 (url 비어있을 때만)
-  // - target 무조건 _blank
-  const anchorAfter = (img.parentElement && img.parentElement.tagName === 'A') ? img.parentElement : img;
+  // areas마다 a.imap-area 삽입
   areas.forEach((area, idx) => {
     const a = document.createElement('a');
     a.className = 'imap-area';
@@ -7139,8 +7186,9 @@ function applyImageMap(img, areas) {
     a.setAttribute('href', href);
     a.setAttribute('target', '_blank');
     if (area.label) a.setAttribute('alt', area.label);
+    a.setAttribute('data-imap-idx', idx);
     a.style.cssText = `position:absolute; left:${area.left.toFixed(2)}%; top:${area.top.toFixed(2)}%; width:${area.width.toFixed(2)}%; height:${area.height.toFixed(2)}%; display:block;`;
-    anchorAfter.insertAdjacentElement('afterend', a);
+    imapWrap.appendChild(a);
   });
 }
 
@@ -7165,12 +7213,7 @@ $('#btnImageMap').addEventListener('click', () => {
     openImgMapModal(imgs[0]);
     return;
   }
-  // 사용자가 직전 클릭/hover한 이미지가 본문에 있으면 그것 우선
-  if (_lastFocusedImg && $('#wysiwyg').contains(_lastFocusedImg)) {
-    openImgMapModal(_lastFocusedImg);
-    return;
-  }
-  // 그 외: 이미지 선택 picker 모달
+  // 이미지 2개 이상 → 무조건 선택 picker 표시 (사용자가 명시적으로 고르도록)
   openImgMapPicker(imgs);
 });
 
